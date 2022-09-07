@@ -23,7 +23,7 @@
   <meta name="description" content="map 是 Golang 中的内建数据结构，是一个同种类型元素的无序组，元素通过另一类型唯一的键进行索引。其键可以是任何相等性操作符支持的类型， 如整数、浮点数、复数、字符串、指针、接口（只要其动态类型支持相等性判断）、结构以及数组。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Golang map实现原理浅析">
-<meta property="og:url" content="http://example.com/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/index.html">
+<meta property="og:url" content="http://example.com/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/index.html">
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="map 是 Golang 中的内建数据结构，是一个同种类型元素的无序组，元素通过另一类型唯一的键进行索引。其键可以是任何相等性操作符支持的类型， 如整数、浮点数、复数、字符串、指针、接口（只要其动态类型支持相等性判断）、结构以及数组。">
 <meta property="og:locale" content="zh_CN">
@@ -45,7 +45,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3dae7f42e29445f38102322471ce8f18~tplv-k3u1fbpfcp-zoom-1.image">
 
-<link rel="canonical" href="http://example.com/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
+<link rel="canonical" href="http://example.com/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
 
 
 <script id="page-configurations">
@@ -212,7 +212,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -255,7 +255,7 @@
             </span>
 
           
-            <span id="/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang map实现原理浅析" title="阅读次数">
+            <span id="/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang map实现原理浅析" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -270,8 +270,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -352,7 +352,7 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" rel="prev" title="Golang 逃逸分析">
+    <a href="/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" rel="prev" title="Golang 逃逸分析">
       <i class="fa fa-chevron-left"></i> Golang 逃逸分析
     </a></div>
       <div class="post-nav-item"></div>

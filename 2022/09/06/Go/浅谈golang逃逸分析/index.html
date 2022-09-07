@@ -23,7 +23,7 @@
   <meta name="description" content="在golang中，应用程序的内存载体，可以简单的分为栈和堆。栈的内存是由编译器自动进行分配和释放，栈区往往存储着函数参数、局部变量和调用函数帧，它们随着函数的创建而分配，函数的退出而销毁。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Golang 逃逸分析">
-<meta property="og:url" content="http://example.com/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/index.html">
+<meta property="og:url" content="http://example.com/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/index.html">
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="在golang中，应用程序的内存载体，可以简单的分为栈和堆。栈的内存是由编译器自动进行分配和释放，栈区往往存储着函数参数、局部变量和调用函数帧，它们随着函数的创建而分配，函数的退出而销毁。">
 <meta property="og:locale" content="zh_CN">
@@ -35,7 +35,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/358747fa08c946f59de2fc16be230424.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16">
 
-<link rel="canonical" href="http://example.com/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/">
+<link rel="canonical" href="http://example.com/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/">
 
 
 <script id="page-configurations">
@@ -202,7 +202,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -239,7 +239,7 @@
             </span>
 
           
-            <span id="/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 逃逸分析" title="阅读次数">
+            <span id="/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 逃逸分析" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -254,8 +254,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/06/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/06/Go/%E6%B5%85%E8%B0%88golang%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -365,7 +365,7 @@
     <div class="post-nav">
       <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2022/09/06/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" rel="next" title="Golang map实现原理浅析">
+    <a href="/2022/09/06/Go/Golang%20map%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" rel="next" title="Golang map实现原理浅析">
       Golang map实现原理浅析 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
