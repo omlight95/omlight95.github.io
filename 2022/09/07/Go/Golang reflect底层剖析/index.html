@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang reflect底层剖析">
+<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a8706c6d1efc46fab47eb32942cf9022~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25b46777918b4178bc34db3a51d52cb2~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d75e386ac77e4e85a5942a87a7408845~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a78332221c484f0d9965b95edc4c48e9~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/412a5ce2ed14422e9fbb25b243878e07~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cafce1fce2754de1bb3865e632a852ec~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/478f8e7d2de3470496ecf1c4be8d28d7~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9d9bde514db144be9fe1cde8e8f4226c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f63f55a02caf4c27a1a133f2a4c22311~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0651539506f447df9474ce3b718136ea~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2022-09-07T15:29:12.056Z">
+<meta property="article:modified_time" content="2022-09-07T15:29:46.558Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang reflect底层剖析 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang reflect底层剖析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 23:29:12 / 修改时间：23:29:46" itemprop="dateCreated datePublished" datetime="2022-09-07T23:29:12+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang reflect底层剖析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。<br>我们已经介绍过runtime包中<code>_type</code>、<code>uncommontype</code>、<code>eface</code>、<code>iface</code>等类型了，reflect也要和它们打交道，但是它们都属于未导出类型，所以reflect在自己的包中又定义了一套，两边的类型定义是保持一致的。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>reflect中有两个核心类型，<code>reflect.Type</code>和<code>reflect.Value</code>，它们两个撑起了反射功能的基本框架。</p>
+<h2 id="Type"><a href="#Type" class="headerlink" title="Type"></a>Type</h2><p><code>reflect.Type</code>是一个接口类型，它定义了一系列方法用于获取类型各方面的信息。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Type <span class="keyword">interface</span> &#123;</span><br><span class="line">    Align() <span class="type">int</span> <span class="comment">//对齐边界</span></span><br><span class="line">    FieldAlign() <span class="type">int</span> <span class="comment">//作为结构体字段的对齐边界</span></span><br><span class="line">    Method(<span class="type">int</span>) Method <span class="comment">//获取方法数组中第i个Method</span></span><br><span class="line">    MethodByName(<span class="type">string</span>) (Method, <span class="type">bool</span>) <span class="comment">//按照名称查找方法</span></span><br><span class="line">    NumMethod() <span class="type">int</span> <span class="comment">//方法列表中可导出方法的数目</span></span><br><span class="line">    Name() <span class="type">string</span> <span class="comment">//类型名称</span></span><br><span class="line">    PkgPath() <span class="type">string</span> <span class="comment">//包路径</span></span><br><span class="line">    Size() <span class="type">uintptr</span> <span class="comment">//该类型变量占用字节数</span></span><br><span class="line">    String() <span class="type">string</span> <span class="comment">//获取类型的字符串表示</span></span><br><span class="line">    Kind() Kind <span class="comment">//类型对应的reflect.Kind</span></span><br><span class="line">    Implements(u Type) <span class="type">bool</span> <span class="comment">//该类型是否实现了接口u</span></span><br><span class="line">    AssignableTo(u Type) <span class="type">bool</span> <span class="comment">//是否可以赋值给类型u</span></span><br><span class="line">    ConvertibleTo(u Type) <span class="type">bool</span> <span class="comment">//是否可转换为类型u</span></span><br><span class="line">    Comparable() <span class="type">bool</span> <span class="comment">//是否可比较</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//只能应用于某些Kind的方法</span></span><br><span class="line">    <span class="comment">//Int*, Uint*, Float*, Complex*: </span></span><br><span class="line">    Bits() <span class="type">int</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Array,Ptr,Slice,Map: </span></span><br><span class="line">    Elem() Type</span><br><span class="line">    <span class="comment">//Array</span></span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">        </span><br><span class="line">    <span class="comment">//Chan:ChanDir, Elem </span></span><br><span class="line">    ChanDir() ChanDir</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Func: </span></span><br><span class="line">    In(i <span class="type">int</span>) Type</span><br><span class="line">    NumIn() <span class="type">int</span></span><br><span class="line">    Out(i <span class="type">int</span>) Type</span><br><span class="line">    NumOut() <span class="type">int</span></span><br><span class="line">    IsVariadic() <span class="type">bool</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Map: </span></span><br><span class="line">    Key() Type</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Struct: </span></span><br><span class="line">    Field(i <span class="type">int</span>) StructField</span><br><span class="line">    FieldByIndex(index []<span class="type">int</span>) StructField</span><br><span class="line">    FieldByName(name <span class="type">string</span>) (StructField, <span class="type">bool</span>)</span><br><span class="line">    FieldByNameFunc(match <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">string</span>)</span></span> <span class="type">bool</span>) (StructField, <span class="type">bool</span>)  </span><br><span class="line">    NumField() <span class="type">int</span></span><br><span class="line"></span><br><span class="line">    common() *rtype</span><br><span class="line">    uncommon() *uncommonType</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通常会用<code>reflect.TypeOf</code>这个函数来拿到一个<code>reflect.Type</code>类型的返回值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span></span> Type &#123;</span><br><span class="line">    eface := *(*emptyInterface)(unsafe.Pointer(&amp;i))</span><br><span class="line">    <span class="keyword">return</span> toType(eface.typ)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>它接收一个空接口类型的参数。<br>接下来，<code>reflect.TypeOf</code>函数会把<code>runtime.eface</code>类型的参数<code>i</code>转换成reflect.emptyInterface类型并赋给局部变量<code>eface</code>。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a8706c6d1efc46fab47eb32942cf9022~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>因为<code>*rtype</code>实现了<code>reflect.Type</code>接口，所以只要把<code>eface</code>这里的<code>typ</code>字段取出来，包装成<code>reflect.Type</code>类型的返回值就好了。<br>这就相当于下面这样把<code>eface.typ</code>赋值给一个<code>reflect.Type</code>类型的变量，这两行代码可以帮助我们理解返回值的结构。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ret reflect.Type</span><br><span class="line">ret = eface.typ</span><br></pre></td></tr></table></figure>
+
+
+
+<p>还记得非空接口长什么样子吧？<code>eface.typ</code>是个指针，所以这个返回值的<code>data</code>字段就等于<code>eface.typ</code>，也就是<code>string</code>类型的元数据地址，而<code>itab</code>中的接口类型就是<code>reflect.Type</code>，动态类型就是<code>*rtype</code>。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25b46777918b4178bc34db3a51d52cb2~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>至于<code>*rtype</code>实现的这些接口要求的方法，也不过是去<code>data</code>字段指向的类型元数据那里获取各种信息罢了。<br>例如可以使用<code>Implements</code>方法来判断类型是否实现了某个接口，比方说fmt.Stringer接口。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Stringer <span class="keyword">interface</span> &#123;</span><br><span class="line">    String() <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d75e386ac77e4e85a5942a87a7408845~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>判断的过程就是通过类型元数据找到方法元数据数组，这里的Method是按照方法名称排过序的，所以只要和接口要求的方法列表两相比较一下，就可以确定该类型是否实现指定接口了。<br>这就是<code>reflect</code>的<code>Type</code>类型和<code>TypeOf</code>方法，重点是要理解反射如何拿到反射变量的类型元数据，剩下的就好说了。</p>
+<h2 id="Value"><a href="#Value" class="headerlink" title="Value"></a>Value</h2><p>与<code>reflect.Type</code>不同，<code>reflect.Value</code>是一个结构体类型。   </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">type</span> Value <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ *rtype</span><br><span class="line">    ptr unsafe.Pointer</span><br><span class="line">    flag</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><code>typ</code>存储反射变量的类型元数据指针；</li>
+<li><code>ptr</code>存储数据地址；</li>
+<li><code>flag</code>是一个位标识符，存储反射变量值的一些描述信息，例如类型掩码，是否为指针，是否为方法，是否只读等等。</li>
+</ul>
+<p><code>reflect.Value</code>同样提供了很多方法，这里我们只关注利用反射来更新变量值的过程。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">    v := reflect.ValueOf(a)</span><br><span class="line">    v.SetString(<span class="string">&quot;new eggo&quot;</span>)</span><br><span class="line">    <span class="built_in">println</span>(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>首先要注意，<code>reflect.ValueOf</code>函数的参数也是空接口类型，所以和前面介绍的<code>TypeOf</code>一样，它接收到的参数中数据指针同样指向<code>a</code>的一个拷贝值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ValueOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span></span> Value &#123;</span><br><span class="line">    <span class="keyword">if</span> i == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> Value&#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    escapes(i)</span><br><span class="line">    <span class="keyword">return</span> unpackEface(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>此外还要注意，<code>reflect.ValueOf</code>函数目前的实现方式，会通过<code>escapes</code>函数显示地把参数<code>i</code>指向的变量逃逸到堆上。<br>对应到上面这个例子，<code>copy of a</code>就会逃逸到堆上，栈上存储它的地址。所以这个空接口类型的参数<code>i</code>，其动态类型指向string类型元数据，动态值指向堆上的<code>copy of a</code>。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a78332221c484f0d9965b95edc4c48e9~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><code>ValueOf</code>函数的返回值是<code>reflect.Value</code>类型，其<code>typ</code>字段取参数的<code>_type</code>字段，指向<code>string</code>类型元数据，<code>ptr</code>字段取参数的<code>data</code>字段，指向<code>copy of a</code>。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/412a5ce2ed14422e9fbb25b243878e07~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>接下来，这个返回值被赋给局部变量<code>v</code>，调用<code>v.SetString</code>时，方法接收者<code>v</code>作为第一个参数，字符串”new eggo”作为第二个参数。 因为此时<code>v.ptr</code>指向的是<code>copy of a</code>，而不是<code>a</code>，所以是不允许修改的。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cafce1fce2754de1bb3865e632a852ec~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>因为修改这样一个用户都不知道的临时变量<code>copy of a</code>没有任何意义，毕竟通过反射来修改变量值本意是要作用到原变量身上的，所以上面这个例子在执行阶段会发生panic：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">panic</span>: reflect: reflect.Value.SetString using unaddressable value</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个异常信息就是提醒我们此时反射修改值的行为并不符合预期。若想顺利修改变量<code>a</code>，就需要反射<code>a</code>的指针。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">    v := reflect.ValueOf(&amp;a)</span><br><span class="line">    v.Elem().SetString(<span class="string">&quot;new eggo&quot;</span>)</span><br><span class="line">    <span class="built_in">println</span>(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>传参依然是值拷贝，只不过这一次拷贝的是<code>a</code>的地址，所以<code>reflect.ValueOf</code>会显示地把局部变量<code>a</code>逃逸到堆上，栈上只存它的地址&amp;a。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/478f8e7d2de3470496ecf1c4be8d28d7~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>局部变量<code>v</code>中，<code>v.typ</code>指向<code>*string</code>类型元数据，<code>v.ptr</code>等于<code>a</code>的地址。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9d9bde514db144be9fe1cde8e8f4226c~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>接下来调用<code>v.Elem()</code>方法可以拿到<code>v.ptr</code>指向的那个变量，也就是局部变量<code>a</code>，并把它包装成一个新的<code>reflect.Value</code>对象作为返回值。这个返回值里<code>typ</code>指向<code>string</code>类型元数据，<code>ptr</code>指向局部变量<code>a</code>。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f63f55a02caf4c27a1a133f2a4c22311~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>通过<code>v.Elem()</code>的返回值再调用<code>SetString</code>方法时，修改的就是原来的变量<code>a</code>了。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0651539506f447df9474ce3b718136ea~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>通过反射修改变量值的问题有点绕，但是只要记住函数传参值拷贝，以及反射修改变量值要作用到原变量身上才有意义这两个原则，再梳理出<code>Value</code>对象内部结构，理解起来就没那么困难了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E6%96%AD%E8%A8%80/" rel="prev" title="Golang 类型断言">
+      <i class="fa fa-chevron-left"></i> Golang 类型断言
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/" rel="next" title="Golang 标准库之反射">
+      Golang 标准库之反射 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Type"><span class="nav-number">1.</span> <span class="nav-text">Type</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Value"><span class="nav-number">2.</span> <span class="nav-text">Value</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

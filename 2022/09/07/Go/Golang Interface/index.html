@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="空接口类型可以接收任意类型的数据，它只要记录这个数据在哪儿，是什么类型的就足够了。空接口变量数据结构如下，其中_type指向接口的动态类型元数据，data就指向接口的动态值。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang Interface">
+<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20Interface/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="空接口类型可以接收任意类型的数据，它只要记录这个数据在哪儿，是什么类型的就足够了。空接口变量数据结构如下，其中_type指向接口的动态类型元数据，data就指向接口的动态值。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1512d00da2ed4b24a2568071491b9807~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b7da5313d4884fc1b61118245378c9a9~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cbd99fba86b04d61a58635988fd3649c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/738b13d4a801474482b94d47cb43927c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf1f4cd39abd413780db6556ef3e27fe~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c6127d4e5e2d42769d36448d00387cd4~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23828e6322e647d293e85d358328676b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/33904780e032484fb2d3cdb955a83ce8~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/51d113c6e0e94122bf7594a3aee42d07~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2022-09-07T15:25:01.651Z">
+<meta property="article:modified_time" content="2022-09-07T15:25:42.327Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1512d00da2ed4b24a2568071491b9807~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20Interface/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang Interface | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20Interface/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang Interface
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 23:25:01 / 修改时间：23:25:42" itemprop="dateCreated datePublished" datetime="2022-09-07T23:25:01+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/07/Go/Golang%20Interface/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Interface" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/07/Go/Golang%20Interface/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20Interface/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">空接口类型可以接收任意类型的数据，它只要记录这个数据在哪儿，是什么类型的就足够了。空接口变量数据结构如下，其中_type指向接口的动态类型元数据，data就指向接口的动态值。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="空接口-interface"><a href="#空接口-interface" class="headerlink" title="空接口 interface{}"></a>空接口 interface{}</h2><p>空接口类型可以接收任意类型的数据，它只要记录这个数据在哪儿，是什么类型的就足够了。空接口变量数据结构如下，其中_type指向接口的动态类型元数据，data就指向接口的动态值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> eface <span class="keyword">struct</span> &#123;</span><br><span class="line">    _type *_type</span><br><span class="line">    data  unsafe.Pointer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如下面这个例子，为e赋值以前，其中存储的_type和data都为nil。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> e <span class="keyword">interface</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1512d00da2ed4b24a2568071491b9807~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f, _ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">e = f</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果我们把*os.File类型的变量f赋给e。那么变量e的结构如下图所示：</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b7da5313d4884fc1b61118245378c9a9~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>因为f本身就是个指针，所以e这里的data就等于f，动态类型就是*os.File。值得强调的是类型元数据这里是可以找到类型关联的方法元数据列表的，这一点对于理解“类型断言”至关重要。</p>
+<h3 id="interface-参数赋值"><a href="#interface-参数赋值" class="headerlink" title="interface{}参数赋值"></a>interface{}参数赋值</h3><p>interface{}类型的变量中会保存一个地址。假如存在如下的一种情况：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> e <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">a := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">e = a</span><br></pre></td></tr></table></figure>
+
+
+
+<p>那么e接收的参数会是下面这样的吗？</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cbd99fba86b04d61a58635988fd3649c~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"><br></p>
+<p>答案是否定的，原因是这样并不符合“Go语言中传参值拷贝”的语义。从语义上讲也应该使用<code>a</code>的拷贝值，而不是直接使用<code>a</code>。但问题是空接口类型的参数需要的只是一个数据指针，不能拷贝a的值过来，又不能拷贝a的地址过来，那拷贝谁？</p>
+<p>解决这个问题的方式，是在编译阶段增加临时变量作为a的拷贝值(copy of a)，再把<code>copy of a</code>的地址传给函数使用，无论之后对参数指向的数据做什么修改，都不会作用到变量a身上。这样就通过<code>传递复制后的地址实现了传值的语义</code>。</p>
+<p><code>copy of a</code>的地址会在编译阶段转换为空接口类型，所以<code>TypeOf</code>接收到的参数就如下图所示。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/738b13d4a801474482b94d47cb43927c~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<h2 id="非空接口"><a href="#非空接口" class="headerlink" title="非空接口"></a>非空接口</h2><p>非空接口就是有方法列表的接口类型，一个变量要想赋值给一个非空接口类型，其类型必须要实现该接口要求的所有方法才行。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> iface <span class="keyword">struct</span> &#123;</span><br><span class="line">    tab   *itab</span><br><span class="line">    data  unsafe.Pointer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>iface.data记录的是接口的动态值，所以接口要求的方法列表以及与data对应的动态类型信息一定存在itab里面。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> itab <span class="keyword">struct</span> &#123;</span><br><span class="line">    inter  *interfacetype</span><br><span class="line">    _type  *_type</span><br><span class="line">    hash   <span class="type">uint32</span></span><br><span class="line">    _      [<span class="number">4</span>]<span class="type">byte</span></span><br><span class="line">    fun    [<span class="number">1</span>]<span class="type">uintptr</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>itab.inter是interface的类型元数据，它里面记录了这个接口类型的描述信息，接口要求的方法列表就记录在interfacetype.mhdr这里。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> interfacetype <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ      _type</span><br><span class="line">    pkgpath  name</span><br><span class="line">    mhdr     []imethod</span><br><span class="line">&#125;   </span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>itab._type就是接口的动态类型，也就是被赋给接口类型的那个变量的类型元数据。</li>
+<li>itab.hash是从itab._type中拷贝来的，是类型的哈希值，用于快速判断类型是否相等时使用。</li>
+<li>itab.fun记录的是动态类型实现的那些接口要求的方法的地址，是从方法元数据中拷贝来的，为的是快速定位到方法。如果itab._type对应的类型没有实现这个接口，则itab.fun[0]&#x3D;0，这在类型断言时会用到。</li>
+</ul>
+<h2 id="非空接口赋值前后"><a href="#非空接口赋值前后" class="headerlink" title="非空接口赋值前后"></a>非空接口赋值前后</h2><p>如果我们声明一个io.ReadWriter类型的变量rw。被赋值以前，rw的data为nil，tab也为nil。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rw io.ReadWriter</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf1f4cd39abd413780db6556ef3e27fe~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>下面我们把一个*os.File类型的变量f，赋值给rw。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f, _ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">rw = f</span><br></pre></td></tr></table></figure>
+
+
+
+<p>此时rw的动态值就是f，动态类型就是<em>os.File。而itab.fun这个数组里记录的是</em>os.File实现的Read、Write方法的地址。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c6127d4e5e2d42769d36448d00387cd4~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>下面我们再声明一个io.Writer类型的变量w，并把f赋值给w。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer = f</span><br></pre></td></tr></table></figure>
+
+
+
+<p>此时w的动态值和动态类型与rw相同，只是二者的接口类型元数据不同，要求的方法列表也不同罢了。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23828e6322e647d293e85d358328676b~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<h2 id="itab缓存"><a href="#itab缓存" class="headerlink" title="itab缓存"></a>itab缓存</h2><p>关于itab我们还要额外关注一点，既然一个非空接口类型和一个动态类型就可以确定一个itab的内容，那这个itab结构体自然是可以被接口类型与动态类型均相同的接口变量复用的。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/33904780e032484fb2d3cdb955a83ce8~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>实际上Go语言会把用到的itab结构体缓存起来，并且以<code>&lt;接口类型, 动态类型&gt;</code>组合为key，以<code>*itab</code>为value，构造一个哈希表，用于存储与查询itab信息。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/51d113c6e0e94122bf7594a3aee42d07~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>这个哈希表与map底层的哈希表不同，其结构设计更为简便。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> itabTableType <span class="keyword">struct</span> &#123;</span><br><span class="line">    size    <span class="type">uintptr</span>             <span class="comment">// length of entries array. Always a power of 2.</span></span><br><span class="line">    count   <span class="type">uintptr</span>             <span class="comment">// current number of filled entries.</span></span><br><span class="line">    entries [itabInitSize]*itab <span class="comment">// really [size] large</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>需要一个itab时，会首先去itabTable里查找，计算哈希值时会用到接口类型(itab.inter)和动态类型(itab._type)的类型哈希值：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">itabHashFunc</span><span class="params">(inter *interfacetype, typ *_type)</span></span> <span class="type">uintptr</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="type">uintptr</span>(inter.typ.hash ^ typ.hash)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果能查询到对应的itab指针，就直接拿来使用。若没有就要再创建，然后添加到itabTable中。</p>
+<p>了解了空接口和非空接口的数据结构，明确了接口动态值与动态类型在赋值前与赋值后的变化，接下来就可以看看“类型断言”是怎么回事儿了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F/" rel="prev" title="Golang 类型系统">
+      <i class="fa fa-chevron-left"></i> Golang 类型系统
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E6%96%AD%E8%A8%80/" rel="next" title="Golang 类型断言">
+      Golang 类型断言 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A9%BA%E6%8E%A5%E5%8F%A3-interface"><span class="nav-number">1.</span> <span class="nav-text">空接口 interface{}</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#interface-%E5%8F%82%E6%95%B0%E8%B5%8B%E5%80%BC"><span class="nav-number">1.1.</span> <span class="nav-text">interface{}参数赋值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%A9%BA%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.</span> <span class="nav-text">非空接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%A9%BA%E6%8E%A5%E5%8F%A3%E8%B5%8B%E5%80%BC%E5%89%8D%E5%90%8E"><span class="nav-number">3.</span> <span class="nav-text">非空接口赋值前后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#itab%E7%BC%93%E5%AD%98"><span class="nav-number">4.</span> <span class="nav-text">itab缓存</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

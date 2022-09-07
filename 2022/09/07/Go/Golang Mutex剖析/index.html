@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="state 储存的是互斥锁的状态，加锁和解锁都是通过atomic包提供的函数原子性操作来操作该字段。sema 用作一个信号量，主要用作等待队列。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang Mutex剖析">
+<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="state 储存的是互斥锁的状态，加锁和解锁都是通过atomic包提供的函数原子性操作来操作该字段。sema 用作一个信号量，主要用作等待队列。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b9d0d4cc761a47ea8edb064e8ea0ffc3~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/95d5b6e90b5b4c60b6eb16813532b2d5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/592effd23c4d40d499f427cb22912f4d~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8a5140360494e3a934a98762b777789~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1f943605ff5e47319f2c444052510668~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/447cdca0522a41abb8c259664679d020~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/28fdbd6c9a18487a800a155c37ef3df4~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3539a0c00faf4e1488e161c3b76613aa~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6fc64e48f17c4293b9839068b4bad46f~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/80247df4ab6f45c7beda90389b81b6de~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/071b8b618cc842f9bb6da927a2bbd67b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/14998427658a48d795a68a0690041c67~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fe75351df29d4cc989124bc4d8de924d~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f64dadc0401407d88a5a77309e3314a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e93ba7aada44102bc4edd6bd29718cc~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2022-09-07T15:37:18.208Z">
+<meta property="article:modified_time" content="2022-09-07T15:38:40.299Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b9d0d4cc761a47ea8edb064e8ea0ffc3~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang Mutex剖析 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang Mutex剖析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 23:37:18 / 修改时间：23:38:40" itemprop="dateCreated datePublished" datetime="2022-09-07T23:37:18+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Mutex剖析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">state 储存的是互斥锁的状态，加锁和解锁都是通过atomic包提供的函数原子性操作来操作该字段。sema 用作一个信号量，主要用作等待队列。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Mutex内存模型"><a href="#Mutex内存模型" class="headerlink" title="Mutex内存模型"></a>Mutex内存模型</h2><p>在go语言中，Mutex的结构是这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	state <span class="type">int32</span></span><br><span class="line">	sema <span class="type">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为简单所以不需要额外的初始化。此结构的零值就是一个有效的互斥锁，处于Unlock的状态。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b9d0d4cc761a47ea8edb064e8ea0ffc3~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><code>state</code>储存的是互斥锁的状态，加锁和解锁都是通过atomic包提供的函数原子性操作来操作该字段。</p>
+<p><code>sema</code>用作一个信号量，主要用作等待队列。</p>
+<h2 id="Mutex的两种模式"><a href="#Mutex的两种模式" class="headerlink" title="Mutex的两种模式"></a>Mutex的两种模式</h2><h3 id="正常模式"><a href="#正常模式" class="headerlink" title="正常模式"></a>正常模式</h3><p>在正常模式下，一个尝试加锁的goroutine会先自旋几次，尝试通过原子操作获得锁，若几次自旋之后仍不能获得锁，则通过信号量排队等待。所有的等待者会按照先入先出（FIFO）的顺序排队。</p>
+<p>但是当锁被释放，第一个等待者并不会直接拥有锁，而是需要和后来者竞争。也就是那些处于自旋阶段，尚未排队等待的goroutine。这种情况下后来者更有优势。一方面，它们正在CPU上运行，自然比刚唤醒的goroutine更有优势，另一方面，处于自旋状态的goroutine可以有很多，而被唤醒的goroutine每次只有一个。所以被唤醒的goroutine有很大概率拿不到锁。这种情况下，它会被重新插入到队列的头部，而不是尾部。</p>
+<h3 id="饥饿模式"><a href="#饥饿模式" class="headerlink" title="饥饿模式"></a>饥饿模式</h3><p>而当一个goroutine本次加锁等待的时间超过了1ms后，它会把当前Mutex从正常模式切换至<code>饥饿模式</code>。</p>
+<p>在饥饿模式下，Mutex的所有权从执行Unlock的goroutine直接传递给等待队列头部的goroutine。后来者不会自旋，也不会尝试获得锁。即使Mutex处于Unlock状态，它们会直接从队列的尾部排队等待。当一个等待者获得锁之后，它会在以下两种情况时，将Mutex由饥饿模式切换回正常模式：</p>
+<ul>
+<li>一种情况是：它的等待时间小于1ms，也就是它刚来不久。</li>
+<li>第二种情况是：它是最后一个等待者，等待队列已经空了，后面自然就没有饥饿的goroutine了。</li>
+</ul>
+<p>综上所述，在正常模式下自旋和排队是同时存在的，执行Lock的goroutine会先一边自旋，尝试过几次后如果还没有拿到锁，就需要去排队等待了。这种在排队之前先让大家来抢的模式，能够有更高的吞吐量，因为频繁的挂起、唤醒goroutine会带来较多的开销。但是又不能无限制的自旋，要把自旋的开销控制在较小的范围内，所以在正常模式下，Mutex有更好的性能。但是可能会出现队列尾端的goroutine迟迟抢不到锁（尾端延迟）的情况。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/95d5b6e90b5b4c60b6eb16813532b2d5~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>而饥饿模式下不再自旋尝试，所有goroutine都要排队，严格的先来后到。对于防止尾端延迟来讲特别重要。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/592effd23c4d40d499f427cb22912f4d~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<h2 id="Lock和Unlock"><a href="#Lock和Unlock" class="headerlink" title="Lock和Unlock"></a>Lock和Unlock</h2><p>首先来看一下关于Mutex.state的几个常量定义：</p>
+<p>我们再来看一下Mutex的内存模型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	state <span class="type">int32</span></span><br><span class="line">	sema <span class="type">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8a5140360494e3a934a98762b777789~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>state的类型是int32。</p>
+<ul>
+<li>其中第一位用作锁状态标识符，置为1就表示已加锁，对应的掩码常量为<code>mutexLocked</code>。</li>
+<li>第二位用于记录是否已有goroutine被唤醒了，置为1表示已唤醒，对应掩码常量为<code>mutexWoken</code>。</li>
+<li>第三位标识Mutex的工作模式，0代表正常模式，1代表饥饿模式，对应掩码常量为<code>mutexStarving</code>。</li>
+<li>而常量mutexWaiterShift等于3，表示除了最低三位以外，state的其他位用来记录有多少个等待着在排队。</li>
+</ul>
+<p><strong>Lock和Unlock方法</strong></p>
+<p>再来看看Lock和Unlock方法：</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1f943605ff5e47319f2c444052510668~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>精简掉了注释和部分race检测相关的代码，两个方法中主要通过atomic函数实现了Fast path，相应的Slow path被单独放在了lockSlow和unlockSlow方法中。根据源码注释的说法，这样是为了便于编译器对于Fast path进行内联优化。</p>
+<p>Lock方法的Fast path期望Mutex处于Unlocked状态，没有goroutine在排队，更不会饥饿。理想状况下，一个CAS操作就可以获得锁。但是如果CAS操作没能获得锁，就需要进入Slow path，也就是lockSlow方法。</p>
+<p>Unlock方法同理，首先通过原子操作从state中减去mutexLocked，也就是释放锁。然后根据state的新值来判断是否需要执行Slow path。如果新值为0，也就意味着没有其它goroutine在排队，所以不需要执行额外操作；如果新值不为0，那就需要进入slow path，看看是否需要唤醒某个goroutine。</p>
+<h2 id="slow-path的主要逻辑"><a href="#slow-path的主要逻辑" class="headerlink" title="slow path的主要逻辑"></a>slow path的主要逻辑</h2><p>当一个goroutine尝试给mutex加锁时，如果其它goroutine已经加了锁还没有释放，而且当前mutex工作在正常模式下，是不是就要开始自旋了呢？</p>
+<p>答案是不一定。因为如果当前是单核场景，自旋的goroutine在等待持有锁的goroutine释放锁，而持有锁的goroutine在等待自旋的goroutine让出CPU。这种情况下自旋是没有意义的。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/447cdca0522a41abb8c259664679d020~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>而且，如果<code>GOMAXPROCS=1</code>，或者当前没有其它P在运行，也和单核场景类似，同样不需要自旋。<br>除此之外，如果当前P的本地runq不为空，相较于自旋而言，切换到本地goroutine更有效率。所以为保障吞吐量，也不会自旋。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/28fdbd6c9a18487a800a155c37ef3df4~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>最终，只有在多核场景下，且<code>GOMAXPROCS大于1</code>，且至少有一个其它的P正在running，且当前P的本地runq为空的情况下，才可以自旋。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3539a0c00faf4e1488e161c3b76613aa~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>进入自旋的goroutine会先去争抢mutex的唤醒标识位。设置mutexWoken标识位的目的是：在正常模式下，告知持有锁的goroutine，在unlock的时候不用再唤醒其它goroutine了，已经有goroutine在这里等待。以免唤醒太多的等待协程。</p>
+<p>mutex中的自旋，底层是通过procyield循环执行30次PAUSE，自旋次数上限为4。而且每自旋一次都要重新判断是否可以继续自旋。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6fc64e48f17c4293b9839068b4bad46f~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>如果锁被释放了，或者锁进入饥饿模式，亦或者已经自旋了4次，都会结束自旋。结束自旋或者根本不用的goroutine，就该尝试原子操作修改mutex的状态了。把此时mutex.state保存到old中，把要修改为的新state标记为new。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/80247df4ab6f45c7beda90389b81b6de~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>如果old处于饥饿模式或者加锁状态，goroutine就得去排队，所以上述情况下排队规模要加1。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/071b8b618cc842f9bb6da927a2bbd67b~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>如果是正常模式，就要尝试设置lock位。所以第三行的new位要置为1。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/14998427658a48d795a68a0690041c67~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>如果当前goroutine等待的时间已经超过1ms，而且锁还没有被释放。就要将mutex的状态切换为饥饿模式。注意，这里之所以还要求锁没被释放，是因为如果锁已经释放了，那怎么都得去抢一次，要是直接进入饥饿模式就只能去排队了。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fe75351df29d4cc989124bc4d8de924d~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>把排队规模和几个标识位都设置好以后，在执行原子操作修改state之前，若是当前goroutine持有唤醒标识的话，还要将唤醒标识位重置。<br>因为接下来无论是要去抢锁，还是单纯的要去排队，如果原子操作成功了，要么是成功抢到了锁，要么是成功进到了等待队列里。当前goroutine都不再是被唤醒的goroutine了，所以要释放唤醒标识。<br>而如果原子操作不成功，也就意味着其它goroutine在我们保存mutex.state到old中以后，又修改了state的值。当前goroutine就要回过头去，继续从自旋检查这里开始再次尝试。所以也需要释放自己之前抢到的唤醒标识位，从头再来。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f64dadc0401407d88a5a77309e3314a~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<h3 id="加锁的slow-path"><a href="#加锁的slow-path" class="headerlink" title="加锁的slow path"></a>加锁的slow path</h3><p>继续展开这个原子操作成功的分支，如果是抢锁操作成功了，那么加锁的slow path就可以宣告结束了。如果是排队规模设置成功了，还要决定是排在等待队列头部还是尾部。如果当前goroutine已经排过队了，是在unlock时从等待队列中唤醒的，那就要排到等待队列头部。<br>如果是第一次排队，就得排到等待队列尾部，并且从第一次排队开始记录当前goroutine的等待时间。接下来就会让出，进到等待队列里了。队列里的goroutine被唤醒时，要从上次让出的地方开始继续执行。<br>接下来会判断，如果mutex处在正常模式，那就接着从自旋开始抢锁，如果唤醒后处在饥饿模式，那就没有goroutine会和自己抢了。锁已经轮到自己这里，只需要把mutex.state中lock标识位设置为加锁，把等待队列规模减去1，再看看是不是要切换到正常模式，也就是自己的等待时间是不是小于1ms，或者等待队列已经空了，最后设置好mutex.state就一切ok了。</p>
+<p>这就是加锁操作的slow path。</p>
+<h3 id="解锁的slow-path"><a href="#解锁的slow-path" class="headerlink" title="解锁的slow path"></a>解锁的slow path</h3><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e93ba7aada44102bc4edd6bd29718cc~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>进到unlock的slow path，说明除去lock标识位以外。剩下的位不全为0。<br>如果处在正常模式，若等待队列为空。或者已经有goroutine被唤醒或获得了锁，或者锁进入了饥饿模式，那就不需要唤醒某个goroutine，直接返回即可，否则就要尝试抢占mutexWoken标识位，获取唤醒一个goroutine的权利。抢占成功后，就会通过runtime_Semrelease函数唤醒一个goroutine。<br>如果抢占不成功就进行循环尝试，直到等待队列为空，或者已经有一个goroutine被唤醒或获得了锁，或者锁进入了饥饿模式，则退出循环。<br>而在饥饿模式下，后来的goroutine不会抢占锁，而是直接排队，锁的所有权是直接从执行Unlock的goroutine，传递给等待队列中首个等待者的，所以不用抢占mutexWoken标识位。</p>
+<p>第一个等待者唤醒后，会继承当前goroutine的时间片立刻开始运行，也就是继续lockSlow中这里，goroutine被唤醒以后的逻辑。</p>
+<p>这就是unlock的slow path。</p>
+<p>接下来再看看关于信号量的相关操作。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20GC/" rel="prev" title="Golang GC">
+      <i class="fa fa-chevron-left"></i> Golang GC
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" rel="next" title="Golang Tag语法">
+      Golang Tag语法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mutex%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">Mutex内存模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mutex%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">Mutex的两种模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A3%E5%B8%B8%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.1.</span> <span class="nav-text">正常模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A5%A5%E9%A5%BF%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">饥饿模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lock%E5%92%8CUnlock"><span class="nav-number">3.</span> <span class="nav-text">Lock和Unlock</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#slow-path%E7%9A%84%E4%B8%BB%E8%A6%81%E9%80%BB%E8%BE%91"><span class="nav-number">4.</span> <span class="nav-text">slow path的主要逻辑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E9%94%81%E7%9A%84slow-path"><span class="nav-number">4.1.</span> <span class="nav-text">加锁的slow path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E9%94%81%E7%9A%84slow-path"><span class="nav-number">4.2.</span> <span class="nav-text">解锁的slow path</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

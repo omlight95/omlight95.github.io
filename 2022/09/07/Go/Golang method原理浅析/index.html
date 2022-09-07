@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="方法即method，Go语言支持为自定义类型实现方法，method在具体实现上与普通的函数并无不同，只不过会通过运行时栈多传递一个隐含的参数，这个隐含的参数就是所谓的接收者。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang method原理浅析">
+<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="方法即method，Go语言支持为自定义类型实现方法，method在具体实现上与普通的函数并无不同，只不过会通过运行时栈多传递一个隐含的参数，这个隐含的参数就是所谓的接收者。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23274923b511411aa5b8df19b3056224~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ebd14b243ad4cf3bcaa129ca871796e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32b65bb3491348c7b6b5e16d0e8d13bd~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07c550f05a20409a9a96dfc0bfc8ceda~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ea57bcd807a14c368a9104ebf8486877~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf5e160cc88849519ce18f78c882949a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1fca4392d57e4796a755950fe3f80728~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25f2642b7a034d8aa14ab5a161883739~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2022-09-07T15:22:25.489Z">
+<meta property="article:modified_time" content="2022-09-07T15:22:58.748Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang method原理浅析 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang method原理浅析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 23:22:25 / 修改时间：23:22:58" itemprop="dateCreated datePublished" datetime="2022-09-07T23:22:25+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang method原理浅析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">方法即method，Go语言支持为自定义类型实现方法，method在具体实现上与普通的函数并无不同，只不过会通过运行时栈多传递一个隐含的参数，这个隐含的参数就是所谓的接收者。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><p>方法即method，Go语言支持为自定义类型实现方法，method在具体实现上与普通的函数并无不同，只不过会通过运行时栈多传递一个隐含的参数，这个隐含的参数就是所谓的接收者。下面通过代码来进行说明：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> Name() <span class="type">string</span> &#123;</span><br><span class="line">	a.name = <span class="string">&quot;Hi! &quot;</span> + a.name</span><br><span class="line">	<span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	a := A&#123;name: <span class="string">&quot;hello&quot;</span>&#125;</span><br><span class="line">	<span class="comment">// 1）编译器的语法糖，提供面向对象的语法</span></span><br><span class="line">	fmt.Println(a.Name())</span><br><span class="line">	 <span class="comment">// 2）更贴近真实实现的写法，和普通函数调用几乎没什么不同</span></span><br><span class="line">	fmt.Println(A.Name(a))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以上代码展示了两种不同的写法，都能顺利通过编译并正常运行，实际上这两种写法会生成同样的机器码。<br>第一种：a.Name()，这是我们惯用的写法，很方便；<br>第二种：A.Name(a)，这种写法更底层也更严谨，要求所有的类型必须严格对应，否则是无法通过编译的。<br>其实编译器会帮我们把第一种转换为第二种的形式，所以我们惯用的第一种写法只是“语法糖”，方便而已。</p>
+<p>深入理解这两种写法的等价性是非常重要的，下面再用代码进一步验证：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> Name() <span class="type">string</span> &#123;</span><br><span class="line">    a.name = <span class="string">&quot;Hi! &quot;</span> + a.name</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NameOfA</span><span class="params">(a A)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    a.name = <span class="string">&quot;Hi! &quot;</span> + a.name</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    t1 := reflect.TypeOf(A.Name)</span><br><span class="line">    t2 := reflect.TypeOf(NameOfA)</span><br><span class="line">    <span class="comment">// 会输出true，通过反射来验证，两者的类型是相同的</span></span><br><span class="line">    fmt.Println(t1 == t2)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>因为Go语言反射获取的函数类型只跟参数和返回值有关，既然t1和t2相等，就说明类型A的方法本质上和函数NameOfA相同。也就进一步验证了：方法本质上就是普通的函数，而接收者就是隐含的第一个参数。</p>
+<h2 id="值接收者"><a href="#值接收者" class="headerlink" title="值接收者"></a>值接收者</h2><p>接下来，我们看看上面第一个示例中，a.Name()执行时函数调用栈是什么情况。</p>
+<p>main函数栈帧中局部变量a只有一个string类型的成员，a.Name()会由编译器转换为A.Name(a)这样的函数调用。局部变量a作为要传入的参数，被直接拷贝到参数空间。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image" alt="值接收者方法调用栈"></p>
+<p>A.Name(a)执行时,修改的是参数空间的a.name，string底层指向的字符串内容发生了变化。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23274923b511411aa5b8df19b3056224~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>函数返回前将返回值写入返回值空间，对应到这个例子，就是拷贝参数a的成员name到返回值空间。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ebd14b243ad4cf3bcaa129ca871796e~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>通过值接收者调用方法时，值接收者会作为第一个参数，而Go语言中传参都是值拷贝，所以执行a.Name()修改的并不是局部变量a，而是拷贝过去的参数。要想修改a，还得用指针接收者。</p>
+<h2 id="指针接收者"><a href="#指针接收者" class="headerlink" title="指针接收者"></a>指针接收者</h2><p>我们把上个例子改为指针接收者，然后看看通过指针接收者调用方法时，函数调用栈又会是怎样的情况。 </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pa *A)</span></span> Name() <span class="type">string</span> &#123;</span><br><span class="line">    pa.name = <span class="string">&quot;Hi! &quot;</span> + pa.name</span><br><span class="line">    <span class="keyword">return</span> pa.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">    pa := &amp;a</span><br><span class="line">    fmt.Println(pa.Name())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>main函数栈帧有两个局部变量，pa存储的是a的地址。pa.Name()会由编译器转换为（*A).Name(pa)函数调用，所以参数空间拷贝参数pa的值，也就是局部变量a的地址。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32b65bb3491348c7b6b5e16d0e8d13bd~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>(*A).Name(pa)执行时，修改的是pa指向的结构体，也就是局部变量a.name的值。这个string类型的成员会指向新的底层字符串，而返回值空间被写入的也是pa指向的结构体的成员name。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07c550f05a20409a9a96dfc0bfc8ceda~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>通过指针类型接收者调用方法时，指针会作为参数传入，传参时拷贝的就是地址，所以这里能够实现对原来变量a的修改。</p>
+<h2 id="更甜的语法糖"><a href="#更甜的语法糖" class="headerlink" title="更甜的语法糖"></a>更甜的语法糖</h2><p>再次修改上面的例子，这一次既有值接收者的方法，又有指针接收者的方法。对于a.GetName()和pa.SetName()这两种形式的方法调用我们已经了然。但是下面这pa.GetName()和a.SetName()也能正常执行是几个意思？ </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> GetName() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pa *A)</span></span> SetName() <span class="type">string</span> &#123;</span><br><span class="line">    pa.name = <span class="string">&quot;Hi! &quot;</span> + pa.name</span><br><span class="line">    <span class="keyword">return</span> pa.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">    pa := &amp;a</span><br><span class="line">    </span><br><span class="line">    fmt.Println(pa.GetName())</span><br><span class="line">    fmt.Println(a.SetName())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>不用展开函数调用栈，只需告诉你这是语法糖，理解起来也就没有问题了。编译期间，会把pa.GetName()这种方法调用转换成(*pa).GetName()，也就等价于执行A.GetName(<em>pa)。而a.SetName()会被转换成(&amp;a).SetName()，也相当于执行（</em>A).SetName(&amp;a)。所以，看似值接收者和指针接收者交叉访问了对方的方法，实际上依然遵循之前介绍的执行过程。</p>
+<p><em>如果定义的方法不涉及到任何接口类型时是这样的，详细情况以后详述，目前这样理解无碍。</em></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ea57bcd807a14c368a9104ebf8486877~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>既然这种语法糖是在编译期间发挥作用的，像下面这种编译期间不能拿到地址的字面量，就不能享受语法糖，转换成对应的指针接收者调用了。    </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println((A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;).SetName())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>编译期间会发生错误：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cannot call pointer method on A literal</span><br><span class="line">cannot take the address of A literal</span><br><span class="line">错误: 进程退出代码 <span class="number">2.</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="Method-Expression-amp-Method-Value"><a href="#Method-Expression-amp-Method-Value" class="headerlink" title="Method Expression &amp; Method Value"></a>Method Expression &amp; Method Value</h2><p>我们已经知道，Go语言中函数作为变量、参数和返回值时，都是以Function Value的形式存在的。也知道闭包只是有捕获列表(catch list)的Funtion Value而已。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf5e160cc88849519ce18f78c882949a~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p>那么如果把方法赋给一个变量，这个变量又是怎样的存在呢？   </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> GetName() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := A&#123;name:<span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    f1 := A.GetName      <span class="comment">//方法表达式</span></span><br><span class="line">    f1(a)                <span class="comment">//eggo</span></span><br><span class="line"></span><br><span class="line">    f2 := a.GetName      <span class="comment">//方法变量</span></span><br><span class="line">    f2()                 <span class="comment">//eggo</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="1-方法表达式"><a href="#1-方法表达式" class="headerlink" title="1.方法表达式"></a>1.方法表达式</h3><p>如果像f1这样，把一个类型的方法赋给它，这样的变量就被称为<code>方法表达式</code>。对f1的处理相当于下面这段代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">......    </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetName</span><span class="params">(a A)</span></span> <span class="type">string</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := A&#123;name:<span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    f1 := GetName</span><br><span class="line">    f1(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>所以，f1实际上就是一个普通的Function Value，执行时需要传入一个A类型的变量作为第一个参数。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1fca4392d57e4796a755950fe3f80728~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<h3 id="2-方法变量-作为局部变量"><a href="#2-方法变量-作为局部变量" class="headerlink" title="2.方法变量 (作为局部变量)"></a>2.方法变量 (作为局部变量)</h3><p>然而，像f2这样，通过a.GetName进行赋值，这样的变量被称为<code>方法变量</code>。通过方法变量执行方法时，我们无需再传入方法接收者作为第一个参数，这是因为编译器替我们做了处理。方法变量也是一个Function Value，在这个例子中，编译阶段f2()会被转换为A.GetName(a)。但是这只是方法变量作为<code>局部变量</code>的情况。</p>
+<h3 id="3-方法变量-作为返回值"><a href="#3-方法变量-作为返回值" class="headerlink" title="3.方法变量 (作为返回值)"></a>3.方法变量 (作为返回值)</h3><p>如果像下面的GetFunc函数这样，把方法变量作为<code>返回值</code>。这个返回值实际上是一个捕获了局部变量a的Function Value，也就是说f3是一个<code>闭包对象</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">...... </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetFunc</span><span class="params">()</span></span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo in GetFunc&quot;</span>&#125;</span><br><span class="line">    <span class="keyword">return</span> a.GetName</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo in main&quot;</span>&#125;</span><br><span class="line">    f2 := a.GetName</span><br><span class="line">    fmt.Println(f2()) <span class="comment">//这里输出：eggo in main</span></span><br><span class="line"></span><br><span class="line">    f3 := GetFunc()</span><br><span class="line">    fmt.Println(f3()) <span class="comment">//这里输出：eggo in GetFunc</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的GetFunc函数和下面这段代码是等价的，通过它我们能够清晰地看到闭包是如何形成的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetFunc</span><span class="params">()</span></span> (<span class="function"><span class="keyword">func</span><span class="params">()</span></span><span class="type">string</span>) &#123;</span><br><span class="line">    a := A&#123;name:<span class="string">&quot;eggo in GetFunc&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span><span class="type">string</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> A.GetName(a)  <span class="comment">//捕获变量a</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>f3是一个闭包对象，它执行时用到的是自己捕获的变量，也就是函数GetFunc的局部变量a。而f2这个方法变量，使用的是main函数的局部变量a。这样就很好理解上面这段示例程序的输出结果了。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25f2642b7a034d8aa14ab5a161883739~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20panic%E5%92%8Crecover%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/" rel="prev" title="Golang panic和recover原理浅析">
+      <i class="fa fa-chevron-left"></i> Golang panic和recover原理浅析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F/" rel="next" title="Golang 类型系统">
+      Golang 类型系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%80%BC%E6%8E%A5%E6%94%B6%E8%80%85"><span class="nav-number">2.</span> <span class="nav-text">值接收者</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E6%8E%A5%E6%94%B6%E8%80%85"><span class="nav-number">3.</span> <span class="nav-text">指针接收者</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E7%94%9C%E7%9A%84%E8%AF%AD%E6%B3%95%E7%B3%96"><span class="nav-number">4.</span> <span class="nav-text">更甜的语法糖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Method-Expression-amp-Method-Value"><span class="nav-number">5.</span> <span class="nav-text">Method Expression &amp; Method Value</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%96%B9%E6%B3%95%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">1.方法表达式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%96%B9%E6%B3%95%E5%8F%98%E9%87%8F-%E4%BD%9C%E4%B8%BA%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F"><span class="nav-number">5.2.</span> <span class="nav-text">2.方法变量 (作为局部变量)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%96%B9%E6%B3%95%E5%8F%98%E9%87%8F-%E4%BD%9C%E4%B8%BA%E8%BF%94%E5%9B%9E%E5%80%BC"><span class="nav-number">5.3.</span> <span class="nav-text">3.方法变量 (作为返回值)</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户goroutine可并发运行，但需要一定时间的 STW(stop the world)，STW的过程中，CPU不执行用户代码，全部用于垃圾回收，这个过程的影响很大，Golang进行了多次的迭代优化来解决这个问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang GC">
+<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20GC/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户goroutine可并发运行，但需要一定时间的 STW(stop the world)，STW的过程中，CPU不执行用户代码，全部用于垃圾回收，这个过程的影响很大，Golang进行了多次的迭代优化来解决这个问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ac1b83fe06af4a14b08370b501d810c8~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/545ce0e836d6421ab817bc882c6a9225~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eac72e80cdd647dba6b141ed4ad579d2~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7718cc193ab043b986b0680dc1ce463b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/93a332327e9a43d4b3a0c18b6b3b3a20~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2ac709b570b941d5bd7b81c1cbd45fc1~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7a000a5fbfd74f6593ffd593f4026bf5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e7af7bdaae0c4930871025c8749d8950~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/17bf5f0ddfee4d848759c7bcfce847d0~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cc6d2618db954e729bc8306c06751d4b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3010110caf624310bb25df825b274ee5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/84bcefbb465a46699f360b9f889aeb41~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cebaae7267b34d24bb096925719a4d4e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6a5a9baa13054016a3815bf60c7dd9e4~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c93db7580edf4d688f3cb1e0ace94773~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eb60c2e1b1c040e8971b1d236edd08d9~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f3355fc5f7274fc0af1518d858d89376~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9f1e61f0727e4409a3374e77efe09144~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c9371425b8d7428a963eed8b7e3c8051~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9dc4828bc1af4463ba4ec1373bb1bee5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/afbafac77b1141828e821cfcf3d26650~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/34894cf8c33946329bb2c78a7a69ab6c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/686c50f8dd784d1f844f17bfa21fd5f5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/14f841fbb3ac4c12b37195e9acf4cc72~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c673530edb89453da67a81e831547c23~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/073a6e5db8cb475bbe38855c727c57d5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ad51f4abc95940369f57d7692158178a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3c8834269e634c9ea38658d86edb0701~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1dde571066324609862ff19e294e3a95~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2dec0820aa4c4a7bb231beab84625d2a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7a277b8762b9419eb64b00beced71633~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cd4a97c8f3ad47d59e3e1841c51efd0f~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4036a8b11d994754811c53a13162f410~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7243344632fa42a791a707f5d8d80627~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0bd798bd85444f27ac36b9c8f7df571e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6b1c655c756c454c89d167763dd51948~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41e49a176cfe46839c3ea7c5c530bfca~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/19055b031c674e48bb1f24cdc8de1f2c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ff951b3fb30b44b2b9bcfc9889338c2d~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/491aad80d88845ad9fcf8277eb2f5119~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0e1d6759f7e54a8abf9bcd24b3bb10d5~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/984303836de447ebaafe2c56cf329e7c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ecb69027ab0b4c0ca34ce9f56f885df2~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6ae43cb30bb244689bb1d882c7fd0252~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f0b5bcfcff2443218cc40316f4d92aba~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2ad32a5a07224ecda04a02ffc515fb2e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ce1217825c864b929399831f93794fea~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/09bec0e1773848b59bf63ca8bf025fef~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/267919f0eb854318bf9a5d5754295b89~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2022-09-07T15:36:22.695Z">
+<meta property="article:modified_time" content="2022-09-07T15:37:07.132Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ac1b83fe06af4a14b08370b501d810c8~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20GC/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang GC | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20GC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang GC
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 23:36:22 / 修改时间：23:37:07" itemprop="dateCreated datePublished" datetime="2022-09-07T23:36:22+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/07/Go/Golang%20GC/" class="post-meta-item leancloud_visitors" data-flag-title="Golang GC" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/07/Go/Golang%20GC/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20GC/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户goroutine可并发运行，但需要一定时间的 STW(stop the world)，STW的过程中，CPU不执行用户代码，全部用于垃圾回收，这个过程的影响很大，Golang进行了多次的迭代优化来解决这个问题。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户goroutine可并发运行，但需要一定时间的**STW(stop the world)**，STW的过程中，CPU不执行用户代码，全部用于垃圾回收，这个过程的影响很大，Golang进行了多次的迭代优化来解决这个问题。</p>
+<h2 id="一、Go-V1-3之前的标记-清除-mark-and-sweep-算法"><a href="#一、Go-V1-3之前的标记-清除-mark-and-sweep-算法" class="headerlink" title="一、Go V1.3之前的标记-清除(mark and sweep)算法"></a>一、Go V1.3之前的标记-清除(mark and sweep)算法</h2><p>此算法主要有两个主要的步骤：</p>
+<ul>
+<li>标记(Mark phase)</li>
+<li>清除(Sweep phase)</li>
+</ul>
+<p><strong>第一步</strong>，暂停程序业务逻辑, 找出不可达的对象，然后做上标记。第二步，回收标记好的对象。</p>
+<p>操作非常简单，但是有一点需要额外注意：mark and sweep算法在执行的时候，需要程序暂停！即 <code>STW(stop the world)</code>。也就是说，这段时间程序会卡在哪儿。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ac1b83fe06af4a14b08370b501d810c8~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第二步</strong>, 开始标记，程序找出它所有可达的对象，并做上标记。如下图所示：</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/545ce0e836d6421ab817bc882c6a9225~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第三步</strong>,  标记完了之后，然后开始清除未标记的对象. 结果如下:</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eac72e80cdd647dba6b141ed4ad579d2~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第四步</strong>, 停止暂停，让程序继续跑。然后循环重复这个过程，直到process程序生命周期结束。</p>
+<h2 id="二、标记-清扫-mark-and-sweep-的缺点"><a href="#二、标记-清扫-mark-and-sweep-的缺点" class="headerlink" title="二、标记-清扫(mark and sweep)的缺点"></a>二、标记-清扫(mark and sweep)的缺点</h2><ul>
+<li>STW，stop the world；让程序暂停，程序出现卡顿 **(重要问题)**。</li>
+<li>标记需要扫描整个heap</li>
+<li>清除数据会产生heap碎片</li>
+</ul>
+<p>所以Go V1.3版本之前就是以上来实施的,  流程是:</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7718cc193ab043b986b0680dc1ce463b~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>Go V1.3 做了简单的优化,将STW提前, 减少STW暂停的时间范围.如下所示:</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/93a332327e9a43d4b3a0c18b6b3b3a20~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>这里面最重要的问题就是：mark-and-sweep 算法会暂停整个程序</strong> 。</p>
+<p>Go是如何面对并这个问题的呢？接下来G V1.5版本 就用<strong>三色并发标记法</strong>来优化这个问题。</p>
+<h2 id="三、Go-V1-5的三色并发标记法"><a href="#三、Go-V1-5的三色并发标记法" class="headerlink" title="三、Go V1.5的三色并发标记法"></a>三、Go V1.5的三色并发标记法</h2><p>三色标记法 实际上就是通过三个阶段的标记来确定清楚的对象都有哪些. 我们来看一下具体的过程。</p>
+<p><strong>第一步</strong> , 就是只要是新创建的对象,默认的颜色都是标记为“白色”。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2ac709b570b941d5bd7b81c1cbd45fc1~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>这里面需要注意的是, 所谓“程序”, 则是一些对象的根节点集合。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7a000a5fbfd74f6593ffd593f4026bf5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>所以上图,可以转换如下的方式来表示:</p>
+<p><strong>第二步</strong>, 每次GC回收开始, 然后从根节点开始遍历所有对象，把遍历到的对象从白色集合放入“灰色”集合。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e7af7bdaae0c4930871025c8749d8950~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第三步</strong>, 遍历灰色集合，将灰色对象引用的对象从白色集合放入灰色集合，之后将此灰色对象放入黑色集合。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/17bf5f0ddfee4d848759c7bcfce847d0~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第四步</strong>, 重复<strong>第三步</strong>, 直到灰色中无任何对象.</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cc6d2618db954e729bc8306c06751d4b~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3010110caf624310bb25df825b274ee5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>第五步</strong>: 回收所有的白色标记表的对象. 也就是回收垃圾。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/84bcefbb465a46699f360b9f889aeb41~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>以上便是<code>三色并发标记法</code>, 不难看出,我们上面已经清楚的体现<code>三色</code>的特性, 那么又是如何实现并行的呢?</p>
+<blockquote>
+<p>Go是如何解决标记-清除(mark and sweep)算法中的卡顿(stw，stop the world)问题的呢？</p>
+</blockquote>
+<h2 id="四、没有STW的三色标记法"><a href="#四、没有STW的三色标记法" class="headerlink" title="四、没有STW的三色标记法"></a>四、没有STW的三色标记法</h2><p>我们还是基于上述的三色并发标记法来说, 他是一定要依赖STW的。因为如果不暂停程序, 程序的逻辑改变对象引用关系, 这种动作如果在标记阶段做了修改，会影响标记结果的正确性。我们举一个场景。</p>
+<p>如果三色标记法, 标记过程不使用STW将会发生什么事情?</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cebaae7267b34d24bb096925719a4d4e~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6a5a9baa13054016a3815bf60c7dd9e4~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c93db7580edf4d688f3cb1e0ace94773~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eb60c2e1b1c040e8971b1d236edd08d9~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f3355fc5f7274fc0af1518d858d89376~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>可以看出，有两个问题, 在三色标记法中,是不希望被发生的:</p>
+<ul>
+<li>条件1: 一个白色对象被黑色对象引用 **(白色被挂在黑色下)**。</li>
+<li>条件2: 灰色对象与它之间的可达关系的白色对象遭到破坏 **(灰色同时丢了该白色)**。</li>
+</ul>
+<p>当以上两个条件同时满足时, 就会出现对象丢失现象!</p>
+<p>当然, 如果上述中的白色对象3, 如果他还有很多下游对象的话, 也会一并都清理掉！</p>
+<p>为了防止这种现象的发生，最简单的方式就是STW，直接禁止掉其他用户程序对对象引用关系的干扰，但是<strong>STW的过程有明显的资源浪费，对所有的用户程序都有很大影响</strong>，如何能在保证对象不丢失的情况下合理的尽可能的提高GC效率，减少STW时间呢？</p>
+<p>答案就是, 那么我们只要使用一个机制,来破坏上面的两个条件就可以了。</p>
+<h2 id="五、屏障机制"><a href="#五、屏障机制" class="headerlink" title="五、屏障机制"></a>五、屏障机制</h2><p>我们让GC回收器,满足下面两种情况之一时,可保对象不丢失. 所以引出两种方式:</p>
+<h3 id="1-“强-弱”-三色不变式"><a href="#1-“强-弱”-三色不变式" class="headerlink" title="(1) “强-弱” 三色不变式"></a>(1) “强-弱” 三色不变式</h3><ul>
+<li>强三色不变式</li>
+</ul>
+<p>不存在黑色对象引用到白色对象的指针。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9f1e61f0727e4409a3374e77efe09144~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<ul>
+<li>弱三色不变式</li>
+</ul>
+<p>所有被黑色对象引用的白色对象都处于灰色保护状态。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c9371425b8d7428a963eed8b7e3c8051~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>为了遵循上述的两个方式,Golang团队初步得到了如下具体的两种屏障方式“插入屏障”, “删除屏障”。</p>
+<h3 id="2-插入屏障"><a href="#2-插入屏障" class="headerlink" title="(2)  插入屏障"></a>(2)  插入屏障</h3><ul>
+<li><p><code>具体操作</code>: 在A对象引用B对象的时候，B对象被标记为灰色。(将B挂在A下游，B必须被标记为灰色)。</p>
+</li>
+<li><p><code>满足</code>: <strong>强三色不变式</strong>. (不存在黑色对象引用白色对象的情况了， 因为白色会强制变成灰色)。</p>
+</li>
+</ul>
+<p>伪码如下:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">添加下游对象(当前下游对象slot, 新下游对象ptr) &#123;   </span><br><span class="line">  <span class="comment">//1</span></span><br><span class="line">  标记灰色(新下游对象ptr)   </span><br><span class="line">  </span><br><span class="line">  <span class="comment">//2</span></span><br><span class="line">  当前下游对象slot = 新下游对象ptr  				  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>场景：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A.添加下游对象(<span class="literal">nil</span>, B)   <span class="comment">//A 之前没有下游， 新添加一个下游对象B， B被标记为灰色</span></span><br><span class="line">A.添加下游对象(C, B)     <span class="comment">//A 将下游对象C 更换为B，  B被标记为灰色</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这段伪码逻辑就是写屏障, 我们知道, 黑色对象的内存槽有两种位置, <code>栈</code>和<code>堆</code>。栈空间的特点是容量小,但是要求相应速度快,因为函数调用弹出频繁使用, 所以“插入屏障”机制在<strong>栈空间的对象操作中不使用</strong>. 而仅仅使用在堆空间对象的操作中。</p>
+<p>接下来，我们用几张图，来模拟整个一个详细的过程， 希望您能够更可观的看清晰整体流程。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9dc4828bc1af4463ba4ec1373bb1bee5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/afbafac77b1141828e821cfcf3d26650~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/34894cf8c33946329bb2c78a7a69ab6c~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/686c50f8dd784d1f844f17bfa21fd5f5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/14f841fbb3ac4c12b37195e9acf4cc72~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c673530edb89453da67a81e831547c23~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/073a6e5db8cb475bbe38855c727c57d5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ad51f4abc95940369f57d7692158178a~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3c8834269e634c9ea38658d86edb0701~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1dde571066324609862ff19e294e3a95~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<h3 id="3-删除屏障"><a href="#3-删除屏障" class="headerlink" title="(3)  删除屏障"></a>(3)  删除屏障</h3><ul>
+<li><p><code>具体操作</code>: 被删除的对象，如果自身为灰色或者白色，那么被标记为灰色。</p>
+</li>
+<li><p><code>满足</code>: <strong>弱三色不变式</strong>. (保护灰色对象到白色对象的路径不会断)。</p>
+</li>
+</ul>
+<p>伪代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">添加下游对象(当前下游对象slot， 新下游对象ptr) &#123;</span><br><span class="line">  <span class="comment">//1</span></span><br><span class="line">  <span class="keyword">if</span> (当前下游对象slot是灰色 || 当前下游对象slot是白色) &#123;</span><br><span class="line">  		标记灰色(当前下游对象slot)     <span class="comment">//slot为被删除对象， 标记为灰色</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//2</span></span><br><span class="line">  当前下游对象slot = 新下游对象ptr</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>场景：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A.添加下游对象(B, <span class="literal">nil</span>)   <span class="comment">//A对象，删除B对象的引用。  B被A删除，被标记为灰(如果B之前为白)</span></span><br><span class="line">A.添加下游对象(B, C)		 <span class="comment">//A对象，更换下游B变成C。   B被A删除，被标记为灰(如果B之前为白)</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>接下来，我们用几张图，来模拟整个一个详细的过程， 希望您能够更可观的看清晰整体流程:</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2dec0820aa4c4a7bb231beab84625d2a~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7a277b8762b9419eb64b00beced71633~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cd4a97c8f3ad47d59e3e1841c51efd0f~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4036a8b11d994754811c53a13162f410~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7243344632fa42a791a707f5d8d80627~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0bd798bd85444f27ac36b9c8f7df571e~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6b1c655c756c454c89d167763dd51948~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>这种方式的回收精度低，一个对象即使被删除了最后一个指向它的指针也依旧可以活过这一轮，在下一轮GC中被清理掉。</p>
+<h2 id="六、Go-V1-8的混合写屏障-hybrid-write-barrier-机制"><a href="#六、Go-V1-8的混合写屏障-hybrid-write-barrier-机制" class="headerlink" title="六、Go V1.8的混合写屏障(hybrid write barrier)机制"></a>六、Go V1.8的混合写屏障(hybrid write barrier)机制</h2><p>插入写屏障和删除写屏障的短板：</p>
+<ul>
+<li><p>插入写屏障：结束时需要STW来重新扫描栈，标记栈上引用的白色对象的存活；</p>
+</li>
+<li><p>删除写屏障：回收精度低，GC开始时STW扫描堆栈来记录初始快照，这个过程会保护开始时刻的所有存活对象。</p>
+</li>
+</ul>
+<p>Go V1.8版本引入了混合写屏障机制（hybrid write barrier），避免了对栈re-scan的过程，极大的减少了STW的时间。结合了两者的优点。</p>
+<h4 id="1-混合写屏障规则"><a href="#1-混合写屏障规则" class="headerlink" title="(1) 混合写屏障规则"></a>(1) 混合写屏障规则</h4><p><code>具体操作</code>: </p>
+<p>1、GC开始将栈上的对象全部扫描并标记为黑色(之后不再进行第二次重复扫描，无需STW)， </p>
+<p>2、GC期间，任何在栈上创建的新对象，均为黑色。</p>
+<p>3、被删除的对象标记为灰色。</p>
+<p>4、被添加的对象标记为灰色。</p>
+<p><code>满足</code>: 变形的<strong>弱三色不变式</strong>。</p>
+<p>伪代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">添加下游对象(当前下游对象slot, 新下游对象ptr) &#123;</span><br><span class="line">  	<span class="comment">//1 </span></span><br><span class="line">		标记灰色(当前下游对象slot)    <span class="comment">//只要当前下游对象被移走，就标记灰色</span></span><br><span class="line">  	</span><br><span class="line">  	<span class="comment">//2 </span></span><br><span class="line">  	标记灰色(新下游对象ptr)</span><br><span class="line">  		</span><br><span class="line">  	<span class="comment">//3</span></span><br><span class="line">  	当前下游对象slot = 新下游对象ptr</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里我们注意， 屏障技术是不在栈上应用的，因为要保证栈的运行效率。</p>
+<h3 id="2-混合写屏障的具体场景分析"><a href="#2-混合写屏障的具体场景分析" class="headerlink" title="(2) 混合写屏障的具体场景分析"></a>(2) 混合写屏障的具体场景分析</h3><p>接下来，我们用几张图，来模拟整个一个详细的过程， 希望您能够更可观的看清晰整体流程。</p>
+<blockquote>
+<p>注意混合写屏障是Gc的一种屏障机制，所以只是当程序执行GC的时候，才会触发这种机制。</p>
+</blockquote>
+<p><strong>GC开始：扫描栈区，将可达对象全部标记为黑</strong></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41e49a176cfe46839c3ea7c5c530bfca~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/19055b031c674e48bb1f24cdc8de1f2c~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>场景一： 对象被一个堆对象删除引用，成为栈对象的下游</strong></p>
+<p>伪代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//前提：堆对象4-&gt;对象7 = 对象7；  //对象7 被 对象4引用</span></span><br><span class="line">栈对象<span class="number">1</span>-&gt;对象<span class="number">7</span> = 堆对象<span class="number">7</span>；  <span class="comment">//将堆对象7 挂在 栈对象1 下游</span></span><br><span class="line">堆对象<span class="number">4</span>-&gt;对象<span class="number">7</span> = null；    <span class="comment">//对象4 删除引用 对象7</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ff951b3fb30b44b2b9bcfc9889338c2d~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/491aad80d88845ad9fcf8277eb2f5119~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>场景二： 对象被一个栈对象删除引用，成为另一个栈对象的下游</strong></p>
+<p>伪代码:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">new</span> 栈对象<span class="number">9</span>；</span><br><span class="line">对象<span class="number">8</span>-&gt;对象<span class="number">3</span> = 对象<span class="number">3</span>；      <span class="comment">//将栈对象3 挂在 栈对象9 下游</span></span><br><span class="line">对象<span class="number">2</span>-&gt;对象<span class="number">3</span> = null；      <span class="comment">//对象2 删除引用 对象3</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0e1d6759f7e54a8abf9bcd24b3bb10d5~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/984303836de447ebaafe2c56cf329e7c~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ecb69027ab0b4c0ca34ce9f56f885df2~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>场景三：对象被一个堆对象删除引用，成为另一个堆对象的下游</strong></p>
+<p>伪代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">堆对象<span class="number">10</span>-&gt;对象<span class="number">7</span> = 堆对象<span class="number">7</span>；       <span class="comment">//将堆对象7 挂在 堆对象10 下游</span></span><br><span class="line">堆对象<span class="number">4</span>-&gt;对象<span class="number">7</span> = null；         <span class="comment">//对象4 删除引用 对象7</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6ae43cb30bb244689bb1d882c7fd0252~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f0b5bcfcff2443218cc40316f4d92aba~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2ad32a5a07224ecda04a02ffc515fb2e~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><strong>场景四：对象从一个栈对象删除引用，成为另一个堆对象的下游</strong></p>
+<p>伪代码:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">堆对象<span class="number">10</span>-&gt;对象<span class="number">7</span> = 堆对象<span class="number">7</span>；       <span class="comment">//将堆对象7 挂在 堆对象10 下游</span></span><br><span class="line">堆对象<span class="number">4</span>-&gt;对象<span class="number">7</span> = null；         <span class="comment">//对象4 删除引用 对象7</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ce1217825c864b929399831f93794fea~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/09bec0e1773848b59bf63ca8bf025fef~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/267919f0eb854318bf9a5d5754295b89~tplv-k3u1fbpfcp-zoom-1.image" alt="请添加图片描述"></p>
+<p>Golang中的混合写屏障满足<code>弱三色不变式</code>，结合了删除写屏障和插入写屏障的优点，只需要在开始时并发扫描各个goroutine的栈，使其变黑并一直保持，这个过程不需要STW，而标记结束后，因为栈在扫描后始终是黑色的，也无需再进行re-scan操作了，减少了STW的时间。</p>
+<h2 id="七、总结"><a href="#七、总结" class="headerlink" title="七、总结"></a>七、总结</h2><p>以上便是Golang的GC全部的标记-清除逻辑及场景演示全过程。</p>
+<p>GoV1.3- 普通标记清除法，整体过程需要启动STW，效率极低。</p>
+<p>GoV1.5- 三色标记法， 堆空间启动写屏障，栈空间不启动，全部扫描之后，需要重新扫描一次栈(需要STW)，效率普通</p>
+<p>GoV1.8-三色标记法，混合写屏障机制， 栈空间不启动，堆空间启动。整个过程几乎不需要STW，效率较高。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/" rel="prev" title="Golang 实现RPC的几种方式">
+      <i class="fa fa-chevron-left"></i> Golang 实现RPC的几种方式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" rel="next" title="Golang Mutex剖析">
+      Golang Mutex剖析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81Go-V1-3%E4%B9%8B%E5%89%8D%E7%9A%84%E6%A0%87%E8%AE%B0-%E6%B8%85%E9%99%A4-mark-and-sweep-%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">一、Go V1.3之前的标记-清除(mark and sweep)算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%A0%87%E8%AE%B0-%E6%B8%85%E6%89%AB-mark-and-sweep-%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">二、标记-清扫(mark and sweep)的缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Go-V1-5%E7%9A%84%E4%B8%89%E8%89%B2%E5%B9%B6%E5%8F%91%E6%A0%87%E8%AE%B0%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">三、Go V1.5的三色并发标记法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%B2%A1%E6%9C%89STW%E7%9A%84%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">四、没有STW的三色标记法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%B1%8F%E9%9A%9C%E6%9C%BA%E5%88%B6"><span class="nav-number">5.</span> <span class="nav-text">五、屏障机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E2%80%9C%E5%BC%BA-%E5%BC%B1%E2%80%9D-%E4%B8%89%E8%89%B2%E4%B8%8D%E5%8F%98%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">(1) “强-弱” 三色不变式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8F%92%E5%85%A5%E5%B1%8F%E9%9A%9C"><span class="nav-number">5.2.</span> <span class="nav-text">(2)  插入屏障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%88%A0%E9%99%A4%E5%B1%8F%E9%9A%9C"><span class="nav-number">5.3.</span> <span class="nav-text">(3)  删除屏障</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81Go-V1-8%E7%9A%84%E6%B7%B7%E5%90%88%E5%86%99%E5%B1%8F%E9%9A%9C-hybrid-write-barrier-%E6%9C%BA%E5%88%B6"><span class="nav-number">6.</span> <span class="nav-text">六、Go V1.8的混合写屏障(hybrid write barrier)机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%B7%B7%E5%90%88%E5%86%99%E5%B1%8F%E9%9A%9C%E8%A7%84%E5%88%99"><span class="nav-number">6.0.1.</span> <span class="nav-text">(1) 混合写屏障规则</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%B7%B7%E5%90%88%E5%86%99%E5%B1%8F%E9%9A%9C%E7%9A%84%E5%85%B7%E4%BD%93%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90"><span class="nav-number">6.1.</span> <span class="nav-text">(2) 混合写屏障的具体场景分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">七、总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
