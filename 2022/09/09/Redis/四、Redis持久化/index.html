@@ -20,19 +20,27 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="tag被定义在结构体字段的后面，以字符串的形式出现。">
+  <meta name="description" content="Redis有两种持久化方案：RDB持久化和AOF持久化。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Golang Tag语法">
-<meta property="og:url" content="http://example.com/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:title" content="四、Redis持久化">
+<meta property="og:url" content="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/index.html">
 <meta property="og:site_name" content="Omlight&#39;s Blog">
-<meta property="og:description" content="tag被定义在结构体字段的后面，以字符串的形式出现。">
+<meta property="og:description" content="Redis有两种持久化方案：RDB持久化和AOF持久化。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-09-07T15:38:53.904Z">
-<meta property="article:modified_time" content="2022-09-07T15:39:38.777Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e68aa164f7424a1e8204a27861e8b3da.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/66e8f5cd14374b0db854f1f56cd1d080.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/032201de536b446da345ea29399f6e73.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/54bcb0556c2e40c38c0be038142425ad.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5124818ed8e142cbacdf502a3f967791.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/7ab3bad8617f47af9c2abbe6d38a578d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/1cc7d2009c7b42d0a2a7462fdc5b531d.png">
+<meta property="article:published_time" content="2022-09-09T15:29:31.913Z">
+<meta property="article:modified_time" content="2022-09-09T15:44:06.661Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/e68aa164f7424a1e8204a27861e8b3da.png">
 
-<link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/">
+<link rel="canonical" href="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
 
 
 <script id="page-configurations">
@@ -45,7 +53,7 @@
   };
 </script>
 
-  <title>Golang Tag语法 | Omlight's Blog</title>
+  <title>四、Redis持久化 | Omlight's Blog</title>
   
 
 
@@ -199,7 +207,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -212,7 +220,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Golang Tag语法
+          四、Redis持久化
         </h1>
 
         <div class="post-meta">
@@ -223,7 +231,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:38:53 / 修改时间：23:39:38" itemprop="dateCreated datePublished" datetime="2022-09-07T23:38:53+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-09 23:29:31 / 修改时间：23:44:06" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:31+08:00">2022-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,12 +239,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Tag语法" title="阅读次数">
+            <span id="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="四、Redis持久化" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -251,13 +259,13 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" itemprop="commentCount"></span>
     </a>
   </span>
   
   
-            <div class="post-description">tag被定义在结构体字段的后面，以字符串的形式出现。</div>
+            <div class="post-description">Redis有两种持久化方案：RDB持久化和AOF持久化。</div>
 
         </div>
       </header>
@@ -268,58 +276,83 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="Tag格式"><a href="#Tag格式" class="headerlink" title="Tag格式"></a>Tag格式</h2><p>tag被定义在结构体字段的后面，以字符串的形式出现，如下所示：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> T <span class="keyword">struct</span> &#123;</span><br><span class="line">	f1 <span class="type">string</span> <span class="string">&quot;f one&quot;</span></span><br><span class="line">	f2 <span class="type">string</span></span><br><span class="line">	f3 <span class="type">string</span> <span class="string">`f three`</span></span><br><span class="line">	f4, f5 <span class="type">int64</span> <span class="string">`f four and five`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>要注意，不管是双引号还是反引号，都可以用来当tag。如果结构体字段在定义的时候，两个字段共用一个属性，那么这个tag会被附在两个名字上，像上述代码中的f1，f5一样。</p>
-<p><strong>键值对</strong></p>
-<p><code>Tags</code>可以由键值对来组成，通过空格符来分割键值 —<code>key1:&quot;value1&quot; key2:&quot;value2&quot; key3:&quot;value3&quot;</code>。如果Tags格式没问题的话，我们可以通过<code>Lookup</code>或者<code>Get</code>来获取键值对的值。<br><code>Lookup</code>回传两个值，对应的值和是否找到。<br><code>Get</code>只回传一个值，即对应的那个值，如果没有找到就返回空。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Food <span class="keyword">struct</span> &#123;</span><br><span class="line">	Apple <span class="type">string</span> <span class="string">`fruit:&quot;apple&quot;`</span></span><br><span class="line">	Tomato <span class="type">string</span> <span class="string">`vegetable:&quot;tomato&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	t := reflect.TypeOf(Food&#123;&#125;)</span><br><span class="line">	f, _ := t.FieldByName(<span class="string">&quot;Apple&quot;</span>)</span><br><span class="line">	fmt.Println(f.Tag)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Tag.Lookup</span></span><br><span class="line">	v, ok := f.Tag.Lookup(<span class="string">&quot;fruit&quot;</span>)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;%s, %t\n&quot;</span>, v, ok)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Tag.Get</span></span><br><span class="line">	v = f.Tag.Get(<span class="string">&quot;fruit&quot;</span>)</span><br><span class="line">	fmt.Println(v)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>运行结果：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fruit:<span class="string">&quot;apple&quot;</span></span><br><span class="line">apple, <span class="literal">true</span></span><br><span class="line">apple</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-<h2 id="Tag的使用"><a href="#Tag的使用" class="headerlink" title="Tag的使用"></a>Tag的使用</h2><h3 id="json"><a href="#json" class="headerlink" title="json"></a>json</h3><p>在golang中，命名都是推荐用驼峰方式，并且在首字母大小写有特殊的语法含义：包外无法引用。但是由于经常需要和其它的系统进行数据交互，例如转成json格式，存储到mongodb啊等等。这个时候如果用属性名来作为键值可能不一定会符合项目要求。<br>而通过Tag，我们可以在转换成其它格式的时候，使用其中定义的字段作为键值。<br>例如：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	UserId <span class="type">int</span> <span class="string">`json:&quot;user_id&quot;`</span></span><br><span class="line">	UserName <span class="type">string</span> <span class="string">`json:&quot;user_name&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	u := &amp;User&#123;UserId: <span class="number">1</span>, UserName: <span class="string">&quot;张三&quot;</span>&#125;</span><br><span class="line">	j, _ := json.Marshal(u)</span><br><span class="line">	fmt.Println(<span class="type">string</span>(j))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出结果：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;user_id&quot;</span>:<span class="number">1</span>,<span class="string">&quot;user_name&quot;</span>:<span class="string">&quot;张三&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-<h3 id="ORM"><a href="#ORM" class="headerlink" title="ORM"></a>ORM</h3><p>ORM是指将关系型数据库中的记录映射为对象，以对象的形式展现。我们可以把对数据库的操作转化为对对象的操作。</p>
-<table>
-<thead>
-<tr>
-<th>面向对象的概念</th>
-<th>面向关系概念</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>类</td>
-<td>表</td>
-</tr>
-<tr>
-<td>对象</td>
-<td>表的行（记录）</td>
-</tr>
-<tr>
-<td>属性</td>
-<td>表的列（字段）</td>
-</tr>
-</tbody></table>
-<p>对应到golang中，就是把对关系型数据库的操作转化为对结构体的操作。<br>我们以<code>GORM</code>框架来举例，在GORM中，与数据表进行映射的结构体我们称之为模型（Models）。</p>
-<p>回归到Tag，在数据表中定义一个字段时，我们通常会在字段的末尾加上一些额外信息，比如约束、列大小等等。映射到Models中，就需要使用Tag来设置相应的信息。</p>
-<p>例如下面这个Models：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">  gorm.Model</span><br><span class="line">  Name         <span class="type">string</span></span><br><span class="line">  Age          sql.NullInt64</span><br><span class="line">  Birthday     *time.Time</span><br><span class="line">  Email        <span class="type">string</span>  <span class="string">`gorm:&quot;type:varchar(100);unique_index&quot;`</span></span><br><span class="line">  Role         <span class="type">string</span>  <span class="string">`gorm:&quot;size:255&quot;`</span> <span class="comment">// 设置字段大小为255</span></span><br><span class="line">  MemberNumber *<span class="type">string</span> <span class="string">`gorm:&quot;unique;not null&quot;`</span> <span class="comment">// 设置会员号（member number）唯一并且不为空</span></span><br><span class="line">  Num          <span class="type">int</span>     <span class="string">`gorm:&quot;AUTO_INCREMENT&quot;`</span> <span class="comment">// 设置 num 为自增类型</span></span><br><span class="line">  Address      <span class="type">string</span>  <span class="string">`gorm:&quot;index:addr&quot;`</span> <span class="comment">// 给address字段创建名为addr的索引</span></span><br><span class="line">  IgnoreMe     <span class="type">int</span>     <span class="string">`gorm:&quot;-&quot;`</span> <span class="comment">// 忽略本字段</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        <p>Redis有两种持久化方案：</p>
+<ul>
+<li>RDB持久化</li>
+<li>AOF持久化</li>
+</ul>
+<h2 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h2><p>RDB全称<code>Redis Database Backup file（Redis数据备份文件）</code>，也被叫做Redis数据快照。简单来说就是把内存中的所有数据都记录到磁盘中。当Redis实例故障重启后，从磁盘读取快照文件，恢复数据。快照文件称为RDB文件，默认是保存在当前运行目录。</p>
+<h3 id="执行时机"><a href="#执行时机" class="headerlink" title="执行时机"></a>执行时机</h3><p>RDB持久化在四种情况下会执行：</p>
+<ul>
+<li>执行save命令</li>
+<li>执行bgsave命令</li>
+<li>Redis停机时</li>
+<li>触发RDB条件时</li>
+</ul>
+<p><strong>1）save命令</strong></p>
+<p>执行下面的命令，可以立即执行一次RDB：</p>
+<p><img src="https://img-blog.csdnimg.cn/e68aa164f7424a1e8204a27861e8b3da.png" alt="在这里插入图片描述"></p>
+<p>save命令会导致主进程执行RDB，这个过程中其它所有命令都会被阻塞。只有在数据迁移时可能用到。</p>
+<p><strong>2）bgsave命令</strong></p>
+<p>下面的命令可以异步执行RDB：</p>
+<p><img src="https://img-blog.csdnimg.cn/66e8f5cd14374b0db854f1f56cd1d080.png" alt="在这里插入图片描述"></p>
+<p>这个命令执行后会开启独立进程完成RDB，主进程可以持续处理用户请求，不受影响。</p>
+<p><strong>3）停机时</strong></p>
+<p>Redis停机时会执行一次save命令，实现RDB持久化。</p>
+<p><strong>4）触发RDB条件</strong></p>
+<p>Redis内部有触发RDB的机制，可以在<code>redis.conf</code>文件中找到，格式如下：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 900秒内，如果至少有1个key被修改，则执行bgsave ， 如果是save &quot;&quot; 则表示禁用RDB</span></span><br><span class="line"><span class="attr">save</span> <span class="string">900 1  </span></span><br><span class="line"><span class="attr">save</span> <span class="string">300 10  </span></span><br><span class="line"><span class="attr">save</span> <span class="string">60 10000 </span></span><br></pre></td></tr></table></figure>
 
 
-<p>GORM框架支持很多结构体Tag，具体可以查看这篇博文：</p>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_49723651/article/details/121586415#Tag">https://blog.csdn.net/qq_49723651&#x2F;article&#x2F;details&#x2F;121586415#Tag</a></p>
+
+<p>RDB的其它配置也可以在<code>redis.conf</code>文件中设置：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 是否压缩 ,建议不开启，压缩也会消耗cpu，而磁盘不值钱</span></span><br><span class="line"><span class="attr">rdbcompression</span> <span class="string">yes</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># RDB文件名称</span></span><br><span class="line"><span class="attr">dbfilename</span> <span class="string">dump.rdb  </span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># 文件保存的路径目录</span></span><br><span class="line"><span class="attr">dir</span> <span class="string">./ </span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RDB原理"><a href="#RDB原理" class="headerlink" title="RDB原理"></a>RDB原理</h3><p>bgsave开始时会fork主进程得到子进程，子进程共享主进程的内存数据。完成fork后读取内存数据并写入 RDB 文件。</p>
+<p>fork采用的是<code>copy-on-write</code>技术：</p>
+<ul>
+<li>当主进程执行读操作时，访问共享内存；</li>
+<li>当主进程执行写操作时，则会拷贝一份数据，执行写操作。</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/032201de536b446da345ea29399f6e73.png" alt="在这里插入图片描述"></p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>RDB方式bgsave的基本流程：</p>
+<ul>
+<li>fork主进程得到一个子进程，共享内存空间</li>
+<li>子进程读取内存数据并写入新的RDB文件</li>
+<li>用新RDB文件替换旧的RDB文件</li>
+</ul>
+<p>RDB会在什么时候执行？save 60 1000代表什么含义？</p>
+<ul>
+<li>默认是服务停止时</li>
+<li>代表60秒内至少执行1000次修改则触发RDB</li>
+</ul>
+<p>RDB的缺点？</p>
+<ul>
+<li>RDB执行间隔时间长，两次RDB之间写入数据有丢失的风险</li>
+<li>fork子进程、压缩、写出RDB文件都比较耗时</li>
+</ul>
+<h2 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h2><h3 id="AOF原理"><a href="#AOF原理" class="headerlink" title="AOF原理"></a>AOF原理</h3><p>AOF全称为<code>Append Only File（追加文件）</code>。Redis处理的每一个写命令都会记录在AOF文件，可以看做是命令日志文件。</p>
+<p><img src="https://img-blog.csdnimg.cn/54bcb0556c2e40c38c0be038142425ad.png" alt="在这里插入图片描述"></p>
+<h3 id="AOF配置"><a href="#AOF配置" class="headerlink" title="AOF配置"></a>AOF配置</h3><p>AOF默认是关闭的，需要修改<code>redis.conf</code>配置文件来开启AOF：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 是否开启AOF功能，默认是no</span></span><br><span class="line"><span class="attr">appendonly</span> <span class="string">yes</span></span><br><span class="line"><span class="comment"># AOF文件的名称</span></span><br><span class="line"><span class="attr">appendfilename</span> <span class="string">&quot;appendonly.aof&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>AOF的命令记录的频率也可以通过<code>redis.conf</code>文件来配：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 表示每执行一次写命令，立即记录到AOF文件</span></span><br><span class="line"><span class="attr">appendfsync</span> <span class="string">always </span></span><br><span class="line"><span class="comment"># 写命令执行完先放入AOF缓冲区，然后表示每隔1秒将缓冲区数据写到AOF文件，是默认方案</span></span><br><span class="line"><span class="attr">appendfsync</span> <span class="string">everysec </span></span><br><span class="line"><span class="comment"># 写命令执行完先放入AOF缓冲区，由操作系统决定何时将缓冲区内容写回磁盘</span></span><br><span class="line"><span class="attr">appendfsync</span> <span class="string">no</span></span><br></pre></td></tr></table></figure>
+
+
+<p>三种策略对比：</p>
+<p><img src="https://img-blog.csdnimg.cn/5124818ed8e142cbacdf502a3f967791.png" alt="在这里插入图片描述"></p>
+<h3 id="AOF文件重写"><a href="#AOF文件重写" class="headerlink" title="AOF文件重写"></a>AOF文件重写</h3><p>因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但只有最后一次写操作才有意义。通过执行bgrewriteaof命令，可以让AOF文件执行重写功能，用最少的命令达到相同效果。</p>
+<p><img src="https://img-blog.csdnimg.cn/7ab3bad8617f47af9c2abbe6d38a578d.png" alt="在这里插入图片描述"></p>
+<p>如图，AOF原本有三个命令，但是<code>set num 123 和 set num 666</code>都是对num的操作，第二次会覆盖第一次的值，因此第一个命令记录下来没有意义。</p>
+<p>所以重写命令后，AOF文件内容就是：<code>mset name jack num 666</code></p>
+<p>Redis也会在触发阈值时自动去重写AOF文件。阈值也可以在<code>redis.conf</code>中配置：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># AOF文件比上次文件 增长超过多少百分比则触发重写</span></span><br><span class="line"><span class="attr">auto-aof-rewrite-percentage</span> <span class="string">100</span></span><br><span class="line"><span class="comment"># AOF文件体积最小多大以上才触发重写 </span></span><br><span class="line"><span class="attr">auto-aof-rewrite-min-size</span> <span class="string">64mb </span></span><br></pre></td></tr></table></figure>
+
+<h2 id="RDB与AOF对比"><a href="#RDB与AOF对比" class="headerlink" title="RDB与AOF对比"></a>RDB与AOF对比</h2><p>RDB和AOF各有自己的优缺点，如果对数据安全性要求较高，在实际开发中往往会<strong>结合</strong>两者来使用。</p>
+<p><img src="https://img-blog.csdnimg.cn/1cc7d2009c7b42d0a2a7462fdc5b531d.png" alt="在这里插入图片描述"></p>
 
     </div>
 
@@ -335,13 +368,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" rel="prev" title="Golang Mutex剖析">
-      <i class="fa fa-chevron-left"></i> Golang Mutex剖析
+    <a href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" rel="prev" title="三、Redis事务和锁机制">
+      <i class="fa fa-chevron-left"></i> 三、Redis事务和锁机制
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/" rel="next" title="Golang 匿名函数的活用">
-      Golang 匿名函数的活用 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -401,7 +431,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Tag%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">Tag格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tag%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">Tag的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#json"><span class="nav-number">2.1.</span> <span class="nav-text">json</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ORM"><span class="nav-number">2.2.</span> <span class="nav-text">ORM</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RDB%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">RDB持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E6%97%B6%E6%9C%BA"><span class="nav-number">1.1.</span> <span class="nav-text">执行时机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">RDB原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">1.3.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOF%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">AOF持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF%E5%8E%9F%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">AOF原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">AOF配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF%E6%96%87%E4%BB%B6%E9%87%8D%E5%86%99"><span class="nav-number">2.3.</span> <span class="nav-text">AOF文件重写</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RDB%E4%B8%8EAOF%E5%AF%B9%E6%AF%94"><span class="nav-number">3.</span> <span class="nav-text">RDB与AOF对比</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
