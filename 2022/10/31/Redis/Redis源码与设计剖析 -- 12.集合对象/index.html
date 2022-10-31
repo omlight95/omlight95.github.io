@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="集合对象的编码可以是 intset 或者 hashtable。intset 编码的集合对象使用整数集合作为底层实现， 集合对象包含的所有元素都被保存在整数集合里面。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis源码与设计剖析 -- 12.集合对象">
+<meta property="og:url" content="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="集合对象的编码可以是 intset 或者 hashtable。intset 编码的集合对象使用整数集合作为底层实现， 集合对象包含的所有元素都被保存在整数集合里面。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/57ad39b5303a4a81bbef921b9ebfb487.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6e45ec210b324eac8262e0b2d9effebd.png">
+<meta property="article:published_time" content="2022-10-31T09:25:43.897Z">
+<meta property="article:modified_time" content="2022-10-31T11:21:23.122Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/57ad39b5303a4a81bbef921b9ebfb487.png">
+
+<link rel="canonical" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis源码与设计剖析 -- 12.集合对象 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis源码与设计剖析 -- 12.集合对象
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:25:43 / 修改时间：19:21:23" itemprop="dateCreated datePublished" datetime="2022-10-31T17:25:43+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 12.集合对象" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">集合对象的编码可以是 intset 或者 hashtable。intset 编码的集合对象使用整数集合作为底层实现， 集合对象包含的所有元素都被保存在整数集合里面。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-集合对象的结构"><a href="#1-集合对象的结构" class="headerlink" title="1. 集合对象的结构"></a>1. 集合对象的结构</h2><p>集合对象的编码可以是<code>intset</code>或者<code>hashtable</code>. 下面分别展示了集合对象分别使用<code>intset</code>和<code>hashtable</code>编码的结构图：</p>
+<p><img src="https://img-blog.csdnimg.cn/57ad39b5303a4a81bbef921b9ebfb487.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/6e45ec210b324eac8262e0b2d9effebd.png" alt="在这里插入图片描述"></p>
+<h2 id="2-集合对象编码"><a href="#2-集合对象编码" class="headerlink" title="2. 集合对象编码"></a>2. 集合对象编码</h2><h3 id="2-1-编码使用规则"><a href="#2-1-编码使用规则" class="headerlink" title="2.1 编码使用规则"></a>2.1 编码使用规则</h3><p>当集合对象可以同时满足以下两个条件时，对象使用<code>intset</code>编码：</p>
+<ul>
+<li>集合对象保存的所有元素都是整数值.</li>
+<li>集合对象保存的元素数量不超过<code>512</code>个.</li>
+</ul>
+<p>不能满足这两个条件的集合对象需要使用<code>hashtable</code>编码.</p>
+<h3 id="2-2-编码转换"><a href="#2-2-编码转换" class="headerlink" title="2.2 编码转换"></a>2.2 编码转换</h3><p>对于使用<code>intset</code>编码的集合对象来说，当使用<code>intset</code>编码所需的两个条件的任意一个不能被满足时，就会执行对象的编码转换操作，原本保存在整数集合中的所有元素都会被转移并保存到字典里面，并且对象的编码也会从<code>intset</code>变为<code>hashtable</code>.</p>
+<h2 id="3-集合对象命令介绍"><a href="#3-集合对象命令介绍" class="headerlink" title="3. 集合对象命令介绍"></a>3. 集合对象命令介绍</h2><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SADD key member1 [member2]</td>
+<td>将一个或多个成员添加到集合</td>
+</tr>
+<tr>
+<td>SCARD key</td>
+<td>获取集合中的成员数</td>
+</tr>
+<tr>
+<td>SDIFF key1 [key2]</td>
+<td>减去多个集合</td>
+</tr>
+<tr>
+<td>SDIFFSTORE destination key1 [key2]</td>
+<td>减去多个集并将结果集存储在键中</td>
+</tr>
+<tr>
+<td>SINTER key1 [key2]</td>
+<td>相交多个集合</td>
+</tr>
+<tr>
+<td>SINTERSTORE destination key1 [key2]</td>
+<td>交叉多个集合并将结果集存储在键中</td>
+</tr>
+<tr>
+<td>SISMEMBER key member</td>
+<td>判断确定给定值是否是集合的成员</td>
+</tr>
+<tr>
+<td>SMOVE source destination member</td>
+<td>将成员从一个集合移动到另一个集合</td>
+</tr>
+<tr>
+<td>SPOP key</td>
+<td>从集合中删除并返回随机成员</td>
+</tr>
+<tr>
+<td>SRANDMEMBER key [count]</td>
+<td>从集合中获取一个或多个随机成员</td>
+</tr>
+<tr>
+<td>SREM key member1 [member2]</td>
+<td>从集合中删除一个或多个成员</td>
+</tr>
+<tr>
+<td>SUNION key1 [key2]</td>
+<td>添加多个集合</td>
+</tr>
+<tr>
+<td>SUNIONSTORE destination key1 [key2]</td>
+<td>添加多个集并将结果集存储在键中</td>
+</tr>
+<tr>
+<td>SSCAN key cursor [MATCH pattern] [COUNT count]</td>
+<td>递增地迭代集合中的元素</td>
+</tr>
+</tbody></table>
+<h2 id="4-集合对象命令的实现"><a href="#4-集合对象命令的实现" class="headerlink" title="4. 集合对象命令的实现"></a>4. 集合对象命令的实现</h2><p>关于集合对象的源码在<code>server.h</code>头文件和<code>t_set.c</code>源文件中.</p>
+<p>集合对象也实现了自己的迭代器，也是基于字典的迭代器封装的，和哈希对象的迭代器类似，这里不再展示.</p>
+<p>集合对象可以进行<code>交</code>、<code>差</code>和<code>并</code>运算，源码中对应的宏如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> SET_OP_UNION 0      <span class="comment">// 并集</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SET_OP_DIFF 1       <span class="comment">// 差集</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SET_OP_INTER 2      <span class="comment">// 交集</span></span></span><br></pre></td></tr></table></figure>
+
+<p>下面展示一下这些命令的实现.</p>
+<h3 id="4-1-交集命令实现"><a href="#4-1-交集命令实现" class="headerlink" title="4.1 交集命令实现"></a>4.1 交集命令实现</h3><p><strong>SINTER命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SINTER key [key ...]</span></span><br><span class="line"><span class="comment">// SINTER命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sinterCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sinterGenericCommand(c,c-&gt;argv+<span class="number">1</span>,c-&gt;argc<span class="number">-1</span>,<span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>SINTERSTORE命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SINTERSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// 对n个集合做交集，并将结果存到destination集合中</span></span><br><span class="line"><span class="comment">// SINTERSTORE 命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sinterstoreCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sinterGenericCommand(c,c-&gt;argv+<span class="number">2</span>,c-&gt;argc<span class="number">-2</span>,c-&gt;argv[<span class="number">1</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>底层实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SINTER key [key ...]</span></span><br><span class="line"><span class="comment">// SINTERSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// SINTER、SINTERSTORE一类命令的底层实现</span></span><br><span class="line"><span class="comment">// setkeys：集合名称；setnum：集合个数；dstkey：将运算结果保存到dstkey中</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sinterGenericCommand</span><span class="params">(client *c, robj **setkeys,</span></span><br><span class="line"><span class="params">                          <span class="type">unsigned</span> <span class="type">long</span> setnum, robj *dstkey)</span> &#123;</span><br><span class="line">    <span class="comment">// 分配存储集合的数组</span></span><br><span class="line">    robj **sets = zmalloc(<span class="keyword">sizeof</span>(robj*)*setnum);</span><br><span class="line">    setTypeIterator *si;</span><br><span class="line">    robj *eleobj, *dstset = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int64_t</span> intobj;</span><br><span class="line">    <span class="type">void</span> *replylen = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> j, cardinality = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> encoding;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历集合数组</span></span><br><span class="line">    <span class="comment">// 将满足要求的集合都存到sets集合数组中（空的集合会被删除）</span></span><br><span class="line">    <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">        <span class="comment">// 如果dstkey为空，则是SINTER命令，不为空则是SINTERSTORE命令</span></span><br><span class="line">        <span class="comment">// 如果是SINTER命令，则以读操作读取出集合对象，否则以写操作读取出集合对象</span></span><br><span class="line">        robj *setobj = dstkey ?</span><br><span class="line">            lookupKeyWrite(c-&gt;db,setkeys[j]) :</span><br><span class="line">            lookupKeyRead(c-&gt;db,setkeys[j]);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 读取的集合对象不存在，执行清理操作</span></span><br><span class="line">        <span class="keyword">if</span> (!setobj) &#123;</span><br><span class="line">            zfree(sets);    <span class="comment">//释放集合数组空间</span></span><br><span class="line">            <span class="comment">// 如果是SINTERSTORE命令</span></span><br><span class="line">            <span class="keyword">if</span> (dstkey) &#123;</span><br><span class="line">                <span class="comment">// 从数据库中删除存储的目标集合对象dstkey</span></span><br><span class="line">                <span class="keyword">if</span> (dbDelete(c-&gt;db,dstkey)) &#123;</span><br><span class="line">                    <span class="comment">// 发送信号表示数据库键被修改，并更新脏键</span></span><br><span class="line">                    signalModifiedKey(c-&gt;db,dstkey);</span><br><span class="line">                    server.dirty++;</span><br><span class="line">                &#125;</span><br><span class="line">                addReply(c,shared.czero);   <span class="comment">//发送0给client</span></span><br><span class="line">            <span class="comment">// 如果是SINTER命令，发送空回复</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                addReply(c,shared.emptymultibulk);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 读取集合对象成功，检查其数据类型</span></span><br><span class="line">        <span class="keyword">if</span> (checkType(c,setobj,OBJ_SET)) &#123;</span><br><span class="line">            zfree(sets);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 将读取出的对象保存在集合数组中</span></span><br><span class="line">        sets[j] = setobj;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从小到大排序集合数组中的集合大小，能够提高算法的性能</span></span><br><span class="line">    qsort(sets,setnum,<span class="keyword">sizeof</span>(robj*),qsortCompareSetsByCardinality);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 首先我们应该输出集合中元素的数量，但是现在不知道交集的大小</span></span><br><span class="line">    <span class="comment">// 因此创建一个空对象的链表，然后保存所有的回复</span></span><br><span class="line">    <span class="keyword">if</span> (!dstkey) &#123;</span><br><span class="line">    	<span class="comment">// STINER命令创建一个链表</span></span><br><span class="line">        replylen = addDeferredMultiBulkLength(c);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="comment">// STINERSTORE命令创建要给整数集合对象</span></span><br><span class="line">        dstset = createIntsetObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 迭代第一个也是集合元素数量最小的集合的每一个元素，将该集合中的所有元素和其他集合作比较</span></span><br><span class="line">    <span class="comment">// 如果至少有一个集合不包括该元素，则该元素不属于交集</span></span><br><span class="line">    si = setTypeInitIterator(sets[<span class="number">0</span>]);</span><br><span class="line">    <span class="comment">// 创建集合类型的迭代器并迭代器集合数组中的第一个集合的所有元素</span></span><br><span class="line">    <span class="keyword">while</span>((encoding = setTypeNext(si,&amp;eleobj,&amp;intobj)) != <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历其他集合</span></span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">1</span>; j &lt; setnum; j++) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 跳过与第一个集合相等的集合，没有必要比较两个相同集合的元素，而且第一个集合作为结果的交集</span></span><br><span class="line">            <span class="keyword">if</span> (sets[j] == sets[<span class="number">0</span>]) <span class="keyword">continue</span>;</span><br><span class="line">            <span class="comment">// 当前元素为INTSET类型</span></span><br><span class="line">            <span class="keyword">if</span> (encoding == OBJ_ENCODING_INTSET) &#123;</span><br><span class="line">                <span class="comment">/* intset with intset is simple... and fast */</span></span><br><span class="line">                <span class="comment">// 如果在当前intset集合中没有找到该元素则直接跳过当前元素，操作下一个元素</span></span><br><span class="line">                <span class="keyword">if</span> (sets[j]-&gt;encoding == OBJ_ENCODING_INTSET &amp;&amp;</span><br><span class="line">                    !intsetFind((intset*)sets[j]-&gt;ptr,intobj))</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="comment">/* in order to compare an integer with an object we</span></span><br><span class="line"><span class="comment">                 * have to use the generic function, creating an object</span></span><br><span class="line"><span class="comment">                 * for this */</span></span><br><span class="line">                <span class="comment">// 在字典中查找</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (sets[j]-&gt;encoding == OBJ_ENCODING_HT) &#123;</span><br><span class="line">                    <span class="comment">// 创建字符串对象</span></span><br><span class="line">                    eleobj = createStringObjectFromLongLong(intobj);</span><br><span class="line">                    <span class="comment">// 如果当前元素不是当前集合中的元素，则释放字符串对象跳过for循环体，操作下一个元素</span></span><br><span class="line">                    <span class="keyword">if</span> (!setTypeIsMember(sets[j],eleobj)) &#123;</span><br><span class="line">                        decrRefCount(eleobj);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    decrRefCount(eleobj);</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="comment">// 当前元素为HT字典类型</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (encoding == OBJ_ENCODING_HT) &#123;</span><br><span class="line">                <span class="comment">/* Optimization... if the source object is integer</span></span><br><span class="line"><span class="comment">                 * encoded AND the target set is an intset, we can get</span></span><br><span class="line"><span class="comment">                 * a much faster path. */</span></span><br><span class="line">                <span class="comment">// 当前元素的编码是int类型且当前集合为整数集合，如果该集合不包含该元素，则跳过循环</span></span><br><span class="line">                <span class="keyword">if</span> (eleobj-&gt;encoding == OBJ_ENCODING_INT &amp;&amp;</span><br><span class="line">                    sets[j]-&gt;encoding == OBJ_ENCODING_INTSET &amp;&amp;</span><br><span class="line">                    !intsetFind((intset*)sets[j]-&gt;ptr,(<span class="type">long</span>)eleobj-&gt;ptr))</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="comment">/* else... object to object check is easy as we use the</span></span><br><span class="line"><span class="comment">                 * type agnostic API here. */</span></span><br><span class="line">                <span class="comment">// 其他类型，在当前集合中查找该元素是否存在</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!setTypeIsMember(sets[j],eleobj)) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Only take action when all sets contain the member */</span></span><br><span class="line">        <span class="comment">// 执行到这里，该元素为结果集合中的元素</span></span><br><span class="line">        <span class="keyword">if</span> (j == setnum) &#123;</span><br><span class="line">            <span class="comment">// 如果是SINTER命令，回复集合</span></span><br><span class="line">            <span class="keyword">if</span> (!dstkey) &#123;</span><br><span class="line">                <span class="keyword">if</span> (encoding == OBJ_ENCODING_HT)</span><br><span class="line">                    addReplyBulk(c,eleobj);</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    addReplyBulkLongLong(c,intobj);</span><br><span class="line">                cardinality++;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 如果是SINTERSTORE命令，先将结果添加到集合中，因为还要store到数据库中</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (encoding == OBJ_ENCODING_INTSET) &#123;</span><br><span class="line">                    eleobj = createStringObjectFromLongLong(intobj);</span><br><span class="line">                    setTypeAdd(dstset,eleobj);</span><br><span class="line">                    decrRefCount(eleobj);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    setTypeAdd(dstset,eleobj);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    setTypeReleaseIterator(si); <span class="comment">//释放迭代器</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// SINTERSTORE命令，要将结果的集合添加到数据库中</span></span><br><span class="line">    <span class="keyword">if</span> (dstkey) &#123;</span><br><span class="line">        <span class="comment">/* Store the resulting set into the target, if the intersection</span></span><br><span class="line"><span class="comment">         * is not an empty set. */</span></span><br><span class="line">        <span class="comment">// 如果之前存在该集合则先删除</span></span><br><span class="line">        <span class="type">int</span> deleted = dbDelete(c-&gt;db,dstkey);</span><br><span class="line">        <span class="comment">// 结果集大小非空，则将其添加到数据库中</span></span><br><span class="line">        <span class="keyword">if</span> (setTypeSize(dstset) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            dbAdd(c-&gt;db,dstkey,dstset);</span><br><span class="line">            <span class="comment">// 回复结果集的大小</span></span><br><span class="line">            addReplyLongLong(c,setTypeSize(dstset));</span><br><span class="line">            <span class="comment">// 发送&quot;sinterstore&quot;事件通知</span></span><br><span class="line">            notifyKeyspaceEvent(NOTIFY_SET,<span class="string">&quot;sinterstore&quot;</span>,</span><br><span class="line">                dstkey,c-&gt;db-&gt;id);</span><br><span class="line">        <span class="comment">// 结果集为空，释放空间</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            decrRefCount(dstset);</span><br><span class="line">            <span class="comment">// 发送0给client</span></span><br><span class="line">            addReply(c,shared.czero);</span><br><span class="line">            <span class="comment">// 发送&quot;del&quot;事件通知</span></span><br><span class="line">            <span class="keyword">if</span> (deleted)</span><br><span class="line">                notifyKeyspaceEvent(NOTIFY_GENERIC,<span class="string">&quot;del&quot;</span>,</span><br><span class="line">                    dstkey,c-&gt;db-&gt;id);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 键被修改，发送信号。更新脏键</span></span><br><span class="line">        signalModifiedKey(c-&gt;db,dstkey);</span><br><span class="line">        server.dirty++;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SINTER命令，回复结果集合给client</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        setDeferredMultiBulkLength(c,replylen,cardinality);</span><br><span class="line">    &#125;</span><br><span class="line">    zfree(sets);    <span class="comment">//释放集合数组空间</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="4-2-并集和差集命令实现"><a href="#4-2-并集和差集命令实现" class="headerlink" title="4.2 并集和差集命令实现"></a>4.2 并集和差集命令实现</h3><p><strong>SUNION命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SUNION key [key ...]</span></span><br><span class="line"><span class="comment">// SUNION命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sunionCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sunionDiffGenericCommand(c,c-&gt;argv+<span class="number">1</span>,c-&gt;argc<span class="number">-1</span>,<span class="literal">NULL</span>,SET_OP_UNION);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>SUNIONSTORE命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SUNIONSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// SUNIONSTORE命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sunionstoreCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sunionDiffGenericCommand(c,c-&gt;argv+<span class="number">2</span>,c-&gt;argc<span class="number">-2</span>,c-&gt;argv[<span class="number">1</span>],SET_OP_UNION);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>SDIFF命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SDIFF key [key ...]</span></span><br><span class="line"><span class="comment">// SDIFF命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sdiffCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sunionDiffGenericCommand(c,c-&gt;argv+<span class="number">1</span>,c-&gt;argc<span class="number">-1</span>,<span class="literal">NULL</span>,SET_OP_DIFF);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>SDIFFSTORE命令实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SDIFFSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// SDIFFSTORE命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sdiffstoreCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    sunionDiffGenericCommand(c,c-&gt;argv+<span class="number">2</span>,c-&gt;argc<span class="number">-2</span>,c-&gt;argv[<span class="number">1</span>],SET_OP_DIFF);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>底层实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SUNION key [key ...]</span></span><br><span class="line"><span class="comment">// SUNIONSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// SDIFF key [key ...]</span></span><br><span class="line"><span class="comment">// SDIFFSTORE destination key [key ...]</span></span><br><span class="line"><span class="comment">// 并集、差集命令的底层实现</span></span><br><span class="line"><span class="comment">// setkeys：集合名称；setnum：集合个数；dstkey：将运算结果保存到dstkey中</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sunionDiffGenericCommand</span><span class="params">(client *c, robj **setkeys, <span class="type">int</span> setnum,</span></span><br><span class="line"><span class="params">                              robj *dstkey, <span class="type">int</span> op)</span> &#123;</span><br><span class="line">    <span class="comment">// 分配集合数组的空间</span></span><br><span class="line">    robj **sets = zmalloc(<span class="keyword">sizeof</span>(robj*)*setnum);</span><br><span class="line">    setTypeIterator *si;</span><br><span class="line">    robj *ele, *dstset = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int</span> j, cardinality = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> diff_algo = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历数组中集合键对象</span></span><br><span class="line">    <span class="comment">// 将满足要求的集合都存到sets集合数组中（空的集合会被删除）</span></span><br><span class="line">    <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">        <span class="comment">// 如果dstkey为空，则是SUNION或SDIFF命令，不为空则是SUNIONSTORE或SDIFFSTORE命令</span></span><br><span class="line">        <span class="comment">// 如果是SUNION或SDIFF命令，则以读操作读取出集合对象，否则以写操作读取出集合对象</span></span><br><span class="line">        robj *setobj = dstkey ?</span><br><span class="line">            lookupKeyWrite(c-&gt;db,setkeys[j]) :</span><br><span class="line">            lookupKeyRead(c-&gt;db,setkeys[j]);</span><br><span class="line">        <span class="comment">// 不存在的集合键设置为空</span></span><br><span class="line">        <span class="keyword">if</span> (!setobj) &#123;</span><br><span class="line">            sets[j] = <span class="literal">NULL</span>;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 检查存在的集合键是否是集合对象，不是则释放空间</span></span><br><span class="line">        <span class="keyword">if</span> (checkType(c,setobj,OBJ_SET)) &#123;</span><br><span class="line">            zfree(sets);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sets[j] = setobj;   <span class="comment">//保存到集合数组中</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 计算差集共有两种算法</span></span><br><span class="line">    <span class="comment">// 1.时间复杂度O(N*M)，N是第一个集合中元素的总个数，M是集合的总个数</span></span><br><span class="line">    <span class="comment">// 2.时间复杂度O(N)，N是所有集合中元素的总个数</span></span><br><span class="line">    <span class="keyword">if</span> (op == SET_OP_DIFF &amp;&amp; sets[<span class="number">0</span>]) &#123;</span><br><span class="line">        <span class="type">long</span> <span class="type">long</span> algo_one_work = <span class="number">0</span>, algo_two_work = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历集合数组</span></span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (sets[j] == <span class="literal">NULL</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 计算sets[0] × setnum的值</span></span><br><span class="line">            algo_one_work += setTypeSize(sets[<span class="number">0</span>]);</span><br><span class="line">            <span class="comment">// 计算所有集合的元素总个数</span></span><br><span class="line">            algo_two_work += setTypeSize(sets[j]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Algorithm 1 has better constant times and performs less operations</span></span><br><span class="line"><span class="comment">         * if there are elements in common. Give it some advantage. */</span></span><br><span class="line">        algo_one_work /= <span class="number">2</span>;</span><br><span class="line">        <span class="comment">//根据algo_one_work和algo_two_work选择不同算法</span></span><br><span class="line">        diff_algo = (algo_one_work &lt;= algo_two_work) ? <span class="number">1</span> : <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果是算法1，M较小，执行操作少</span></span><br><span class="line">        <span class="keyword">if</span> (diff_algo == <span class="number">1</span> &amp;&amp; setnum &gt; <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="comment">/* With algorithm 1 it is better to order the sets to subtract</span></span><br><span class="line"><span class="comment">             * by decreasing size, so that we are more likely to find</span></span><br><span class="line"><span class="comment">             * duplicated elements ASAP. */</span></span><br><span class="line">            <span class="comment">// 将集合数组除第一个集合以外的所有集合，按照集合的元素排序</span></span><br><span class="line">            qsort(sets+<span class="number">1</span>,setnum<span class="number">-1</span>,<span class="keyword">sizeof</span>(robj*),</span><br><span class="line">                qsortCompareSetsByRevCardinality);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* We need a temp set object to store our union. If the dstkey</span></span><br><span class="line"><span class="comment">     * is not NULL (that is, we are inside an SUNIONSTORE operation) then</span></span><br><span class="line"><span class="comment">     * this set object will be the resulting object to set into the target key*/</span></span><br><span class="line">    <span class="comment">// 创建一个临时集合对象作为结果集</span></span><br><span class="line">    dstset = createIntsetObject();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行并集操作</span></span><br><span class="line">    <span class="keyword">if</span> (op == SET_OP_UNION) &#123;</span><br><span class="line">        <span class="comment">/* Union is trivial, just add every element of every set to the</span></span><br><span class="line"><span class="comment">         * temporary set. */</span></span><br><span class="line">        <span class="comment">// 仅仅讲每一个集合中的每一个元素加入到结果集中</span></span><br><span class="line">        <span class="comment">// 遍历每一个集合</span></span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!sets[j]) <span class="keyword">continue</span>; <span class="comment">/* non existing keys are like empty sets */</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 创建一个集合类型的迭代器</span></span><br><span class="line">            si = setTypeInitIterator(sets[j]);</span><br><span class="line">            <span class="comment">// 遍历当前集合中的所有元素</span></span><br><span class="line">            <span class="keyword">while</span>((ele = setTypeNextObject(si)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">                <span class="comment">// 讲迭代器指向的当前元素对象加入到结果集中</span></span><br><span class="line">                <span class="keyword">if</span> (setTypeAdd(dstset,ele)) cardinality++;  <span class="comment">//如果结果集中不存在新加入的元素，则更新结果集的元素个数计数器</span></span><br><span class="line">                decrRefCount(ele);  <span class="comment">//否则直接释放元素对象空间</span></span><br><span class="line">            &#125;</span><br><span class="line">            setTypeReleaseIterator(si);     <span class="comment">//释放迭代器空间</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">// 执行差集操作并且使用算法1</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (op == SET_OP_DIFF &amp;&amp; sets[<span class="number">0</span>] &amp;&amp; diff_algo == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="comment">/* DIFF Algorithm 1:</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * We perform the diff by iterating all the elements of the first set,</span></span><br><span class="line"><span class="comment">         * and only adding it to the target set if the element does not exist</span></span><br><span class="line"><span class="comment">         * into all the other sets.</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * This way we perform at max N*M operations, where N is the size of</span></span><br><span class="line"><span class="comment">         * the first set, and M the number of sets. */</span></span><br><span class="line">        <span class="comment">// 我们执行差集操作通过遍历第一个集合中的所有元素，并且将其他集合中不存在元素加入到结果集中</span></span><br><span class="line">        <span class="comment">// 时间复杂度O(N*M)，N是第一个集合中元素的总个数，M是集合的总个数</span></span><br><span class="line">        si = setTypeInitIterator(sets[<span class="number">0</span>]);</span><br><span class="line">        <span class="comment">// 创建集合类型迭代器遍历第一个集合中的所有元素</span></span><br><span class="line">        <span class="keyword">while</span>((ele = setTypeNextObject(si)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="comment">// 遍历集合数组中的除了第一个的所有集合，检查元素是否存在在每一个集合</span></span><br><span class="line">            <span class="keyword">for</span> (j = <span class="number">1</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!sets[j]) <span class="keyword">continue</span>; <span class="comment">/* no key is an empty set. */</span>   <span class="comment">//集合键不存在跳过本次循环</span></span><br><span class="line">                <span class="keyword">if</span> (sets[j] == sets[<span class="number">0</span>]) <span class="keyword">break</span>; <span class="comment">/* same set! */</span>          <span class="comment">//相同的集合没必要比较</span></span><br><span class="line">                <span class="keyword">if</span> (setTypeIsMember(sets[j],ele)) <span class="keyword">break</span>;                <span class="comment">//如果元素存在后面的集合中，遍历下一个元素</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 执行到这里，说明当前元素不存在于 除了第一个的所有集合</span></span><br><span class="line">            <span class="keyword">if</span> (j == setnum) &#123;</span><br><span class="line">                <span class="comment">/* There is no other set with this element. Add it. */</span></span><br><span class="line">                <span class="comment">// 因此将当前元素添加到结果集合中，更新计数器</span></span><br><span class="line">                setTypeAdd(dstset,ele);</span><br><span class="line">                cardinality++;</span><br><span class="line">            &#125;</span><br><span class="line">            decrRefCount(ele);  <span class="comment">//释放元素对象空间</span></span><br><span class="line">        &#125;</span><br><span class="line">        setTypeReleaseIterator(si); <span class="comment">//释放迭代器空间</span></span><br><span class="line">    <span class="comment">// 执行差集操作并且使用算法2</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (op == SET_OP_DIFF &amp;&amp; sets[<span class="number">0</span>] &amp;&amp; diff_algo == <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="comment">/* DIFF Algorithm 2:</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * Add all the elements of the first set to the auxiliary set.</span></span><br><span class="line"><span class="comment">         * Then remove all the elements of all the next sets from it.</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * This is O(N) where N is the sum of all the elements in every</span></span><br><span class="line"><span class="comment">         * set. */</span></span><br><span class="line">        <span class="comment">// 将第一个集合的所有元素加入到结果集中，然后遍历其后的所有集合，将有交集的元素从结果集中删除</span></span><br><span class="line">        <span class="comment">// 2.时间复杂度O(N)，N是所有集合中元素的总个数</span></span><br><span class="line">        <span class="comment">// 遍历所有的集合</span></span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; setnum; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!sets[j]) <span class="keyword">continue</span>; <span class="comment">/* non existing keys are like empty sets */</span></span><br><span class="line"></span><br><span class="line">            si = setTypeInitIterator(sets[j]);</span><br><span class="line">            <span class="comment">// 创建集合类型迭代器遍历每一个集合中的所有元素</span></span><br><span class="line">            <span class="keyword">while</span>((ele = setTypeNextObject(si)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">                <span class="comment">// 如果是第一个集合，将每一个元素加入到结果集中</span></span><br><span class="line">                <span class="keyword">if</span> (j == <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (setTypeAdd(dstset,ele)) cardinality++;</span><br><span class="line">                <span class="comment">// 如果是其后的集合，将当前元素从结果集中删除，如结果集中有的话</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (setTypeRemove(dstset,ele)) cardinality--;</span><br><span class="line">                &#125;</span><br><span class="line">                decrRefCount(ele);</span><br><span class="line">            &#125;</span><br><span class="line">            setTypeReleaseIterator(si);<span class="comment">//释放迭代器空间</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Exit if result set is empty as any additional removal</span></span><br><span class="line"><span class="comment">             * of elements will have no effect. */</span></span><br><span class="line">            <span class="comment">// 只要结果集为空，那么差集结果就为空，不用比较后续的集合</span></span><br><span class="line">            <span class="keyword">if</span> (cardinality == <span class="number">0</span>) <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Output the content of the resulting set, if not in STORE mode */</span></span><br><span class="line">    <span class="comment">// 如果不是STORE一类的命令，输出所有的结果</span></span><br><span class="line">    <span class="keyword">if</span> (!dstkey) &#123;</span><br><span class="line">        <span class="comment">// 发送结果集的元素个数给client</span></span><br><span class="line">        addReplyMultiBulkLen(c,cardinality);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历结果集中的每一个元素，并发送给client</span></span><br><span class="line">        si = setTypeInitIterator(dstset);</span><br><span class="line">        <span class="keyword">while</span>((ele = setTypeNextObject(si)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            addReplyBulk(c,ele);</span><br><span class="line">            decrRefCount(ele);  <span class="comment">//发送完要释放空间</span></span><br><span class="line">        &#125;</span><br><span class="line">        setTypeReleaseIterator(si); <span class="comment">//释放迭代器</span></span><br><span class="line">        decrRefCount(dstset);       <span class="comment">//发送集合后要释放结果集的空间</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// STORE一类的命令，输出所有的结果</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* If we have a target key where to store the resulting set</span></span><br><span class="line"><span class="comment">         * create this key with the result set inside */</span></span><br><span class="line">        <span class="comment">// 先将目标集合从数据库中删除，如果存在的话</span></span><br><span class="line">        <span class="type">int</span> deleted = dbDelete(c-&gt;db,dstkey);</span><br><span class="line">        <span class="comment">// 如果结果集合非空</span></span><br><span class="line">        <span class="keyword">if</span> (setTypeSize(dstset) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            dbAdd(c-&gt;db,dstkey,dstset); <span class="comment">//将结果集加入到数据库中</span></span><br><span class="line">            addReplyLongLong(c,setTypeSize(dstset));    <span class="comment">//发送结果集的元素个数给client</span></span><br><span class="line">            <span class="comment">// 发送对应的事件通知</span></span><br><span class="line">            notifyKeyspaceEvent(NOTIFY_SET,</span><br><span class="line">                op == SET_OP_UNION ? <span class="string">&quot;sunionstore&quot;</span> : <span class="string">&quot;sdiffstore&quot;</span>,</span><br><span class="line">                dstkey,c-&gt;db-&gt;id);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 结果集为空，则释放空间</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            decrRefCount(dstset);</span><br><span class="line">            addReply(c,shared.czero);   <span class="comment">//发送0给client</span></span><br><span class="line">            <span class="comment">// 发送&quot;del&quot;事件通知</span></span><br><span class="line">            <span class="keyword">if</span> (deleted)</span><br><span class="line">                notifyKeyspaceEvent(NOTIFY_GENERIC,<span class="string">&quot;del&quot;</span>,</span><br><span class="line">                    dstkey,c-&gt;db-&gt;id);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 键被修改，发送信号通知，更新脏键</span></span><br><span class="line">        signalModifiedKey(c-&gt;db,dstkey);</span><br><span class="line">        server.dirty++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 释放集合数组空间</span></span><br><span class="line">    zfree(sets);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/" rel="prev" title="Redis源码与设计剖析 -- 11.哈希对象">
+      <i class="fa fa-chevron-left"></i> Redis源码与设计剖析 -- 11.哈希对象
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" rel="next" title="Redis源码与设计剖析 -- 13.有序集合对象">
+      Redis源码与设计剖析 -- 13.有序集合对象 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">1. 集合对象的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">2. 集合对象编码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E7%BC%96%E7%A0%81%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 编码使用规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 编码转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E5%91%BD%E4%BB%A4%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.</span> <span class="nav-text">3. 集合对象命令介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">4. 集合对象命令的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E4%BA%A4%E9%9B%86%E5%91%BD%E4%BB%A4%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 交集命令实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E5%B9%B6%E9%9B%86%E5%92%8C%E5%B7%AE%E9%9B%86%E5%91%BD%E4%BB%A4%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 并集和差集命令实现</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

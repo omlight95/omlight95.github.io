@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在前面的章节中，我们介绍了Redis中用到的所有底层数据结构，包括：SDS、双端链表、字典、跳表、压缩列表、整数集合、快速列表. Redis并没有直接使用这些数据结构来实现键值对数据库，而是基于这些数据结构创建了一个对象系统，这个系统包含字符串对象、列表对象、哈希对象、集合对象和有序集合对象这五种类型的对象，每种对象都用到了至少一种我们前面所介绍的数据结构.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis源码与设计剖析 -- 8.对象系统">
+<meta property="og:url" content="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="在前面的章节中，我们介绍了Redis中用到的所有底层数据结构，包括：SDS、双端链表、字典、跳表、压缩列表、整数集合、快速列表. Redis并没有直接使用这些数据结构来实现键值对数据库，而是基于这些数据结构创建了一个对象系统，这个系统包含字符串对象、列表对象、哈希对象、集合对象和有序集合对象这五种类型的对象，每种对象都用到了至少一种我们前面所介绍的数据结构.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-31T09:24:57.169Z">
+<meta property="article:modified_time" content="2022-10-31T09:33:37.301Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis源码与设计剖析 -- 8.对象系统 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis源码与设计剖析 -- 8.对象系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:24:57 / 修改时间：17:33:37" itemprop="dateCreated datePublished" datetime="2022-10-31T17:24:57+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 8.对象系统" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%208.%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">在前面的章节中，我们介绍了Redis中用到的所有底层数据结构，包括：SDS、双端链表、字典、跳表、压缩列表、整数集合、快速列表. Redis并没有直接使用这些数据结构来实现键值对数据库，而是基于这些数据结构创建了一个对象系统，这个系统包含字符串对象、列表对象、哈希对象、集合对象和有序集合对象这五种类型的对象，每种对象都用到了至少一种我们前面所介绍的数据结构.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1. 介绍"></a>1. 介绍</h2><p>在前面的章节中，我们介绍了Redis中用到的所有底层数据结构，包括：<code>SDS</code>、<code>双端链表</code>、<code>字典</code>、<code>跳表</code>、<code>压缩列表</code>、<code>整数集合</code>、<code>快速列表</code>.</p>
+<p>Redis并没有直接使用这些数据结构来实现键值对数据库，而是基于这些数据结构创建了一个对象系统，这个系统包含<code>字符串对象</code>、<code>列表对象</code>、<code>哈希对象</code>、<code>集合对象</code>和<code>有序集合对象</code>这五种类型的对象，每种对象都用到了至少一种我们前面所介绍的数据结构.</p>
+<p><strong>使用对象系统的优点：</strong></p>
+<ul>
+<li>Redis可以在执行命令之前，根据对象的类型来判断一个对象是否可以执行给定的命令.</li>
+<li>可以针对不同的使用场景，为对象设置多种不同的数据结构实现，从而优化对象在不同场景下的使用效率.</li>
+</ul>
+<p>除此之外，对象系统还实现了一些比较实用的机制：</p>
+<p><strong>内存回收机制：</strong></p>
+<p>基于引用计数技术，当程序不再使用某个对象的时候，这个对象所占用的内存就会被自动释放.</p>
+<p><strong>对象共享机制</strong></p>
+<p>Redis同样通过引用计数技术实现了对象共享机制，这一机制可以在适当的条件下，通过让多个数据库键共享同一个对象来节约内存.</p>
+<p><strong>过期键自动删除</strong></p>
+<p>Redis的对象带有访问时间记录信息，该信息可以用于计算数据库键的空转时长，在服务器启用了<code>maxmemory</code>功能的情况下，空转时长较大的那些键可能会优先被服务器删除.</p>
+<h2 id="2-对象的结构"><a href="#2-对象的结构" class="headerlink" title="2. 对象的结构"></a>2. 对象的结构</h2><p>我们在Redis数据库中新创建一个键值对的时候，我们至少会创建两个对象，一个对象用作键值对的键（键对象），另一个对象用作键值对的值（值对象）. 其中键对象固定是一个字符串对象，而值对象则是由<code>redisObject</code>结构保存的数据，该结构中和保存数据有关的三个属性分别是：<code>type</code>属性、<code>encoding</code>属性和<code>ptr</code>属性. 而<code>lru</code>和<code>refcount</code>分别是用于对象删除和对象引用的字段，我们后面再解释.</p>
+<p>Redis对象相关的源码在<code>server.h</code>和<code>object.c</code>文件中.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisObject</span> &#123;</span></span><br><span class="line">    <span class="comment">// 对象的数据类型，占4bits，共5种类型</span></span><br><span class="line">    <span class="type">unsigned</span> type:<span class="number">4</span>;</span><br><span class="line">    <span class="comment">// 对象的编码，占4bits，共10种类型</span></span><br><span class="line">    <span class="type">unsigned</span> encoding:<span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 实用LRU算法计算相对server.lruclock的LRU时间</span></span><br><span class="line">    <span class="type">unsigned</span> lru:LRU_BITS;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 引用计数</span></span><br><span class="line">    <span class="type">int</span> refcount;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指向底层数据实现的指针</span></span><br><span class="line">    <span class="type">void</span> *ptr;</span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-1-对象类型"><a href="#2-1-对象类型" class="headerlink" title="2.1 对象类型"></a>2.1 对象类型</h3><p>对象的<code>type</code>属性记录了对象的类型，Redis一共有5个对象类型，见下表：</p>
+<table>
+<thead>
+<tr>
+<th>类型常量</th>
+<th>对象的名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REDIS_STRING</td>
+<td>字符串对象</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>列表对象</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>哈希对象</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>集合对象</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>有序集合对象</td>
+</tr>
+</tbody></table>
+<p>当我们对一个数据库键执行<code>TYPE KEY</code>命令时，命令会返回该数据库键对应的<code>值对象的类型</code>，下表列出了<code>TYPE KEY</code>命令在面对不同类型的值对象所产生的输出：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>对象 type 属性的值</th>
+<th>TYPE 命令的输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字符串对象</td>
+<td>REDIS_STRING</td>
+<td>“string”</td>
+</tr>
+<tr>
+<td>列表对象</td>
+<td>REDIS_LIST</td>
+<td>“list”</td>
+</tr>
+<tr>
+<td>哈希对象</td>
+<td>REDIS_HASH</td>
+<td>“hash”</td>
+</tr>
+<tr>
+<td>集合对象</td>
+<td>REDIS_SET</td>
+<td>“set”</td>
+</tr>
+<tr>
+<td>有序集合对象</td>
+<td>REDIS_ZSET</td>
+<td>“zset”</td>
+</tr>
+</tbody></table>
+<p><code>type</code>属性会被设置为对应类型的宏：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 字符串对象</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_STRING 0</span></span><br><span class="line"><span class="comment">// 列表对象</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_LIST 1</span></span><br><span class="line"><span class="comment">// 集合对象</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_SET 2</span></span><br><span class="line"><span class="comment">// 有序集合对象</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ZSET 3</span></span><br><span class="line"><span class="comment">// 哈希对象</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_HASH 4</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-对象编码和底层类型"><a href="#2-2-对象编码和底层类型" class="headerlink" title="2.2 对象编码和底层类型"></a>2.2 对象编码和底层类型</h3><p>一种对象在保存不同大小数据的时候，可能使用不同的编码类型，而编码类型由<code>encoding</code>属性来记录. 使用命令<code>OBJECT ENCODING KEY</code>可以得到该数据库键对应值所使用的编码.</p>
+<p>下表记录了每种对象会使用的编码类型：</p>
+<table>
+<thead>
+<tr>
+<th>encoding</th>
+<th>ptr</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OBJ_ENCODING_INT</td>
+<td>整数值实现的字符串对象</td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_EMBSTR</td>
+<td>embstr 编码的简单动态字符串实现的字符串对象</td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_RAW</td>
+<td>简单动态字符串实现的字符串对象</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_QUICKLIST</td>
+<td>快速列表实现的列表对象</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_HT</td>
+<td>字典实现的集合对象</td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_INTSET</td>
+<td>整数集合实现的集合对象</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_ZIPLIST</td>
+<td>压缩列表实现的哈希对象</td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_HT</td>
+<td>字典实现的哈希对象</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_SKIPLIST</td>
+<td>跳跃表和字典实现的有序集合对象</td>
+</tr>
+<tr>
+<td>OBJ_ENCODING_ZIPLIST</td>
+<td>压缩列表实现的有序集合对象</td>
+</tr>
+</tbody></table>
+<p>下面是<code>enconding</code>属性会用到的宏：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_RAW 0     <span class="comment">/* Raw representation */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_INT 1     <span class="comment">/* Encoded as integer */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_HT 2      <span class="comment">/* Encoded as hash table */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_ZIPMAP 3  <span class="comment">/* Encoded as zipmap */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_LINKEDLIST 4 <span class="comment">/* No longer used: old list encoding. */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_ZIPLIST 5 <span class="comment">/* Encoded as ziplist */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_INTSET 6  <span class="comment">/* Encoded as intset */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_SKIPLIST 7  <span class="comment">/* Encoded as skiplist */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_EMBSTR 8  <span class="comment">/* Embedded sds string encoding */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_QUICKLIST 9 <span class="comment">/* Encoded as linked list of ziplists */</span></span></span><br><span class="line"><span class="comment">// redis 5.0添加，用于消息队列的数据类型</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_STREAM 10 <span class="comment">/* Encoded as a radix tree of listpacks */</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-指向底层类型的指针"><a href="#2-3-指向底层类型的指针" class="headerlink" title="2.3 指向底层类型的指针"></a>2.3 指向底层类型的指针</h3><p><code>ptr</code>是一个万能指针，它会指向对象的底层实现数据类型. 我们后面会逐一介绍这些类型.</p>
+<h2 id="3-对象系统的重要操作"><a href="#3-对象系统的重要操作" class="headerlink" title="3. 对象系统的重要操作"></a>3. 对象系统的重要操作</h2><p>Redis为对象系统定义了丰富的API，以下函数定义在<code>server.h</code>头文件中，实现在<code>server.c</code>源文件中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Redis object implementation */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">decrRefCount</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">decrRefCountVoid</span><span class="params">(<span class="type">void</span> *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">incrRefCount</span><span class="params">(robj *o)</span>;</span><br><span class="line">robj *<span class="title function_">resetRefCount</span><span class="params">(robj *obj)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">freeStringObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">freeListObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">freeSetObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">freeZsetObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">freeHashObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"></span><br><span class="line">robj *<span class="title function_">createObject</span><span class="params">(<span class="type">int</span> type, <span class="type">void</span> *ptr)</span>;</span><br><span class="line">robj *<span class="title function_">createStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span>;</span><br><span class="line">robj *<span class="title function_">createRawStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span>;</span><br><span class="line">robj *<span class="title function_">createEmbeddedStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span>;</span><br><span class="line">robj *<span class="title function_">dupStringObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">isObjectRepresentableAsLongLong</span><span class="params">(robj *o, <span class="type">long</span> <span class="type">long</span> *llongval)</span>;</span><br><span class="line">robj *<span class="title function_">tryObjectEncoding</span><span class="params">(robj *o)</span>;</span><br><span class="line">robj *<span class="title function_">getDecodedObject</span><span class="params">(robj *o)</span>;</span><br><span class="line"><span class="type">size_t</span> <span class="title function_">stringObjectLen</span><span class="params">(robj *o)</span>;</span><br><span class="line">robj *<span class="title function_">createStringObjectFromLongLong</span><span class="params">(<span class="type">long</span> <span class="type">long</span> value)</span>;</span><br><span class="line">robj *<span class="title function_">createStringObjectFromLongDouble</span><span class="params">(<span class="type">long</span> <span class="type">double</span> value, <span class="type">int</span> humanfriendly)</span>;</span><br><span class="line">robj *<span class="title function_">createQuicklistObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createZiplistObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createSetObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createIntsetObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createHashObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createZsetObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">robj *<span class="title function_">createZsetZiplistObject</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">getLongFromObjectOrReply</span><span class="params">(client *c, robj *o, <span class="type">long</span> *target, <span class="type">const</span> <span class="type">char</span> *msg)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">checkType</span><span class="params">(client *c, robj *o, <span class="type">int</span> type)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">getLongLongFromObjectOrReply</span><span class="params">(client *c, robj *o, <span class="type">long</span> <span class="type">long</span> *target, <span class="type">const</span> <span class="type">char</span> *msg)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">getDoubleFromObjectOrReply</span><span class="params">(client *c, robj *o, <span class="type">double</span> *target, <span class="type">const</span> <span class="type">char</span> *msg)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">getLongLongFromObject</span><span class="params">(robj *o, <span class="type">long</span> <span class="type">long</span> *target)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">getLongDoubleFromObject</span><span class="params">(robj *o, <span class="type">long</span> <span class="type">double</span> *target)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">getLongDoubleFromObjectOrReply</span><span class="params">(client *c, robj *o, <span class="type">long</span> <span class="type">double</span> *target, <span class="type">const</span> <span class="type">char</span> *msg)</span>;</span><br><span class="line"><span class="type">char</span> *<span class="title function_">strEncoding</span><span class="params">(<span class="type">int</span> encoding)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">compareStringObjects</span><span class="params">(robj *a, robj *b)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">collateStringObjects</span><span class="params">(robj *a, robj *b)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">equalStringObjects</span><span class="params">(robj *a, robj *b)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> <span class="title function_">estimateObjectIdleTime</span><span class="params">(robj *o)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>我们挑选几个进行研究.</p>
+<h3 id="3-1-创建字符串对象"><a href="#3-1-创建字符串对象" class="headerlink" title="3.1 创建字符串对象"></a>3.1 创建字符串对象</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个默认的对象</span></span><br><span class="line">robj *<span class="title function_">createObject</span><span class="params">(<span class="type">int</span> type, <span class="type">void</span> *ptr)</span> &#123;</span><br><span class="line">	<span class="comment">// 分配空间</span></span><br><span class="line">    robj *o = zmalloc(<span class="keyword">sizeof</span>(*o));</span><br><span class="line">    <span class="comment">// 设置对象类型</span></span><br><span class="line">    o-&gt;type = type;</span><br><span class="line">    <span class="comment">// 设置默认的编码方式</span></span><br><span class="line">    o-&gt;encoding = OBJ_ENCODING_RAW;</span><br><span class="line">    <span class="comment">// 设置对象</span></span><br><span class="line">    o-&gt;ptr = ptr;</span><br><span class="line">    <span class="comment">// 引用计数为1</span></span><br><span class="line">    o-&gt;refcount = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Set the LRU to the current lruclock (minutes resolution). */</span></span><br><span class="line">    <span class="comment">// 计算设置当前LRU时间</span></span><br><span class="line">    o-&gt;lru = LRU_CLOCK();</span><br><span class="line">    <span class="keyword">return</span> o;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>创建一个编码为 OBJ_ENCODING_RAW 的字符串对象</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个字符串对象，编码默认为 OBJ_ENCODING_RAW，指向的数据为一个sds</span></span><br><span class="line">robj *<span class="title function_">createRawStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> createObject(OBJ_STRING,sdsnewlen(ptr,len));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>创建一个编码为 OBJ_ENCODING_EMBSTR 的字符串对象</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个embstr编码的字符串对象</span></span><br><span class="line">robj *<span class="title function_">createEmbeddedStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span> &#123;</span><br><span class="line">	<span class="comment">// 分配空间</span></span><br><span class="line">    robj *o = zmalloc(<span class="keyword">sizeof</span>(robj)+<span class="keyword">sizeof</span>(<span class="keyword">struct</span> sdshdr8)+len+<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// o+1刚好就是struct sdshdr8的地址</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sdshdr8</span> *<span class="title">sh</span> =</span> (<span class="type">void</span>*)(o+<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 类型为字符串对象</span></span><br><span class="line">    o-&gt;type = OBJ_STRING;</span><br><span class="line">    <span class="comment">// 设置编码类型</span></span><br><span class="line">    o-&gt;encoding = OBJ_ENCODING_EMBSTR;</span><br><span class="line">    <span class="comment">// 指向分配的sds对象，分配的len+1的空间首地址</span></span><br><span class="line">    o-&gt;ptr = sh+<span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 设置引用计数</span></span><br><span class="line">    o-&gt;refcount = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 计算设置当前LRU时间</span></span><br><span class="line">    o-&gt;lru = LRU_CLOCK();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 设置字符串长度</span></span><br><span class="line">    sh-&gt;len = len;</span><br><span class="line">    <span class="comment">// 设置最大容量</span></span><br><span class="line">    sh-&gt;alloc = len;</span><br><span class="line">    <span class="comment">// 设置sds的类型</span></span><br><span class="line">    sh-&gt;flags = SDS_TYPE_8;</span><br><span class="line">    <span class="comment">// 如果传了字符串参数</span></span><br><span class="line">    <span class="keyword">if</span> (ptr) &#123;</span><br><span class="line">   		<span class="comment">// 将传进来的ptr保存到对象中</span></span><br><span class="line">        <span class="built_in">memcpy</span>(sh-&gt;buf,ptr,len);</span><br><span class="line">        <span class="comment">// 结束符标志</span></span><br><span class="line">        sh-&gt;buf[len] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="comment">// 否则将对象的空间初始化为0</span></span><br><span class="line">        <span class="built_in">memset</span>(sh-&gt;buf,<span class="number">0</span>,len+<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> o;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>创建一个编码为 OBJ_ENCODING_INT 的字符串对象</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建字符串对象，根据整数值</span></span><br><span class="line">robj *<span class="title function_">createStringObjectFromLongLong</span><span class="params">(<span class="type">long</span> <span class="type">long</span> value)</span> &#123;</span><br><span class="line">    robj *o;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// redis中[0, 10000)内的整数是共享的</span></span><br><span class="line">    <span class="comment">// 如果value属于redis共享整数的范围</span></span><br><span class="line">    <span class="keyword">if</span> (value &gt;= <span class="number">0</span> &amp;&amp; value &lt; OBJ_SHARED_INTEGERS) &#123;</span><br><span class="line">    	<span class="comment">// 引用计数加1</span></span><br><span class="line">        incrRefCount(shared.integers[value]);</span><br><span class="line">        <span class="comment">// 返回一个编码类型为OBJ_ENCODING_INT的字符串对象</span></span><br><span class="line">        o = shared.integers[value];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果不在共享整数的范围</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="comment">// value在long类型所表示的范围内</span></span><br><span class="line">        <span class="keyword">if</span> (value &gt;= LONG_MIN &amp;&amp; value &lt;= LONG_MAX) &#123;</span><br><span class="line">        	<span class="comment">// 创建对象</span></span><br><span class="line">            o = createObject(OBJ_STRING, <span class="literal">NULL</span>);</span><br><span class="line">            <span class="comment">// 编码类型为OBJ_ENCODING_INT</span></span><br><span class="line">            o-&gt;encoding = OBJ_ENCODING_INT;</span><br><span class="line">            <span class="comment">// 指向这个value值</span></span><br><span class="line">            o-&gt;ptr = (<span class="type">void</span>*)((<span class="type">long</span>)value);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// value不在long类型所表示的范围内，将long long类型的整数转换为字符串</span></span><br><span class="line">            <span class="comment">// 编码类型为OBJ_ENCODING_RAW</span></span><br><span class="line">            o = createObject(OBJ_STRING,sdsfromlonglong(value));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> o;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>根据不同的长度使用不同的编码</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// sdshdr8的大小为3个字节，加上1个结束符共4个字节</span></span><br><span class="line"><span class="comment">// redisObject的大小为16个字节</span></span><br><span class="line"><span class="comment">// redis使用jemalloc内存分配器，且jemalloc会分配8，16，32，64等字节的内存</span></span><br><span class="line"><span class="comment">// 一个embstr固定的大小为16+3+1 = 20个字节，因此一个最大的embstr字符串为64-20 = 44字节</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OBJ_ENCODING_EMBSTR_SIZE_LIMIT 44</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建字符串对象，根据长度使用不同的编码类型</span></span><br><span class="line"><span class="comment">// createRawStringObject和createEmbeddedStringObject的区别是：</span></span><br><span class="line"><span class="comment">// createRawStringObject是当字符串长度大于44字节时，robj结构和sdshdr结构在内存上是分开的</span></span><br><span class="line"><span class="comment">// createEmbeddedStringObject是当字符串长度小于等于44字节时，robj结构和sdshdr结构在内存上是连续的</span></span><br><span class="line">robj *<span class="title function_">createStringObject</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *ptr, <span class="type">size_t</span> len)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (len &lt;= OBJ_ENCODING_EMBSTR_SIZE_LIMIT)</span><br><span class="line">        <span class="keyword">return</span> createEmbeddedStringObject(ptr,len);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> createRawStringObject(ptr,len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="3-2-复制字符串对象"><a href="#3-2-复制字符串对象" class="headerlink" title="3.2 复制字符串对象"></a>3.2 复制字符串对象</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 返回 复制的o对象的副本的地址，且创建的对象非共享</span></span><br><span class="line">robj *<span class="title function_">dupStringObject</span><span class="params">(robj *o)</span> &#123;</span><br><span class="line">    robj *d;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 一定是OBJ_STRING类型</span></span><br><span class="line">    serverAssert(o-&gt;type == OBJ_STRING);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 根据不同的编码类型</span></span><br><span class="line">    <span class="keyword">switch</span>(o-&gt;encoding) &#123;</span><br><span class="line">    <span class="keyword">case</span> OBJ_ENCODING_RAW:</span><br><span class="line">    	<span class="comment">// 创建的对象非共享</span></span><br><span class="line">        <span class="keyword">return</span> createRawStringObject(o-&gt;ptr,sdslen(o-&gt;ptr));        </span><br><span class="line">    <span class="keyword">case</span> OBJ_ENCODING_EMBSTR:</span><br><span class="line">        <span class="keyword">return</span> createEmbeddedStringObject(o-&gt;ptr,sdslen(o-&gt;ptr));</span><br><span class="line">    <span class="keyword">case</span> OBJ_ENCODING_INT:</span><br><span class="line">    	<span class="comment">// 即使是共享整数范围内的整数，创建的对象也是非共享的</span></span><br><span class="line">        d = createObject(OBJ_STRING, <span class="literal">NULL</span>);</span><br><span class="line">        d-&gt;encoding = OBJ_ENCODING_INT;</span><br><span class="line">        d-&gt;ptr = o-&gt;ptr;</span><br><span class="line">        <span class="keyword">return</span> d;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        serverPanic(<span class="string">&quot;Wrong encoding.&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-销毁字符串对象"><a href="#3-3-销毁字符串对象" class="headerlink" title="3.3 销毁字符串对象"></a>3.3 销毁字符串对象</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 销毁字符串对象ptr指向的对象</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">freeStringObject</span><span class="params">(robj *o)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (o-&gt;encoding == OBJ_ENCODING_RAW) &#123;</span><br><span class="line">        sdsfree(o-&gt;ptr);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%207.%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8/" rel="prev" title="Redis源码与设计剖析 -- 7.快速列表">
+      <i class="fa fa-chevron-left"></i> Redis源码与设计剖析 -- 7.快速列表
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/" rel="next" title="Redis源码与设计剖析 -- 9.字符串对象">
+      Redis源码与设计剖析 -- 9.字符串对象 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">1. 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">2. 对象的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E5%AF%B9%E8%B1%A1%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 对象类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A0%81%E5%92%8C%E5%BA%95%E5%B1%82%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 对象编码和底层类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E6%8C%87%E5%90%91%E5%BA%95%E5%B1%82%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%8C%87%E9%92%88"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 指向底层类型的指针</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%AF%B9%E8%B1%A1%E7%B3%BB%E7%BB%9F%E7%9A%84%E9%87%8D%E8%A6%81%E6%93%8D%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">3. 对象系统的重要操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E5%88%9B%E5%BB%BA%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 创建字符串对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%A4%8D%E5%88%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 复制字符串对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E9%94%80%E6%AF%81%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 销毁字符串对象</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

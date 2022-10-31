@@ -196,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -210,7 +210,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-title-link" itemprop="url">四、Redis持久化</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 18.Redis网络连接库分析</a>
         </h2>
 
         <div class="post-meta">
@@ -221,7 +221,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-09 23:29:31 / 修改时间：23:44:06" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:31+08:00">2022-09-09</time>
+              <time title="创建时间：2022-10-31 17:27:10 / 修改时间：19:30:28" itemprop="dateCreated datePublished" datetime="2022-10-31T17:27:10+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -234,7 +234,7 @@
             </span>
 
           
-            <span id="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="四、Redis持久化" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 18.Redis网络连接库分析" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -249,8 +249,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -265,10 +265,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Redis有两种持久化方案：RDB持久化和AOF持久化。</p>
+          <p>Redis网络连接库对应的文件是networking.c，这个文件主要负责客户端的创建与释放、命令接收与命令回复、Redis通信协议分析、CLIENT 命令的实现。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -292,7 +292,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -306,7 +306,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">三、Redis事务和锁机制</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 17.Redis事件处理</a>
         </h2>
 
         <div class="post-meta">
@@ -317,7 +317,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-09 23:29:14 / 修改时间：23:43:48" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:14+08:00">2022-09-09</time>
+              <time title="创建时间：2022-10-31 17:26:55 / 修改时间：19:28:43" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:55+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -330,7 +330,7 @@
             </span>
 
           
-            <span id="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="三、Redis事务和锁机制" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 17.Redis事件处理" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -345,8 +345,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -361,10 +361,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Redis事务就是一个命令执行的队列，将一系列预定义命令包装成一个整体（一个队列）。当执行时，一次性按照添加顺序依次执行，中间不会被打断或者干扰。</p>
+          <p>Redis服务器是一个事件驱动程序，所谓事件驱动就是输入一条命令并且按下回车，然后消息被组装成Redis协议的格式发送给Redis服务器，这个时候就会产生一个事件，Redis服务器会接收改命令，处理该命令和发送回复，而当我们没有与服务器进行交互时，服务器就会处于阻塞等待状态，它会让出CPU然后进入睡眠状态，当事件触发时，就会被操作系统唤醒.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -388,7 +388,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -402,7 +402,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="post-title-link" itemprop="url">二、Redis常用命令以及数据类型</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 16.AOF持久化机制</a>
         </h2>
 
         <div class="post-meta">
@@ -413,7 +413,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-09 23:29:02 / 修改时间：23:43:30" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:02+08:00">2022-09-09</time>
+              <time title="创建时间：2022-10-31 17:26:43 / 修改时间：19:27:17" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:43+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -426,7 +426,7 @@
             </span>
 
           
-            <span id="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="post-meta-item leancloud_visitors" data-flag-title="二、Redis常用命令以及数据类型" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 16.AOF持久化机制" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -441,8 +441,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -457,10 +457,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>通用指令是部分数据类型的，都可以使用的指令，常见的有KEYS、DEL、EXISTS、EXPIRE、TTL等等，此外Redis还有五大数据类型。</p>
+          <p>除了RDB持久化功能之外，Redis 还提供了AOF ( Append Only File )持久化功能。与RDB持久化通过保存数据库中的键值对来记录数据库状态不同，AOF持久化是以日志的方式记录Redis服务器所执行的写命令来记录数据库状态的。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -484,7 +484,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -498,7 +498,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">一、Redis的安装与配置</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 15.RDB持久化机制</a>
         </h2>
 
         <div class="post-meta">
@@ -509,7 +509,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-09 23:28:48 / 修改时间：23:43:11" itemprop="dateCreated datePublished" datetime="2022-09-09T23:28:48+08:00">2022-09-09</time>
+              <time title="创建时间：2022-10-31 17:26:33 / 修改时间：19:26:15" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:33+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -522,7 +522,7 @@
             </span>
 
           
-            <span id="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="post-meta-item leancloud_visitors" data-flag-title="一、Redis的安装与配置" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 15.RDB持久化机制" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -537,8 +537,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -553,10 +553,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Redis在Linux环境下的安装与配置。</p>
+          <p>因为Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -580,7 +580,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -594,7 +594,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" class="post-title-link" itemprop="url">Golang 自定义排序</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 14.数据库实现</a>
         </h2>
 
         <div class="post-meta">
@@ -605,7 +605,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:26:00 / 修改时间：13:27:20" itemprop="dateCreated datePublished" datetime="2022-09-08T13:26:00+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:26:13 / 修改时间：19:25:26" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:13+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -613,12 +613,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 自定义排序" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 14.数据库实现" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -633,8 +633,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -649,10 +649,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>C++中实现自定义排序，可以在sort函数的最后一个参数位上，加上一个自定义的比大小函数或者仿函数来实现. Go语言中通过sort包提供的接口和函数，也可以实现自定义排序.</p>
+          <p>Redis服务器将所有数据库都保存在服务器状态 redis.h/redisServer 结构的db数组中，db数组的每个项都是一个server.h/ redisDb结构，每个redisDb结构代表一个数据库.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -676,7 +676,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -690,7 +690,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/" class="post-title-link" itemprop="url">Golang1.18 泛型初探</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 13.有序集合对象</a>
         </h2>
 
         <div class="post-meta">
@@ -701,7 +701,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:24:58 / 修改时间：13:25:43" itemprop="dateCreated datePublished" datetime="2022-09-08T13:24:58+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:26:00 / 修改时间：19:24:15" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:00+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -709,12 +709,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/" class="post-meta-item leancloud_visitors" data-flag-title="Golang1.18 泛型初探" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 13.有序集合对象" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -729,8 +729,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -745,10 +745,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在泛型出现之前，go语言的灵活性很大部分是基于``interface{}``这个空接口来保证的。任何变量都可以继承空接口，但是在使用变量的时候，就需要对变量进行``类型断言``。而类型断言是基于``反射``来实现的，反射中的类型错误在真正运行的时候才会引发panic，而且大量使用反射会使得程序的效率变得非常低。</p>
+          <p>有序集合的编码可以是ziplist或者skiplist. 当使用ziplist编码时，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员，而第二个元素则保存元素的分值，压缩列表内的集合元素按分值从小到大进行排序.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang1.18%20%E6%B3%9B%E5%9E%8B%E5%88%9D%E6%8E%A2/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -772,7 +772,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -786,7 +786,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">Golang Context的使用场景</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 12.集合对象</a>
         </h2>
 
         <div class="post-meta">
@@ -797,7 +797,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:24:07 / 修改时间：13:24:41" itemprop="dateCreated datePublished" datetime="2022-09-08T13:24:07+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:25:43 / 修改时间：19:21:23" itemprop="dateCreated datePublished" datetime="2022-10-31T17:25:43+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -805,12 +805,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Context的使用场景" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 12.集合对象" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -825,8 +825,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -841,10 +841,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>值传递只是context的一个辅助功能，并不是核心功能。一般我们只用context来传递不影响业务主逻辑的可选数据，比如日志信息、调试信息以及元信息等等。</p>
+          <p>集合对象的编码可以是 intset 或者 hashtable。intset 编码的集合对象使用整数集合作为底层实现， 集合对象包含的所有元素都被保存在整数集合里面。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -868,7 +868,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -882,7 +882,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-title-link" itemprop="url">Golang 优雅的使用Context</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 11.哈希对象</a>
         </h2>
 
         <div class="post-meta">
@@ -893,7 +893,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:23:13 / 修改时间：13:23:52" itemprop="dateCreated datePublished" datetime="2022-09-08T13:23:13+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:25:34 / 修改时间：17:38:06" itemprop="dateCreated datePublished" datetime="2022-10-31T17:25:34+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -901,12 +901,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 优雅的使用Context" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 11.哈希对象" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -921,8 +921,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -937,10 +937,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在很多场景下，在执行一个任务时，我们会将这个任务拆分成几个子任务，然后开启几个不同的goroutine去执行。当因为某些原因这个任务需要终止时，我们需要将这些goroutine也全都终止掉。</p>
+          <p>哈希对象的编码可以是ziplist或者字典. 当使用ziplist作为底层实现时，每当有新的键值对要加人到哈希对象时，程序会先将保存了键的压缩列表节点推入到压缩列表表尾，然后再将保存了值的压缩列表节点推入到压缩列表表尾.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2011.%E5%93%88%E5%B8%8C%E5%AF%B9%E8%B1%A1/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -964,7 +964,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -978,7 +978,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">生产者-消费者模式 Golang实现</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 10.列表对象</a>
         </h2>
 
         <div class="post-meta">
@@ -989,7 +989,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:21:42 / 修改时间：13:22:57" itemprop="dateCreated datePublished" datetime="2022-09-08T13:21:42+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:25:21 / 修改时间：17:36:53" itemprop="dateCreated datePublished" datetime="2022-10-31T17:25:21+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -997,12 +997,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="生产者-消费者模式 Golang实现" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 10.列表对象" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1017,8 +1017,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1033,10 +1033,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>生产者消费者模型具体来讲，就是在一个系统中，存在生产者和消费者两种角色，他们通过内存缓冲区进行通信，生产者生产消费者需要的资料，消费者把资料做成产品。</p>
+          <p>列表对象命令的实现代码在t_list.c源文件中. Redis先是定义了一些最底层的函数比如listTypePush、listTypePush等等，然后在这些底层命令之上又封装了有特定功能的函数，比如阻塞和非阻塞插入和删除. 这里我们只介绍一些最底层的命令.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2010.%E5%88%97%E8%A1%A8%E5%AF%B9%E8%B1%A1/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1060,7 +1060,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -1074,7 +1074,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">Master-Worker模式 Golang实现</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 9.字符串对象</a>
         </h2>
 
         <div class="post-meta">
@@ -1085,7 +1085,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-08 13:20:21 / 修改时间：13:21:27" itemprop="dateCreated datePublished" datetime="2022-09-08T13:20:21+08:00">2022-09-08</time>
+              <time title="创建时间：2022-10-31 17:25:11 / 修改时间：17:34:28" itemprop="dateCreated datePublished" datetime="2022-10-31T17:25:11+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1093,12 +1093,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="Master-Worker模式 Golang实现" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 9.字符串对象" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1113,8 +1113,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1129,10 +1129,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Master-Worker模式是常用的并行计算模式。它的核心思想是系统由两类进程协作工作：Master进行和Worker进行。Master负责接收和分配任务，Worker负责处理子任务。当各个Worker子进程处理完成后，会将结果返回给Master，由Master做归纳和总结。其好处是能将一个大任务分解成若干个子任务，并行执行，从而提高系统的吞吐量。</p>
+          <p>下图展示了字符串对象的结构，首先是一个``redisObject``表头，表头中规定了对象类型以及对象所使用的编码，``ptr``指针则指向了一个``sdshdr``表头，``sdshdr``结构中的``buf``数组保存着实际的字符串.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%209.%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AF%B9%E8%B1%A1/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1155,7 +1155,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1223,7 +1223,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-count">58</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

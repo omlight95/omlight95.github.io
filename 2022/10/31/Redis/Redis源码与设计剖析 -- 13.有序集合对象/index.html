@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="有序集合的编码可以是ziplist或者skiplist. 当使用ziplist编码时，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员，而第二个元素则保存元素的分值，压缩列表内的集合元素按分值从小到大进行排序.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis源码与设计剖析 -- 13.有序集合对象">
+<meta property="og:url" content="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="有序集合的编码可以是ziplist或者skiplist. 当使用ziplist编码时，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员，而第二个元素则保存元素的分值，压缩列表内的集合元素按分值从小到大进行排序.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e5d31ef886af45c5b8a4598a5bfd7a87.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6bb4cb17e1374d278e5a74c27cd24683.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/40b5b489cc0f427db094d20dd57e09c1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/506845283caa46cf83427f3f32371411.png">
+<meta property="article:published_time" content="2022-10-31T09:26:00.141Z">
+<meta property="article:modified_time" content="2022-10-31T11:24:15.017Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/e5d31ef886af45c5b8a4598a5bfd7a87.png">
+
+<link rel="canonical" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis源码与设计剖析 -- 13.有序集合对象 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis源码与设计剖析 -- 13.有序集合对象
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:26:00 / 修改时间：19:24:15" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:00+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 13.有序集合对象" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2013.%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">有序集合的编码可以是ziplist或者skiplist. 当使用ziplist编码时，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员，而第二个元素则保存元素的分值，压缩列表内的集合元素按分值从小到大进行排序.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-有序集合对象的结构"><a href="#1-有序集合对象的结构" class="headerlink" title="1. 有序集合对象的结构"></a>1. 有序集合对象的结构</h2><p>有序集合的编码可以是<code>ziplist</code>或者<code>skiplist</code>.</p>
+<p>当使用<code>ziplist</code>编码时，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员，而第二个元素则保存元素的分值，压缩列表内的集合元素按分值从小到大进行排序. 分值小的元素靠近表头，分值大的元素靠近表尾. 如下图：</p>
+<p><img src="https://img-blog.csdnimg.cn/e5d31ef886af45c5b8a4598a5bfd7a87.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/6bb4cb17e1374d278e5a74c27cd24683.png" alt="在这里插入图片描述"></p>
+<p>当使用<code>skiplist</code>编码时，有序集合对象的<code>ptr</code>指针会指向一个<code>zset</code>结构，该结构同时包含一个字典和一个跳跃表：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 有序集合类型</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zset</span> &#123;</span></span><br><span class="line">    dict *dict;</span><br><span class="line">    zskiplist *zsl;</span><br><span class="line">&#125; zset;</span><br></pre></td></tr></table></figure>
+
+<p>如图：</p>
+<p><img src="https://img-blog.csdnimg.cn/40b5b489cc0f427db094d20dd57e09c1.png" alt="在这里插入图片描述"></p>
+<p>但为什么要使用两种数据结构，而不直接使用跳跃表或者字典任意一种呢？</p>
+<p>当对有序集合对象要根据成员查找分值时，将使用字典来实现，时间复杂度为<code>O(1)</code>，而如果单单使用跳跃表的话，这一复杂度将会是<code>O(log(n))</code>.</p>
+<p>而当有序集合对象要执行范围型操作时，比如<code>ZRANK</code>、<code>ZRANGE</code>等命令时，将使用跳跃表来实现，而如果单单使用字典来实现的话，每次都要将找出来的元素重新进行排序，完成排序的时间复杂度至少为<code>O(NlogN)</code>，以及额外的<code>O(N)</code>空间复杂度（保存排序结果）.</p>
+<p>所以Redis选择了同时使用字典和跳跃表两种数据结构来实现有序集合. 但是这两种数据结构都会通过指针来共享相同元素的成员和分值，所以同时使用跳跃表和字典来保存集合元素不会产生任何重复成员或者分值，也不会因此而浪费额外的空间. </p>
+<p>可以参考下面的结构图，为了方便展示，在字典和跳跃表中重复展示了各个元素的成员和分值，但在实际中，字典和跳跃表会共享元素的成员和分值，所以并不会造成任何数据重复，也不会因此而浪费任何空间.</p>
+<p><img src="https://img-blog.csdnimg.cn/506845283caa46cf83427f3f32371411.png" alt="在这里插入图片描述"></p>
+<h2 id="2-有序集合对象编码"><a href="#2-有序集合对象编码" class="headerlink" title="2. 有序集合对象编码"></a>2. 有序集合对象编码</h2><h3 id="2-1-编码使用规则"><a href="#2-1-编码使用规则" class="headerlink" title="2.1 编码使用规则"></a>2.1 编码使用规则</h3><p>当有序集合对象可以同时满足以下两个条件时，对象使用<code>ziplist</code>编码:</p>
+<ul>
+<li>有序集合保存的元素数量小于<code>128</code>个.</li>
+<li>有序集合保存的所有元素成员的长度都小于64字节.</li>
+</ul>
+<p>不能满足以上两个条件的有序集合对象将使用<code>skiplist</code>编码.</p>
+<h3 id="2-2-编码转换"><a href="#2-2-编码转换" class="headerlink" title="2.2 编码转换"></a>2.2 编码转换</h3><p>对于使用<code>ziplist</code>编码的有序集合对象来说，当使用<code>ziplist</code>编码所需的两个条件中的任意一个不能被满足时，就会执行对象的编码转换操作，原本保存在压缩列表里的所有集合元素都会被转移并保存到<code>zset</code>结构里面，对象的编码也会从<code>ziplist</code>变为<code>skiplist</code>.</p>
+<h2 id="3-有序集合对象命令介绍"><a href="#3-有序集合对象命令介绍" class="headerlink" title="3. 有序集合对象命令介绍"></a>3. 有序集合对象命令介绍</h2><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ZADD key score1 member1 [score2 member2]</td>
+<td>向有序集合添加一个或多个成员，或者更新已存在成员的分数</td>
+</tr>
+<tr>
+<td>ZCARD key</td>
+<td>获取有序集合的成员数</td>
+</tr>
+<tr>
+<td>ZCOUNT key min max</td>
+<td>计算在有序集合中指定区间分数的成员数</td>
+</tr>
+<tr>
+<td>ZINCRBY key increment member</td>
+<td>有序集合中对指定成员的分数加上增量 increment</td>
+</tr>
+<tr>
+<td>ZINTERSTORE destination numkeys key [key …]</td>
+<td>计算给定的一个或多个有序集的交集并将结果集存储在新的有序集合 key 中</td>
+</tr>
+<tr>
+<td>ZLEXCOUNT key min max</td>
+<td>在有序集合中计算指定字典区间内成员数量</td>
+</tr>
+<tr>
+<td>ZRANGE key start stop [WITHSCORES]</td>
+<td>通过索引区间返回有序集合成指定区间内的成员</td>
+</tr>
+<tr>
+<td>ZRANGEBYLEX key min max [LIMIT offset count]</td>
+<td>通过字典区间返回有序集合的成员</td>
+</tr>
+<tr>
+<td>ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT]</td>
+<td>通过分数返回有序集合指定区间内的成员</td>
+</tr>
+<tr>
+<td>ZRANK key member</td>
+<td>返回有序集合中指定成员的索引</td>
+</tr>
+<tr>
+<td>ZREM key member [member …]</td>
+<td>移除有序集合中的一个或多个成员</td>
+</tr>
+<tr>
+<td>ZREMRANGEBYLEX key min max</td>
+<td>移除有序集合中给定的字典区间的所有成员</td>
+</tr>
+<tr>
+<td>ZREMRANGEBYRANK key start stop</td>
+<td>移除有序集合中给定的排名区间的所有成员</td>
+</tr>
+<tr>
+<td>ZREMRANGEBYSCORE key min max</td>
+<td>移除有序集合中给定的分数区间的所有成员</td>
+</tr>
+<tr>
+<td>ZREVRANGE key start stop [WITHSCORES]</td>
+<td>返回有序集中指定区间内的成员，通过索引，分数从高到底</td>
+</tr>
+<tr>
+<td>ZREVRANGEBYSCORE key max min [WITHSCORES]</td>
+<td>返回有序集中指定分数区间内的成员，分数从高到低排序</td>
+</tr>
+<tr>
+<td>ZREVRANK key member</td>
+<td>返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序</td>
+</tr>
+<tr>
+<td>ZSCORE key member</td>
+<td>返回有序集中，成员的分数值</td>
+</tr>
+<tr>
+<td>ZUNIONSTORE destination numkeys key [key …]</td>
+<td>计算给定的一个或多个有序集的并集，并存储在新的 key 中</td>
+</tr>
+<tr>
+<td>ZSCAN key cursor [MATCH pattern] [COUNT count]</td>
+<td>迭代有序集合中的元素（包括元素成员和元素分值）</td>
+</tr>
+</tbody></table>
+<h2 id="4-有序集合对象命令的实现"><a href="#4-有序集合对象命令的实现" class="headerlink" title="4. 有序集合对象命令的实现"></a>4. 有序集合对象命令的实现</h2><p>关于有序集合对象的源码在<code>server.h</code>头文件和<code>t_zset.c</code>源文件中.</p>
+<h3 id="4-1-有序集合的范围限定方式"><a href="#4-1-有序集合的范围限定方式" class="headerlink" title="4.1 有序集合的范围限定方式"></a>4.1 有序集合的范围限定方式</h3><p>我们可以发现有序集合有三个主要的关于范围操作的命令：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ZRANGE key start stop [WITHSCORES]</td>
+<td>通过索引区间返回有序集合成指定区间内的成员</td>
+</tr>
+<tr>
+<td>ZRANGEBYLEX key min max [LIMIT offset count]</td>
+<td>通过字典区间返回有序集合的成员</td>
+</tr>
+<tr>
+<td>ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT]</td>
+<td>通过分数返回有序集合指定区间内的成员</td>
+</tr>
+</tbody></table>
+<p>所以Redis有序集合有三种范围限定：</p>
+<ul>
+<li>根据字典区间</li>
+<li>根据排位（索引）区间</li>
+<li>根据分值区间</li>
+</ul>
+<p>以上三种主要依赖两种排序方式：</p>
+<ul>
+<li>分值序</li>
+<li>字典序</li>
+</ul>
+<p>以上两种排序所表示的范围，依赖于两个结构，一个规定分值序的范围和边界，一个规定字典序的范围和边界：</p>
+<p>以下结构体定义在<code>server.h</code>头文件中.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Struct to hold a inclusive/exclusive range spec by score comparison. */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="comment">// 最小值和最大值</span></span><br><span class="line">    <span class="type">double</span> min, max;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// minex表示最小值是否包含在这个范围，1表示不包含，0表示包含</span></span><br><span class="line">    <span class="comment">// 同理maxex表示最大值</span></span><br><span class="line">    <span class="type">int</span> minex, maxex; <span class="comment">/* are min or max exclusive? */</span></span><br><span class="line">&#125; zrangespec;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Struct to hold an inclusive/exclusive range spec by lexicographic comparison. */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    robj *min, *max;  <span class="comment">/* May be set to shared.(minstring|maxstring) */</span><span class="comment">//最小值和最大值</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// minex表示最小值是否包含在这个范围，1表示不包含，0表示包含</span></span><br><span class="line">    <span class="comment">// 同理maxex表示最大值</span></span><br><span class="line">    <span class="type">int</span> minex, maxex; <span class="comment">/* are min or max exclusive? */</span></span><br><span class="line">&#125; zlexrangespec;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="4-2-有序集合的范围操作"><a href="#4-2-有序集合的范围操作" class="headerlink" title="4.2 有序集合的范围操作"></a>4.2 有序集合的范围操作</h3><h4 id="4-2-1-ZRANGE"><a href="#4-2-1-ZRANGE" class="headerlink" title="4.2.1 ZRANGE"></a>4.2.1 ZRANGE</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ZRANGE key start stop [WITHSCORES]</span></span><br><span class="line"><span class="comment">// ZRANGE命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrangeCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    zrangeGenericCommand(c,<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ZREVRANGE key start stop [WITHSCORES]</span></span><br><span class="line"><span class="comment">// ZREVRANGE命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrevrangeCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    zrangeGenericCommand(c,<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>底层实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ZRANGE key start stop [WITHSCORES]</span></span><br><span class="line"><span class="comment">// ZREVRANGE key start stop [WITHSCORES]</span></span><br><span class="line"><span class="comment">// ZRANGE、ZREVRANGE命令底层实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrangeGenericCommand</span><span class="params">(client *c, <span class="type">int</span> reverse)</span> &#123;</span><br><span class="line">    robj *key = c-&gt;argv[<span class="number">1</span>];</span><br><span class="line">    robj *zobj;</span><br><span class="line">    <span class="type">int</span> withscores = <span class="number">0</span>;</span><br><span class="line">    <span class="type">long</span> start;</span><br><span class="line">    <span class="type">long</span> end;</span><br><span class="line">    <span class="type">int</span> llen;</span><br><span class="line">    <span class="type">int</span> rangelen;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 取出起始位置start和结束位置end</span></span><br><span class="line">    <span class="keyword">if</span> ((getLongFromObjectOrReply(c, c-&gt;argv[<span class="number">2</span>], &amp;start, <span class="literal">NULL</span>) != C_OK) ||</span><br><span class="line">        (getLongFromObjectOrReply(c, c-&gt;argv[<span class="number">3</span>], &amp;end, <span class="literal">NULL</span>) != C_OK)) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果有WITHSCORES参数，设置标志</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;argc == <span class="number">5</span> &amp;&amp; !strcasecmp(c-&gt;argv[<span class="number">4</span>]-&gt;ptr,<span class="string">&quot;withscores&quot;</span>)) &#123;</span><br><span class="line">        withscores = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 参数太多发送语法错误信息</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (c-&gt;argc &gt;= <span class="number">5</span>) &#123;</span><br><span class="line">        addReply(c,shared.syntaxerr);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 以读操作取出key有序集合并检查集合的数据类型</span></span><br><span class="line">    <span class="keyword">if</span> ((zobj = lookupKeyReadOrReply(c,key,shared.emptymultibulk)) == <span class="literal">NULL</span></span><br><span class="line">         || checkType(c,zobj,OBJ_ZSET)) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Sanitize indexes. */</span></span><br><span class="line">    <span class="comment">// 获得有序集合的下标范围</span></span><br><span class="line">    llen = zsetLength(zobj);</span><br><span class="line">    <span class="comment">// 处理负数下标</span></span><br><span class="line">    <span class="keyword">if</span> (start &lt; <span class="number">0</span>) start = llen+start;</span><br><span class="line">    <span class="keyword">if</span> (end &lt; <span class="number">0</span>) end = llen+end;</span><br><span class="line">    <span class="keyword">if</span> (start &lt; <span class="number">0</span>) start = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Invariant: start &gt;= 0, so this test will be true when end &lt; 0.</span></span><br><span class="line"><span class="comment">     * The range is empty when start &gt; end or start &gt;= length. */</span></span><br><span class="line">    <span class="comment">// 修剪调整下标</span></span><br><span class="line">    <span class="keyword">if</span> (start &gt; end || start &gt;= llen) &#123;</span><br><span class="line">        addReply(c,shared.emptymultibulk);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (end &gt;= llen) end = llen<span class="number">-1</span>;</span><br><span class="line">    rangelen = (end-start)+<span class="number">1</span>;       <span class="comment">//范围长度</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Return the result in form of a multi-bulk reply */</span></span><br><span class="line">    <span class="comment">// 发送回复的行数信息给client</span></span><br><span class="line">    addReplyMultiBulkLen(c, withscores ? (rangelen*<span class="number">2</span>) : rangelen);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是ziplist</span></span><br><span class="line">    <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_ZIPLIST) &#123;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *zl = zobj-&gt;ptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *eptr, *sptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *vstr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> vlen;</span><br><span class="line">        <span class="type">long</span> <span class="type">long</span> vlong;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 根据reverse决定遍历的头或尾元素节点地址eptr</span></span><br><span class="line">        <span class="keyword">if</span> (reverse)</span><br><span class="line">            eptr = ziplistIndex(zl,<span class="number">-2</span>-(<span class="number">2</span>*start));</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            eptr = ziplistIndex(zl,<span class="number">2</span>*start);</span><br><span class="line"></span><br><span class="line">        serverAssertWithInfo(c,zobj,eptr != <span class="literal">NULL</span>);</span><br><span class="line">        <span class="comment">// 获得分值节点地址</span></span><br><span class="line">        sptr = ziplistNext(zl,eptr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//取出rangelen个元素</span></span><br><span class="line">        <span class="keyword">while</span> (rangelen--) &#123;</span><br><span class="line">            serverAssertWithInfo(c,zobj,eptr != <span class="literal">NULL</span> &amp;&amp; sptr != <span class="literal">NULL</span>);</span><br><span class="line">            serverAssertWithInfo(c,zobj,ziplistGet(eptr,&amp;vstr,&amp;vlen,&amp;vlong));   <span class="comment">//讲元素信息保存在参数中</span></span><br><span class="line">            <span class="comment">// 元素的类型不同，发送不同类型的回复信息</span></span><br><span class="line">            <span class="keyword">if</span> (vstr == <span class="literal">NULL</span>)</span><br><span class="line">                addReplyBulkLongLong(c,vlong);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                addReplyBulkCBuffer(c,vstr,vlen);</span><br><span class="line">            <span class="comment">// 设置了withscores，发送分值</span></span><br><span class="line">            <span class="keyword">if</span> (withscores)</span><br><span class="line">                addReplyDouble(c,zzlGetScore(sptr));</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 根据reverse，指向下一个元素和分值的节点</span></span><br><span class="line">            <span class="keyword">if</span> (reverse)</span><br><span class="line">                zzlPrev(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                zzlNext(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是跳跃表</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_SKIPLIST) &#123;</span><br><span class="line">        zset *zs = zobj-&gt;ptr;</span><br><span class="line">        zskiplist *zsl = zs-&gt;zsl;</span><br><span class="line">        zskiplistNode *ln;</span><br><span class="line">        robj *ele;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Check if starting point is trivial, before doing log(N) lookup. */</span></span><br><span class="line">        <span class="comment">// 根据reverse决定，遍历的头或尾元素节点地址</span></span><br><span class="line">        <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">            ln = zsl-&gt;tail;</span><br><span class="line">            <span class="keyword">if</span> (start &gt; <span class="number">0</span>)</span><br><span class="line">                ln = zslGetElementByRank(zsl,llen-start);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ln = zsl-&gt;header-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">            <span class="keyword">if</span> (start &gt; <span class="number">0</span>)</span><br><span class="line">                ln = zslGetElementByRank(zsl,start+<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 取出rangelen个元素</span></span><br><span class="line">        <span class="keyword">while</span>(rangelen--) &#123;</span><br><span class="line">            serverAssertWithInfo(c,zobj,ln != <span class="literal">NULL</span>);</span><br><span class="line">            ele = ln-&gt;obj;</span><br><span class="line">            addReplyBulk(c,ele);    <span class="comment">//发送元素</span></span><br><span class="line">            <span class="keyword">if</span> (withscores)</span><br><span class="line">                addReplyDouble(c,ln-&gt;score);    <span class="comment">//发送分值</span></span><br><span class="line">            <span class="comment">// 指向下一个节点</span></span><br><span class="line">            ln = reverse ? ln-&gt;backward : ln-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        serverPanic(<span class="string">&quot;Unknown sorted set encoding&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-2-2-ZRANGEBYSCORE"><a href="#4-2-2-ZRANGEBYSCORE" class="headerlink" title="4.2.2 ZRANGEBYSCORE"></a>4.2.2 ZRANGEBYSCORE</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ZRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZRANGEBYSCORE 命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrangebyscoreCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    genericZrangebyscoreCommand(c,<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZREVRANGEBYSCORE 命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrevrangebyscoreCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    genericZrangebyscoreCommand(c,<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>底层实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* This command implements ZRANGEBYSCORE, ZREVRANGEBYSCORE. */</span></span><br><span class="line"><span class="comment">// ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZRANGEBYSCORE ZREVRANGEBYSCORE命令的底层实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">genericZrangebyscoreCommand</span><span class="params">(client *c, <span class="type">int</span> reverse)</span> &#123;</span><br><span class="line">    zrangespec range;</span><br><span class="line">    robj *key = c-&gt;argv[<span class="number">1</span>];</span><br><span class="line">    robj *zobj;</span><br><span class="line">    <span class="type">long</span> offset = <span class="number">0</span>, limit = <span class="number">-1</span>;</span><br><span class="line">    <span class="type">int</span> withscores = <span class="number">0</span>;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> rangelen = <span class="number">0</span>;</span><br><span class="line">    <span class="type">void</span> *replylen = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int</span> minidx, maxidx;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Parse the range arguments. */</span></span><br><span class="line">    <span class="comment">// 解析min和max范围的参数的下标</span></span><br><span class="line">    <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">        <span class="comment">/* Range is given as [max,min] */</span></span><br><span class="line">        maxidx = <span class="number">2</span>; minidx = <span class="number">3</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* Range is given as [min,max] */</span></span><br><span class="line">        minidx = <span class="number">2</span>; maxidx = <span class="number">3</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解析min和max范围参数，保存到zrangespec中，默认是包含[]临界值</span></span><br><span class="line">    <span class="keyword">if</span> (zslParseRange(c-&gt;argv[minidx],c-&gt;argv[maxidx],&amp;range) != C_OK) &#123;</span><br><span class="line">        addReplyError(c,<span class="string">&quot;min or max is not a float&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Parse optional extra arguments. Note that ZCOUNT will exactly have</span></span><br><span class="line"><span class="comment">     * 4 arguments, so we&#x27;ll never enter the following code path. */</span></span><br><span class="line">    <span class="comment">// 解析其他的参数</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;argc &gt; <span class="number">4</span>) &#123;</span><br><span class="line">        <span class="type">int</span> remaining = c-&gt;argc - <span class="number">4</span>;    <span class="comment">//其他参数个数</span></span><br><span class="line">        <span class="type">int</span> pos = <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (remaining) &#123;</span><br><span class="line">            <span class="comment">// 如果有WITHSCORES，设置标志</span></span><br><span class="line">            <span class="keyword">if</span> (remaining &gt;= <span class="number">1</span> &amp;&amp; !strcasecmp(c-&gt;argv[pos]-&gt;ptr,<span class="string">&quot;withscores&quot;</span>)) &#123;</span><br><span class="line">                pos++; remaining--;</span><br><span class="line">                withscores = <span class="number">1</span>;</span><br><span class="line">            <span class="comment">// 如果有LIMIT，取出offset和count值 保存在offset和limit中</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (remaining &gt;= <span class="number">3</span> &amp;&amp; !strcasecmp(c-&gt;argv[pos]-&gt;ptr,<span class="string">&quot;limit&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">if</span> ((getLongFromObjectOrReply(c, c-&gt;argv[pos+<span class="number">1</span>], &amp;offset, <span class="literal">NULL</span>) != C_OK) ||</span><br><span class="line">                    (getLongFromObjectOrReply(c, c-&gt;argv[pos+<span class="number">2</span>], &amp;limit, <span class="literal">NULL</span>) != C_OK)) <span class="keyword">return</span>;</span><br><span class="line">                pos += <span class="number">3</span>; remaining -= <span class="number">3</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                addReply(c,shared.syntaxerr);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Ok, lookup the key and get the range */</span></span><br><span class="line">    <span class="comment">// 以读操作取出有序集合对象</span></span><br><span class="line">    <span class="keyword">if</span> ((zobj = lookupKeyReadOrReply(c,key,shared.emptymultibulk)) == <span class="literal">NULL</span> ||</span><br><span class="line">        checkType(c,zobj,OBJ_ZSET)) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ziplist</span></span><br><span class="line">    <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_ZIPLIST) &#123;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *zl = zobj-&gt;ptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *eptr, *sptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *vstr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> vlen;</span><br><span class="line">        <span class="type">long</span> <span class="type">long</span> vlong;</span><br><span class="line">        <span class="type">double</span> score;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If reversed, get the last node in range as starting point. */</span></span><br><span class="line">        <span class="comment">// 获得range范围内的起始元素节点地址</span></span><br><span class="line">        <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">            eptr = zzlLastInRange(zl,&amp;range);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            eptr = zzlFirstInRange(zl,&amp;range);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* No &quot;first&quot; element in the specified interval. */</span></span><br><span class="line">        <span class="comment">// 没有元素在range里，发送空回复</span></span><br><span class="line">        <span class="keyword">if</span> (eptr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            addReply(c, shared.emptymultibulk);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Get score pointer for the first element. */</span></span><br><span class="line">        serverAssertWithInfo(c,zobj,eptr != <span class="literal">NULL</span>);</span><br><span class="line">        <span class="comment">// 分值节点地址</span></span><br><span class="line">        sptr = ziplistNext(zl,eptr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* We don&#x27;t know in advance how many matching elements there are in the</span></span><br><span class="line"><span class="comment">         * list, so we push this object that will represent the multi-bulk</span></span><br><span class="line"><span class="comment">         * length in the output buffer, and will &quot;fix&quot; it later */</span></span><br><span class="line">        <span class="comment">// 回复长度</span></span><br><span class="line">        replylen = addDeferredMultiBulkLength(c);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If there is an offset, just traverse the number of elements without</span></span><br><span class="line"><span class="comment">         * checking the score because that is done in the next loop. */</span></span><br><span class="line">        <span class="comment">// 跳过offset设定的长度</span></span><br><span class="line">        <span class="keyword">while</span> (eptr &amp;&amp; offset--) &#123;</span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                zzlPrev(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                zzlNext(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历所有符合范围的节点</span></span><br><span class="line">        <span class="keyword">while</span> (eptr &amp;&amp; limit--) &#123;</span><br><span class="line">            score = zzlGetScore(sptr);  <span class="comment">//获取分值</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Abort when the node is no longer in range. */</span></span><br><span class="line">            <span class="comment">// 检查分值是否符合范围内的分值</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zslValueGteMin(score,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zslValueLteMax(score,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* We know the element exists, so ziplistGet should always succeed */</span></span><br><span class="line">            serverAssertWithInfo(c,zobj,ziplistGet(eptr,&amp;vstr,&amp;vlen,&amp;vlong));   <span class="comment">//保存当前元素的值到参数中</span></span><br><span class="line"></span><br><span class="line">            rangelen++;</span><br><span class="line">            <span class="comment">// 不同元素类型，发送不同的类型的值给client</span></span><br><span class="line">            <span class="keyword">if</span> (vstr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">                addReplyBulkLongLong(c,vlong);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                addReplyBulkCBuffer(c,vstr,vlen);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (withscores) &#123;</span><br><span class="line">                addReplyDouble(c,score);    <span class="comment">//发送分值</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Move to next node */</span></span><br><span class="line">            <span class="comment">// 指向下一个元素和分值节点</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                zzlPrev(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                zzlNext(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">// 跳跃表</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_SKIPLIST) &#123;</span><br><span class="line">        zset *zs = zobj-&gt;ptr;</span><br><span class="line">        zskiplist *zsl = zs-&gt;zsl;</span><br><span class="line">        zskiplistNode *ln;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If reversed, get the last node in range as starting point. */</span></span><br><span class="line">        <span class="comment">// 获得range范围内的起始节点地址</span></span><br><span class="line">        <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">            ln = zslLastInRange(zsl,&amp;range);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ln = zslFirstInRange(zsl,&amp;range);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* No &quot;first&quot; element in the specified interval. */</span></span><br><span class="line">        <span class="comment">// 没有元素存在在制定的范围内</span></span><br><span class="line">        <span class="keyword">if</span> (ln == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            addReply(c, shared.emptymultibulk);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* We don&#x27;t know in advance how many matching elements there are in the</span></span><br><span class="line"><span class="comment">         * list, so we push this object that will represent the multi-bulk</span></span><br><span class="line"><span class="comment">         * length in the output buffer, and will &quot;fix&quot; it later */</span></span><br><span class="line">        <span class="comment">// 回复长度</span></span><br><span class="line">        replylen = addDeferredMultiBulkLength(c);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If there is an offset, just traverse the number of elements without</span></span><br><span class="line"><span class="comment">         * checking the score because that is done in the next loop. */</span></span><br><span class="line">        <span class="comment">// 跳过offset个节点</span></span><br><span class="line">        <span class="keyword">while</span> (ln &amp;&amp; offset--) &#123;</span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                ln = ln-&gt;backward;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ln = ln-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历所有符合范围的节点</span></span><br><span class="line">        <span class="keyword">while</span> (ln &amp;&amp; limit--) &#123;</span><br><span class="line">            <span class="comment">/* Abort when the node is no longer in range. */</span></span><br><span class="line">            <span class="comment">// 检查分值是否符合</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zslValueGteMin(ln-&gt;score,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zslValueLteMax(ln-&gt;score,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            rangelen++;</span><br><span class="line">            addReplyBulk(c,ln-&gt;obj);    <span class="comment">//发送元素</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (withscores) &#123;</span><br><span class="line">                addReplyDouble(c,ln-&gt;score);    <span class="comment">//发送分值</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Move to next node */</span></span><br><span class="line">            <span class="comment">// 指向下一个节点</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                ln = ln-&gt;backward;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ln = ln-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        serverPanic(<span class="string">&quot;Unknown sorted set encoding&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (withscores) &#123;   <span class="comment">//更新回复长度</span></span><br><span class="line">        rangelen *= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    setDeferredMultiBulkLength(c, replylen, rangelen);  <span class="comment">//发送范围的长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-2-3-ZRANGEBYLEX"><a href="#4-2-3-ZRANGEBYLEX" class="headerlink" title="4.2.3 ZRANGEBYLEX"></a>4.2.3 ZRANGEBYLEX</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ZRANGEBYLEX key min max [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZRANGEBYLEX 命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrangebylexCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    genericZrangebylexCommand(c,<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ZREVRANGEBYLEX key min max [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZREVRANGEBYLEX命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">zrevrangebylexCommand</span><span class="params">(client *c)</span> &#123;</span><br><span class="line">    genericZrangebylexCommand(c,<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>底层实现</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* This command implements ZRANGEBYLEX, ZREVRANGEBYLEX. */</span></span><br><span class="line"><span class="comment">// ZRANGEBYLEX key min max [LIMIT offset count]</span></span><br><span class="line"><span class="comment">// ZRANGEBYLEX 命令实现</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">genericZrangebylexCommand</span><span class="params">(client *c, <span class="type">int</span> reverse)</span> &#123;</span><br><span class="line">    zlexrangespec range;</span><br><span class="line">    robj *key = c-&gt;argv[<span class="number">1</span>];</span><br><span class="line">    robj *zobj;</span><br><span class="line">    <span class="type">long</span> offset = <span class="number">0</span>, limit = <span class="number">-1</span>;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> rangelen = <span class="number">0</span>;</span><br><span class="line">    <span class="type">void</span> *replylen = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int</span> minidx, maxidx;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Parse the range arguments. */</span></span><br><span class="line">    <span class="comment">// 解析min和max范围的参数的下标</span></span><br><span class="line">    <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">        <span class="comment">/* Range is given as [max,min] */</span></span><br><span class="line">        maxidx = <span class="number">2</span>; minidx = <span class="number">3</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* Range is given as [min,max] */</span></span><br><span class="line">        minidx = <span class="number">2</span>; maxidx = <span class="number">3</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解析min和max范围的参数，保存到range</span></span><br><span class="line">    <span class="keyword">if</span> (zslParseLexRange(c-&gt;argv[minidx],c-&gt;argv[maxidx],&amp;range) != C_OK) &#123;</span><br><span class="line">        addReplyError(c,<span class="string">&quot;min or max not valid string range item&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Parse optional extra arguments. Note that ZCOUNT will exactly have</span></span><br><span class="line"><span class="comment">     * 4 arguments, so we&#x27;ll never enter the following code path. */</span></span><br><span class="line">    <span class="comment">// 解析其他参数</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;argc &gt; <span class="number">4</span>) &#123;</span><br><span class="line">        <span class="type">int</span> remaining = c-&gt;argc - <span class="number">4</span>;    <span class="comment">//其他参数的个数</span></span><br><span class="line">        <span class="type">int</span> pos = <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (remaining) &#123;</span><br><span class="line">            <span class="comment">// 如果有LIMIT，取出offset和count保存在offset和limit</span></span><br><span class="line">            <span class="keyword">if</span> (remaining &gt;= <span class="number">3</span> &amp;&amp; !strcasecmp(c-&gt;argv[pos]-&gt;ptr,<span class="string">&quot;limit&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">if</span> ((getLongFromObjectOrReply(c, c-&gt;argv[pos+<span class="number">1</span>], &amp;offset, <span class="literal">NULL</span>) != C_OK) ||</span><br><span class="line">                    (getLongFromObjectOrReply(c, c-&gt;argv[pos+<span class="number">2</span>], &amp;limit, <span class="literal">NULL</span>) != C_OK)) <span class="keyword">return</span>;</span><br><span class="line">                pos += <span class="number">3</span>; remaining -= <span class="number">3</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                zslFreeLexRange(&amp;range);</span><br><span class="line">                addReply(c,shared.syntaxerr);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Ok, lookup the key and get the range */</span></span><br><span class="line">    <span class="comment">// 以读操作取出有序集合对象</span></span><br><span class="line">    <span class="keyword">if</span> ((zobj = lookupKeyReadOrReply(c,key,shared.emptymultibulk)) == <span class="literal">NULL</span> ||</span><br><span class="line">        checkType(c,zobj,OBJ_ZSET))</span><br><span class="line">    &#123;</span><br><span class="line">        zslFreeLexRange(&amp;range);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ziplist</span></span><br><span class="line">    <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_ZIPLIST) &#123;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *zl = zobj-&gt;ptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *eptr, *sptr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">char</span> *vstr;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> vlen;</span><br><span class="line">        <span class="type">long</span> <span class="type">long</span> vlong;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If reversed, get the last node in range as starting point. */</span></span><br><span class="line">        <span class="comment">// 获得range范围内的起始元素节点地址</span></span><br><span class="line">        <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">            eptr = zzlLastInLexRange(zl,&amp;range);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            eptr = zzlFirstInLexRange(zl,&amp;range);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* No &quot;first&quot; element in the specified interval. */</span></span><br><span class="line">        <span class="comment">// 没有元素在范围内</span></span><br><span class="line">        <span class="keyword">if</span> (eptr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            addReply(c, shared.emptymultibulk);</span><br><span class="line">            zslFreeLexRange(&amp;range);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Get score pointer for the first element. */</span></span><br><span class="line">        serverAssertWithInfo(c,zobj,eptr != <span class="literal">NULL</span>);</span><br><span class="line">        <span class="comment">// 分数节点的地址</span></span><br><span class="line">        sptr = ziplistNext(zl,eptr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* We don&#x27;t know in advance how many matching elements there are in the</span></span><br><span class="line"><span class="comment">         * list, so we push this object that will represent the multi-bulk</span></span><br><span class="line"><span class="comment">         * length in the output buffer, and will &quot;fix&quot; it later */</span></span><br><span class="line">        <span class="comment">// 回复长度</span></span><br><span class="line">        replylen = addDeferredMultiBulkLength(c);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If there is an offset, just traverse the number of elements without</span></span><br><span class="line"><span class="comment">         * checking the score because that is done in the next loop. */</span></span><br><span class="line">        <span class="comment">// 跳过offset设定的长度</span></span><br><span class="line">        <span class="keyword">while</span> (eptr &amp;&amp; offset--) &#123;</span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                zzlPrev(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                zzlNext(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历所有符合范围的节点</span></span><br><span class="line">        <span class="keyword">while</span> (eptr &amp;&amp; limit--) &#123;</span><br><span class="line">            <span class="comment">/* Abort when the node is no longer in range. */</span></span><br><span class="line">            <span class="comment">// 检查分值是否符合范围内的分值</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zzlLexValueGteMin(eptr,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zzlLexValueLteMax(eptr,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* We know the element exists, so ziplistGet should always</span></span><br><span class="line"><span class="comment">             * succeed. */</span></span><br><span class="line">            serverAssertWithInfo(c,zobj,ziplistGet(eptr,&amp;vstr,&amp;vlen,&amp;vlong));   <span class="comment">//保存当前元素的值到参数中</span></span><br><span class="line"></span><br><span class="line">            rangelen++;</span><br><span class="line">            <span class="comment">// 不同元素值类型，发送不同类型的值client</span></span><br><span class="line">            <span class="keyword">if</span> (vstr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">                addReplyBulkLongLong(c,vlong);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                addReplyBulkCBuffer(c,vstr,vlen);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Move to next node */</span></span><br><span class="line">            <span class="comment">// 指向下一个元素和分值节点</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                zzlPrev(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                zzlNext(zl,&amp;eptr,&amp;sptr);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">// skiplist</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (zobj-&gt;encoding == OBJ_ENCODING_SKIPLIST) &#123;</span><br><span class="line">        zset *zs = zobj-&gt;ptr;</span><br><span class="line">        zskiplist *zsl = zs-&gt;zsl;</span><br><span class="line">        zskiplistNode *ln;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If reversed, get the last node in range as starting point. */</span></span><br><span class="line">        <span class="comment">// 获得range范围内的起始节点地址</span></span><br><span class="line">        <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">            ln = zslLastInLexRange(zsl,&amp;range);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ln = zslFirstInLexRange(zsl,&amp;range);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* No &quot;first&quot; element in the specified interval. */</span></span><br><span class="line">        <span class="comment">// 没有节点符合范围</span></span><br><span class="line">        <span class="keyword">if</span> (ln == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            addReply(c, shared.emptymultibulk);</span><br><span class="line">            zslFreeLexRange(&amp;range);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* We don&#x27;t know in advance how many matching elements there are in the</span></span><br><span class="line"><span class="comment">         * list, so we push this object that will represent the multi-bulk</span></span><br><span class="line"><span class="comment">         * length in the output buffer, and will &quot;fix&quot; it later */</span></span><br><span class="line">        <span class="comment">// 回复长度</span></span><br><span class="line">        replylen = addDeferredMultiBulkLength(c);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If there is an offset, just traverse the number of elements without</span></span><br><span class="line"><span class="comment">         * checking the score because that is done in the next loop. */</span></span><br><span class="line">        <span class="comment">// 跳过offset个节点</span></span><br><span class="line">        <span class="keyword">while</span> (ln &amp;&amp; offset--) &#123;</span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                ln = ln-&gt;backward;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ln = ln-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历所有符合范围的节点</span></span><br><span class="line">        <span class="keyword">while</span> (ln &amp;&amp; limit--) &#123;</span><br><span class="line">            <span class="comment">/* Abort when the node is no longer in range. */</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;  <span class="comment">//检查分值是否符合</span></span><br><span class="line">                <span class="keyword">if</span> (!zslLexValueGteMin(ln-&gt;obj,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!zslLexValueLteMax(ln-&gt;obj,&amp;range)) <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            rangelen++;</span><br><span class="line">            addReplyBulk(c,ln-&gt;obj);    <span class="comment">//发送元素</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Move to next node */</span></span><br><span class="line">            <span class="comment">// 指向下一个节点</span></span><br><span class="line">            <span class="keyword">if</span> (reverse) &#123;</span><br><span class="line">                ln = ln-&gt;backward;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ln = ln-&gt;level[<span class="number">0</span>].forward;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        serverPanic(<span class="string">&quot;Unknown sorted set encoding&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    zslFreeLexRange(&amp;range);    <span class="comment">//释放字典序范围</span></span><br><span class="line">    setDeferredMultiBulkLength(c, replylen, rangelen);  <span class="comment">//发送回复长度值</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2012.%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1/" rel="prev" title="Redis源码与设计剖析 -- 12.集合对象">
+      <i class="fa fa-chevron-left"></i> Redis源码与设计剖析 -- 12.集合对象
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2014.%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E7%8E%B0/" rel="next" title="Redis源码与设计剖析 -- 14.数据库实现">
+      Redis源码与设计剖析 -- 14.数据库实现 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">1. 有序集合对象的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">2. 有序集合对象编码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E7%BC%96%E7%A0%81%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 编码使用规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 编码转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E5%91%BD%E4%BB%A4%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.</span> <span class="nav-text">3. 有序集合对象命令介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E5%AF%B9%E8%B1%A1%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">4. 有序集合对象命令的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E7%9A%84%E8%8C%83%E5%9B%B4%E9%99%90%E5%AE%9A%E6%96%B9%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 有序集合的范围限定方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E7%9A%84%E8%8C%83%E5%9B%B4%E6%93%8D%E4%BD%9C"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 有序集合的范围操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-1-ZRANGE"><span class="nav-number">4.2.1.</span> <span class="nav-text">4.2.1 ZRANGE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-2-ZRANGEBYSCORE"><span class="nav-number">4.2.2.</span> <span class="nav-text">4.2.2 ZRANGEBYSCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-3-ZRANGEBYLEX"><span class="nav-number">4.2.3.</span> <span class="nav-text">4.2.3 ZRANGEBYLEX</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
