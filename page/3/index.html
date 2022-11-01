@@ -196,6 +196,582 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 4.跳跃表</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:24:00 / 修改时间：17:30:12" itemprop="dateCreated datePublished" datetime="2022-10-31T17:24:00+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 4.跳跃表" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>跳跃表（skiplist）是一种有序的数据结构，它通过建立多层"索引"，从而达到快速访问节点的目的. 跳跃表支持平均O(logN)，最坏O(N)复杂度的节点查找，还可以通过顺序性操作来批量处理节点.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 3.字典</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:23:47 / 修改时间：17:28:59" itemprop="dateCreated datePublished" datetime="2022-10-31T17:23:47+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 3.字典" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis构建了自己的字典实现. 字典在Redis中的应用相当广泛，比如哈希对象在满足条件的情况下会使用字典作为底层实现，以及Redis中的数据库也是使用字典来作为底层实现的，对数据库的增、删、查、改操作也是构建在对字典的操作之上的.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 2.链表</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:22:08 / 修改时间：17:23:33" itemprop="dateCreated datePublished" datetime="2022-10-31T17:22:08+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 2.链表" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>链表在Redis中的应用非常广泛，比如列表键的底层实现之一就是链表. 当一个列表键包含了数量比较多的元素，又或者列表键中包含的元素都是比较长的字符串时，Redis就会使用链表作为列表键的底层实现（短的话用压缩列表）.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 1.简单动态字符串</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 16:42:23 / 修改时间：17:17:01" itemprop="dateCreated datePublished" datetime="2022-10-31T16:42:23+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 1.简单动态字符串" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis没有直接使用C语言传统的字符串表示（以空字符结尾的字符数组，以下简称C字符串），而是自己构建了一种名为简单动态字符串（simple dynamic string，``SDS`` ）的抽象类型，并将``SDS``用作Redis的默认字符串表示.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-title-link" itemprop="url">四、Redis持久化</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-09 23:29:31 / 修改时间：23:44:06" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:31+08:00">2022-09-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="四、Redis持久化" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis有两种持久化方案：RDB持久化和AOF持久化。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">三、Redis事务和锁机制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-09 23:29:14 / 修改时间：23:43:48" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:14+08:00">2022-09-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="三、Redis事务和锁机制" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis事务就是一个命令执行的队列，将一系列预定义命令包装成一个整体（一个队列）。当执行时，一次性按照添加顺序依次执行，中间不会被打断或者干扰。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -576,586 +1152,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">Golang Context的使用场景</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-08 13:24:07 / 修改时间：13:24:41" itemprop="dateCreated datePublished" datetime="2022-09-08T13:24:07+08:00">2022-09-08</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Context的使用场景" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>值传递只是context的一个辅助功能，并不是核心功能。一般我们只用context来传递不影响业务主逻辑的可选数据，比如日志信息、调试信息以及元信息等等。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20Context%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-title-link" itemprop="url">Golang 优雅的使用Context</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-08 13:23:13 / 修改时间：13:23:52" itemprop="dateCreated datePublished" datetime="2022-09-08T13:23:13+08:00">2022-09-08</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 优雅的使用Context" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在很多场景下，在执行一个任务时，我们会将这个任务拆分成几个子任务，然后开启几个不同的goroutine去执行。当因为某些原因这个任务需要终止时，我们需要将这些goroutine也全都终止掉。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">生产者-消费者模式 Golang实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-08 13:21:42 / 修改时间：13:22:57" itemprop="dateCreated datePublished" datetime="2022-09-08T13:21:42+08:00">2022-09-08</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="生产者-消费者模式 Golang实现" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>生产者消费者模型具体来讲，就是在一个系统中，存在生产者和消费者两种角色，他们通过内存缓冲区进行通信，生产者生产消费者需要的资料，消费者把资料做成产品。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">Master-Worker模式 Golang实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-08 13:20:21 / 修改时间：13:21:27" itemprop="dateCreated datePublished" datetime="2022-09-08T13:20:21+08:00">2022-09-08</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="Master-Worker模式 Golang实现" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Master-Worker模式是常用的并行计算模式。它的核心思想是系统由两类进程协作工作：Master进行和Worker进行。Master负责接收和分配任务，Worker负责处理子任务。当各个Worker子进程处理完成后，会将结果返回给Master，由Master做归纳和总结。其好处是能将一个大任务分解成若干个子任务，并行执行，从而提高系统的吞吐量。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Master-Worker%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">Future模式 Golang实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-07 23:47:21 / 修改时间：23:47:55" itemprop="dateCreated datePublished" datetime="2022-09-07T23:47:21+08:00">2022-09-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="Future模式 Golang实现" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>编程中经常遇到在一个流程中需要调用多个子调用的情况，这些子调用相互之间没有依赖，如果串行地调用，则耗时会很长，此时可以使用并发编程中的future模式。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Future%E6%A8%A1%E5%BC%8F%20Golang%E5%AE%9E%E7%8E%B0/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">Golang 扇入扇出以及通知退出机制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-07 23:46:17 / 修改时间：23:46:53" itemprop="dateCreated datePublished" datetime="2022-09-07T23:46:17+08:00">2022-09-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 扇入扇出以及通知退出机制" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>编程中经常遇到“扇入和扇出”两个概念，所谓的扇入是指将多路通道聚合到一条通道中处理，Go语言最简单的扇入就是使用select聚合多条通道服务;所谓的扇出是指将一条通道发散到多条通道中处理。在Go语言里面实现就是使用go关键字启动多个goroutine并发处理。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E6%89%87%E5%85%A5%E6%89%87%E5%87%BA%E4%BB%A5%E5%8F%8A%E9%80%9A%E7%9F%A5%E9%80%80%E5%87%BA%E6%9C%BA%E5%88%B6/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1223,14 +1223,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
