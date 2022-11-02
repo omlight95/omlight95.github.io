@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ORM数据库就考虑到了这一点，我们以GORM框架举例。在创建数据表的时候，可以不用对数据表添加任何约束，而是把这项任务延后到了创建models的时候，降低了耦合度，后期可以直接修改代码而不用去修改数据库。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GORM 预加载和自引用">
+<meta property="og:url" content="http://example.com/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="ORM数据库就考虑到了这一点，我们以GORM框架举例。在创建数据表的时候，可以不用对数据表添加任何约束，而是把这项任务延后到了创建models的时候，降低了耦合度，后期可以直接修改代码而不用去修改数据库。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/07f22e546be041899e4743e3d7460cd6.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fad75b2d680f41cca9d8f341f73d41a6.png">
+<meta property="article:published_time" content="2022-11-02T02:15:17.947Z">
+<meta property="article:modified_time" content="2022-11-02T02:21:11.301Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/07f22e546be041899e4743e3d7460cd6.png">
+
+<link rel="canonical" href="http://example.com/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>GORM 预加载和自引用 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GORM 预加载和自引用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 10:15:17 / 修改时间：10:21:11" itemprop="dateCreated datePublished" datetime="2022-11-02T10:15:17+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Gorm/" itemprop="url" rel="index"><span itemprop="name">Gorm</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="GORM 预加载和自引用" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">ORM数据库就考虑到了这一点，我们以GORM框架举例。在创建数据表的时候，可以不用对数据表添加任何约束，而是把这项任务延后到了创建models的时候，降低了耦合度，后期可以直接修改代码而不用去修改数据库。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="预加载"><a href="#预加载" class="headerlink" title="预加载"></a>预加载</h2><h3 id="从传统的外键约束说起"><a href="#从传统的外键约束说起" class="headerlink" title="从传统的外键约束说起"></a>从传统的外键约束说起</h3><p>在传统的数据库设计中，如果我们想创建一个主表和从表，得在创建从表语句的时候添加外键约束（一般在创建的时候添加）。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="keyword">CONSTRAINT</span>] [外键约束名称] <span class="keyword">FOREIGN</span> KEY(外键字段名) <span class="keyword">REFERENCES</span> 主表名(主键字段名)</span><br></pre></td></tr></table></figure>
+
+<p>比如现在有一个部门表和一个员工表，他们之间是一对多关系，部门表是主表，员工表是从表。那么在创建员工表的时候，我们得为它添加上外键约束：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># 先建立主表：department表</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> department(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key auto_increment,</span><br><span class="line">	dep_name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	dep_location <span class="type">varchar</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">#  创建从表 employee 并添加外键约束 emp_depid_fk</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> employee(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key auto_increment,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">int</span>,</span><br><span class="line">	dep_id <span class="type">int</span>, <span class="comment">-- 外键对应主表的主键</span></span><br><span class="line">	<span class="comment">-- 创建外键约束</span></span><br><span class="line">	<span class="keyword">constraint</span> emp_depid_fk <span class="keyword">foreign</span> key (dep_id) <span class="keyword">references</span> department(id)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>但是这样做存在一些问题，因为数据表的设计一般是在项目开发的起始阶段，我们不太可能一开始就把数据表设计的很完美，后期可能会对数据表之间的关系做一些调整，而添加外键约束无疑是提前把数据表之间的关系给写死了（如果没有添加级联操作的话），耦合度比较低。</p>
+<h3 id="ORM数据库"><a href="#ORM数据库" class="headerlink" title="ORM数据库"></a>ORM数据库</h3><p>ORM数据库就考虑到了这一点，我们以GORM框架举例。在创建数据表的时候，可以不用对数据表添加任何约束，而是把这项任务延后到了创建models的时候，降低了耦合度，后期可以直接修改代码而不用去修改数据库。</p>
+<p>我们来举一个例子，假如现在要创建三张数据表，学生表与成绩表是多对一，成绩表与课程表之间是一对多：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">USE test01;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> student(</span><br><span class="line">	sno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	NAME <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">INT</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> grade (</span><br><span class="line">	sno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	grade <span class="type">INT</span>,</span><br><span class="line">	cno <span class="type">VARCHAR</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> course (</span><br><span class="line">	cno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	cname <span class="type">VARCHAR</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;01&quot;, &quot;张三&quot;, <span class="number">19</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;02&quot;, &quot;李四&quot;, <span class="number">20</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;02&quot;, &quot;王五&quot;, <span class="number">21</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">90</span>, &quot;0001&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">80</span>, &quot;0002&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">30</span>, &quot;0003&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">80</span>, &quot;0001&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">50</span>, &quot;0002&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">60</span>, &quot;0003&quot;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0001&quot;, &quot;数学&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0002&quot;, &quot;语文&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0003&quot;, &quot;英语&quot;);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/07f22e546be041899e4743e3d7460cd6.png" alt="在这里插入图片描述"></p>
+<p>我们在创建数据表的时候没有指定任何约束，而是把这项工作延后到了创建models的时候：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Sno <span class="type">string</span> <span class="string">`gorm:&quot;primary_key&quot;`</span></span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Age <span class="type">int</span></span><br><span class="line">	Grades []grade <span class="string">`gorm:&quot;foreignKey:Sno;association_foreignkey:Sno&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(student)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;student&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> grade <span class="keyword">struct</span> &#123;</span><br><span class="line">	Sno <span class="type">string</span></span><br><span class="line">	Grade <span class="type">int</span></span><br><span class="line">	Cno <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(grade)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;grade&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> course <span class="keyword">struct</span> &#123;</span><br><span class="line">	Cno <span class="type">string</span> <span class="string">`gorm:&quot;primary_key&quot;`</span></span><br><span class="line">	Cname <span class="type">string</span></span><br><span class="line">	Grades []grade <span class="string">`gorm:&quot;foreignKey:Cno;association_foreignkey:Cno&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(course)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;course&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在主表中，我们创建了从表映射结构体的切片，然后使用结构体tag来指定外键约束的字段，使用这种方式来表达主表和从表之间的关系。</p>
+<h3 id="预加载-1"><a href="#预加载-1" class="headerlink" title="预加载"></a>预加载</h3><p>创建好models以后，我们试着使用查询语句来查询表中的信息，比如查询学生表中张三的信息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> st student</span><br><span class="line">db.Where(<span class="string">&quot;Name=?&quot;</span>, <span class="string">&quot;张三&quot;</span>).Find(&amp;st)</span><br><span class="line"><span class="comment">// &#123;01 张三 19 []&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以发现，虽然学号、姓名和年龄都被打印出来了，但是从表的信息却没有打印出来，虽然在一般情况下，从表的信息是不用打印出来的，但是我们在student结构体中声明了Grades字段，这个字段的值按道理是应该和其他字段一样被打印出来的。</p>
+<p>这个时候就需要使用预加载了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">db.Preload(<span class="string">&quot;Grades&quot;</span>).Where(<span class="string">&quot;Name=?&quot;</span>, <span class="string">&quot;张三&quot;</span>).Find(&amp;st)</span><br><span class="line"><span class="comment">// &#123;01 张三 19 [&#123;01 90 0001&#125; &#123;01 80 0002&#125; &#123;01 30 0003&#125;]&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Preload</code>中指定的是映射结构体中的切片字段名。</p>
+<p><strong>自定义预加载</strong></p>
+<p>我们还可以自定义预加载，比如我们只想显示张三的数学成绩：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">db.Preload(<span class="string">&quot;Grades&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(db *gorm.DB)</span></span> *gorm.DB &#123;</span><br><span class="line">		<span class="comment">// 原生的sql语句, 这里的sno和cno是数据库中的字段，不是结构体中的字段</span></span><br><span class="line">		<span class="keyword">return</span> db.Where(<span class="string">&quot;sno=? and cno=?&quot;</span>, <span class="string">&quot;01&quot;</span>, <span class="string">&quot;0001&quot;</span>)</span><br><span class="line">	&#125;).Where(<span class="string">&quot;Name=?&quot;</span>, <span class="string">&quot;张三&quot;</span>).Find(&amp;st)</span><br><span class="line"><span class="comment">// &#123;01 张三 19 [&#123;01 90 0001&#125;]&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="自引用"><a href="#自引用" class="headerlink" title="自引用"></a>自引用</h2><p>假如现在有一张员工表：</p>
+<p><img src="https://img-blog.csdnimg.cn/fad75b2d680f41cca9d8f341f73d41a6.png" alt="在这里插入图片描述"></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> employee (</span><br><span class="line">	id <span class="type">INT</span>,</span><br><span class="line">	lid <span class="type">INT</span>,</span><br><span class="line">	NAME <span class="type">VARCHAR</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> employee <span class="keyword">VALUES</span>(<span class="number">1</span>, <span class="number">0</span>, &quot;领导&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> employee <span class="keyword">VALUES</span>(<span class="number">2</span>, <span class="number">1</span>, &quot;员工1&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> employee <span class="keyword">VALUES</span>(<span class="number">3</span>, <span class="number">1</span>, &quot;员工2&quot;);</span><br></pre></td></tr></table></figure>
+
+
+<p>三个字段分别是员工编号、领导编号和员工姓名，某条数据的lid可能是另一条数据的id，即一个员工可能是另一个员工的领导，一张表中的数据构成了一对多关系，这就是自引用。</p>
+<p>在models中可以这样来写tag：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> employee <span class="keyword">struct</span> &#123;</span><br><span class="line">	Id <span class="type">int</span></span><br><span class="line">	Lid <span class="type">int</span></span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Employees []employee <span class="string">`gorm:&quot;foreignkey:Lid;association_foreignkey:Id&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(employee)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;employee&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以使用预加载来打印领导的信息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> emp employee</span><br><span class="line">db.Preload(<span class="string">&quot;Employees&quot;</span>).Where(<span class="string">&quot;Name=?&quot;</span>, <span class="string">&quot;领导&quot;</span>).Find(&amp;emp)</span><br><span class="line">fmt.Println(emp)</span><br><span class="line"><span class="comment">// &#123;1 0 领导 [&#123;2 1 员工1 []&#125; &#123;3 1 员工2 []&#125;]&#125;</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/" rel="prev" title="GORM CRUD操作">
+      <i class="fa fa-chevron-left"></i> GORM CRUD操作
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E6%B5%85%E8%AF%86%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="next" title="浅识分布式系统">
+      浅识分布式系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A2%84%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.</span> <span class="nav-text">预加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%A4%96%E9%94%AE%E7%BA%A6%E6%9D%9F%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.1.</span> <span class="nav-text">从传统的外键约束说起</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ORM%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.2.</span> <span class="nav-text">ORM数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%8A%A0%E8%BD%BD-1"><span class="nav-number">1.3.</span> <span class="nav-text">预加载</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%BC%95%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">自引用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">94</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

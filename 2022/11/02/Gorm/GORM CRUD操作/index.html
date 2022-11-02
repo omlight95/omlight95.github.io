@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本片主要是介绍GORM连接MySQL数据库后进行CRUD操作。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GORM CRUD操作">
+<meta property="og:url" content="http://example.com/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="本片主要是介绍GORM连接MySQL数据库后进行CRUD操作。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/bc9f3670f9ab4f8dbbc1547b91abb9f6.png">
+<meta property="article:published_time" content="2022-11-02T02:15:04.844Z">
+<meta property="article:modified_time" content="2022-11-02T02:20:25.736Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/bc9f3670f9ab4f8dbbc1547b91abb9f6.png">
+
+<link rel="canonical" href="http://example.com/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>GORM CRUD操作 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GORM CRUD操作
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 10:15:04 / 修改时间：10:20:25" itemprop="dateCreated datePublished" datetime="2022-11-02T10:15:04+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Gorm/" itemprop="url" rel="index"><span itemprop="name">Gorm</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/" class="post-meta-item leancloud_visitors" data-flag-title="GORM CRUD操作" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/Gorm/GORM%20CRUD%E6%93%8D%E4%BD%9C/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">本片主要是介绍GORM连接MySQL数据库后进行CRUD操作。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>首先要连接到数据库：<br>本文中的<code>db</code>变量为 <code>*gorm.DB</code>对象。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;github.com/jinzhu/gorm&quot;</span></span><br><span class="line">	_ <span class="string">&quot;github.com/jinzhu/gorm/dialects/mysql&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	db, err := gorm.Open(<span class="string">&quot;mysql&quot;</span>, <span class="string">&quot;root:123456@(127.0.0.1:3306)/db6?charset=utf8mb4&amp;parseTime=True&amp;loc=Local&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> err!= <span class="literal">nil</span>&#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> db.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h2><h3 id="创建记录"><a href="#创建记录" class="headerlink" title="创建记录"></a>创建记录</h3><p>首先定义模型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID <span class="type">int64</span></span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Age <span class="type">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用<code>NewRecord()</code>查询主键是否存在，主键为空使用<code>Create()</code>创建记录。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">user := User&#123;Name: <span class="string">&quot;zhangsan&quot;</span>, Age: <span class="number">18</span>&#125;</span><br><span class="line"></span><br><span class="line">db.NewRecord(user)  <span class="comment">//主键为空返回`true`</span></span><br><span class="line">db.Create(&amp;user)  	<span class="comment">//创建user</span></span><br><span class="line">db.NewRecord(user) <span class="comment">//创建`user`后返回`false`</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="默认值"><a href="#默认值" class="headerlink" title="默认值"></a>默认值</h3><p>可以通过tag定义字段的默认值，比如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID <span class="type">int64</span></span><br><span class="line">	Name <span class="type">string</span> <span class="string">`gorm:&quot;default:&#x27;张三&#x27;&quot;`</span></span><br><span class="line">	Age <span class="type">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>注意：通过tag定义字段的默认值，在创建记录时候生成的 SQL 语句会排除没有值或值为 零值 的字段。 在将记录插入到数据库后，Gorm会从数据库加载那些字段的默认值。</p>
+<p>举个例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> user = USer&#123;Name: <span class="string">&quot;&quot;</span>, Age: <span class="number">99</span>&#125;</span><br><span class="line">db.Create(&amp;user)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面代码执行的SQL语句是 <code>INSERT INTO users(&quot;age&quot;) values(&#39;99&#39;);</code> ，排除了零值字段<code>Name </code> ，而在数据库中这一条数据会使用默认值<code>张三</code>作为<code>Name</code>字段的值。</p>
+<p>注意：所有字段的零值, 比如<code>0</code>,<code> &quot;&quot;</code>,<code>false</code>或者其它<code>零值</code>，都不会保存到数据库内，但会使用他们的默认值。 如果你想避免这种情况，可以考虑使用指针或实现 <code>Scanner/Valuer</code>接口，比如：</p>
+<p>使用指针方式实现零值存入数据库:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用指针</span></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">  ID   <span class="type">int64</span></span><br><span class="line">  Name *<span class="type">string</span> <span class="string">`gorm:&quot;default:&#x27;张三&#x27;&quot;`</span></span><br><span class="line">  Age  <span class="type">int64</span></span><br><span class="line">&#125;</span><br><span class="line">user := User&#123;Name: <span class="built_in">new</span>(<span class="type">string</span>), Age: <span class="number">18</span>))&#125;</span><br><span class="line">db.Create(&amp;user)  <span class="comment">// 此时数据库中该条记录name字段的值就是&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用Scanner&#x2F;Valuer接口方式实现零值存入数据库:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用 Scanner/Valuer</span></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID <span class="type">int64</span></span><br><span class="line">	Name sql.NullString <span class="string">`gorm:&quot;default:&#x27;小王子&#x27;&quot;`</span> <span class="comment">// sql.NullString 实现了Scanner/Valuer接口</span></span><br><span class="line">	Age  <span class="type">int64</span></span><br><span class="line">&#125;</span><br><span class="line">user := User&#123;Name: sql.NullString&#123;<span class="string">&quot;&quot;</span>, <span class="literal">true</span>&#125;, Age:<span class="number">18</span>&#125;</span><br><span class="line">db.Create(&amp;user)  <span class="comment">// 此时数据库中该条记录name字段的值就是&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="扩展创建选项"><a href="#扩展创建选项" class="headerlink" title="扩展创建选项"></a>扩展创建选项</h3><p>例如<code>PostgreSQL</code>数据库中可以使用下面的方式实现合并插入,有则更新，无则插入。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 为Instert语句添加扩展SQL选项</span></span><br><span class="line">db.Set(<span class="string">&quot;gorm:insert_option&quot;</span>, <span class="string">&quot;ON CONFLICT&quot;</span>).Create(&amp;product)</span><br><span class="line"><span class="comment">// INSERT INTO products (name, code) VALUES (&quot;name&quot;, &quot;code&quot;) ON CONFLICT;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h2><h3 id="一般查询"><a href="#一般查询" class="headerlink" title="一般查询"></a>一般查询</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 根据主键查询第一条记录</span><br><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">ORDER</span> <span class="keyword">BY</span> id LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 随机获取一条记录</span><br><span class="line">db.Take(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 根据主键查询最后一条记录</span><br><span class="line">db.Last(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">ORDER</span> <span class="keyword">BY</span> id <span class="keyword">DESC</span> LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查询所有的记录</span><br><span class="line">db.Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查询指定的某条记录(仅当主键为整型时可用)</span><br><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>, <span class="number">10</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="Where条件"><a href="#Where条件" class="headerlink" title="Where条件"></a>Where条件</h3><p><strong>普通SQL查询</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">Get</span> <span class="keyword">first</span> matched record</span><br><span class="line">db.Where(&quot;name = ?&quot;, &quot;jinzhu&quot;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> limit <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">Get</span> <span class="keyword">all</span> matched records</span><br><span class="line">db.Where(&quot;name = ?&quot;, &quot;jinzhu&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="operator">&lt;&gt;</span></span><br><span class="line">db.Where(&quot;name &lt;&gt; ?&quot;, &quot;jinzhu&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">&lt;&gt;</span> <span class="string">&#x27;jinzhu&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">IN</span></span><br><span class="line">db.Where(&quot;name IN (?)&quot;, []string&#123;&quot;jinzhu&quot;, &quot;jinzhu 2&quot;&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="keyword">in</span> (<span class="string">&#x27;jinzhu&#x27;</span>,<span class="string">&#x27;jinzhu 2&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">LIKE</span></span><br><span class="line">db.Where(&quot;name LIKE ?&quot;, &quot;%jin%&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;%jin%&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">AND</span></span><br><span class="line">db.Where(&quot;name = ? AND age &gt;= ?&quot;, &quot;jinzhu&quot;, &quot;22&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">AND</span> age <span class="operator">&gt;=</span> <span class="number">22</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="type">Time</span></span><br><span class="line">db.Where(&quot;updated_at &gt; ?&quot;, lastWeek).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> updated_at <span class="operator">&gt;</span> <span class="string">&#x27;2000-01-01 00:00:00&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">BETWEEN</span></span><br><span class="line">db.Where(&quot;created_at BETWEEN ? AND ?&quot;, lastWeek, today).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> created_at <span class="keyword">BETWEEN</span> <span class="string">&#x27;2000-01-01 00:00:00&#x27;</span> <span class="keyword">AND</span> <span class="string">&#x27;2000-01-08 00:00:00&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>Struct &amp; Map查询</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> Struct</span><br><span class="line">db.Where(<span class="operator">&amp;</span><span class="keyword">User</span>&#123;Name: &quot;jinzhu&quot;, Age: <span class="number">20</span>&#125;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> &quot;jinzhu&quot; <span class="keyword">AND</span> age <span class="operator">=</span> <span class="number">20</span> LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Map</span><br><span class="line">db.Where(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;jinzhu&quot;, &quot;age&quot;: <span class="number">20</span>&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> &quot;jinzhu&quot; <span class="keyword">AND</span> age <span class="operator">=</span> <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 主键的切片</span><br><span class="line">db.Where([]int64&#123;<span class="number">20</span>, <span class="number">21</span>, <span class="number">22</span>&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="keyword">IN</span> (<span class="number">20</span>, <span class="number">21</span>, <span class="number">22</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>提示：当通过结构体进行查询时，GORM将会只通过非零值字段查询，这意味着如果你的字段值为<code>0</code>，<code>&#39;&#39;</code>，<code>false</code>或者其他零值时，将不会被用于构建查询条件，例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">db.Where(<span class="operator">&amp;</span><span class="keyword">User</span>&#123;Name: &quot;jinzhu&quot;, Age: <span class="number">0</span>&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> &quot;jinzhu&quot;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>你可以使用指针或实现 Scanner&#x2F;Valuer 接口来避免这个问题。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用指针</span><br><span class="line">type <span class="keyword">User</span> struct &#123;</span><br><span class="line">  gorm.Model</span><br><span class="line">  Name string</span><br><span class="line">  Age  <span class="operator">*</span><span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用 Scanner<span class="operator">/</span>Valuer</span><br><span class="line">type <span class="keyword">User</span> struct &#123;</span><br><span class="line">  gorm.Model</span><br><span class="line">  Name string</span><br><span class="line">  Age  sql.NullInt64  <span class="operator">/</span><span class="operator">/</span> sql.NullInt64 实现了 Scanner<span class="operator">/</span>Valuer 接口</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Not-条件"><a href="#Not-条件" class="headerlink" title="Not 条件"></a>Not 条件</h3><p>作用与Where类似的情形如下:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">db.Not(&quot;name&quot;, &quot;jinzhu&quot;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">&lt;&gt;</span> &quot;jinzhu&quot; LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">Not</span> <span class="keyword">In</span></span><br><span class="line">db.Not(&quot;name&quot;, []string&#123;&quot;jinzhu&quot;, &quot;jinzhu 2&quot;&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="keyword">NOT</span> <span class="keyword">IN</span> (&quot;jinzhu&quot;, &quot;jinzhu 2&quot;);</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">Not</span> <span class="keyword">In</span> slice <span class="keyword">of</span> <span class="keyword">primary</span> keys</span><br><span class="line">db.Not([]int64&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="keyword">NOT</span> <span class="keyword">IN</span> (<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">db.Not([]int64&#123;&#125;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Plain <span class="keyword">SQL</span></span><br><span class="line">db.Not(&quot;name = ?&quot;, &quot;jinzhu&quot;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> <span class="keyword">NOT</span>(name <span class="operator">=</span> &quot;jinzhu&quot;);</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Struct</span><br><span class="line">db.Not(<span class="keyword">User</span>&#123;Name: &quot;jinzhu&quot;&#125;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">&lt;&gt;</span> &quot;jinzhu&quot;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="Or条件"><a href="#Or条件" class="headerlink" title="Or条件"></a>Or条件</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.Where(&quot;role = ?&quot;, &quot;admin&quot;).<span class="keyword">Or</span>(&quot;role = ?&quot;, &quot;super_admin&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> role <span class="operator">=</span> <span class="string">&#x27;admin&#x27;</span> <span class="keyword">OR</span> role <span class="operator">=</span> <span class="string">&#x27;super_admin&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Struct</span><br><span class="line">db.Where(&quot;name = &#x27;jinzhu&#x27;&quot;).<span class="keyword">Or</span>(<span class="keyword">User</span>&#123;Name: &quot;jinzhu 2&quot;&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">OR</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu 2&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Map</span><br><span class="line">db.Where(&quot;name = &#x27;jinzhu&#x27;&quot;).<span class="keyword">Or</span>(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;jinzhu 2&quot;&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">OR</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu 2&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="内联条件"><a href="#内联条件" class="headerlink" title="内联条件"></a>内联条件</h3><p>作用与<code>Where</code>查询类似，当内联条件与多个立即执行方法一起使用时, 内联条件不会传递给后面的立即执行方法。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 根据主键获取记录 (只适用于整形主键)</span><br><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>, <span class="number">23</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">23</span> LIMIT <span class="number">1</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 根据主键获取记录, 如果它是一个非整形主键</span><br><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>, &quot;id = ?&quot;, &quot;string_primary_key&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="string">&#x27;string_primary_key&#x27;</span> LIMIT <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Plain <span class="keyword">SQL</span></span><br><span class="line">db.Find(<span class="operator">&amp;</span><span class="keyword">user</span>, &quot;name = ?&quot;, &quot;jinzhu&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> &quot;jinzhu&quot;;</span><br><span class="line"></span><br><span class="line">db.Find(<span class="operator">&amp;</span>users, &quot;name &lt;&gt; ? AND age &gt; ?&quot;, &quot;jinzhu&quot;, <span class="number">20</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">&lt;&gt;</span> &quot;jinzhu&quot; <span class="keyword">AND</span> age <span class="operator">&gt;</span> <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Struct</span><br><span class="line">db.Find(<span class="operator">&amp;</span>users, <span class="keyword">User</span>&#123;Age: <span class="number">20</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Map</span><br><span class="line">db.Find(<span class="operator">&amp;</span>users, map[string]interface&#123;&#125;&#123;&quot;age&quot;: <span class="number">20</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">20</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="额外查询选项"><a href="#额外查询选项" class="headerlink" title="额外查询选项"></a>额外查询选项</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 为查询 <span class="keyword">SQL</span> 添加额外的 <span class="keyword">SQL</span> 操作</span><br><span class="line">db.Set(&quot;gorm:query_option&quot;, &quot;FOR UPDATE&quot;).<span class="keyword">First</span>(<span class="operator">&amp;</span><span class="keyword">user</span>, <span class="number">10</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">10</span> <span class="keyword">FOR</span> <span class="keyword">UPDATE</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="FirstOrInit"><a href="#FirstOrInit" class="headerlink" title="FirstOrInit"></a>FirstOrInit</h3><p>获取匹配的第一条记录，否则根据给定的条件初始化一个新的对象 (仅支持 struct 和 map 条件)。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>, <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;Jinzhu&quot;&#125;).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">111</span>, Name: &quot;Jinzhu&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line">db.FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>, map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;jinzhu&quot;&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">111</span>, Name: &quot;Jinzhu&quot;, Age: <span class="number">20</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Attrs</strong></p>
+<p>如果记录未找到，将使用参数初始化 struct。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;).Attrs(<span class="keyword">User</span>&#123;Age: <span class="number">20</span>&#125;).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;non_existing&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line"></span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;).Attrs(&quot;age&quot;, <span class="number">20</span>).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;non_existing&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;Jinzhu&quot;&#125;).Attrs(<span class="keyword">User</span>&#123;Age: <span class="number">30</span>&#125;).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> name <span class="operator">=</span> jinzhu<span class="string">&#x27;;</span></span><br><span class="line"><span class="string">//// user -&gt; User&#123;Id: 111, Name: &quot;Jinzhu&quot;, Age: 20&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Assign</strong></p>
+<p>不管记录是否找到，都将参数赋值给 struct。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;).Assign(<span class="keyword">User</span>&#123;Age: <span class="number">20</span>&#125;).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;Jinzhu&quot;&#125;).Assign(<span class="keyword">User</span>&#123;Age: <span class="number">30</span>&#125;).FirstOrInit(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> name <span class="operator">=</span> jinzhu<span class="string">&#x27;;</span></span><br><span class="line"><span class="string">//// user -&gt; User&#123;Id: 111, Name: &quot;Jinzhu&quot;, Age: 30&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="FirstOrCreate"><a href="#FirstOrCreate" class="headerlink" title="FirstOrCreate"></a>FirstOrCreate</h3><p>获取匹配的第一条记录, 否则根据给定的条件创建一个新的记录 (仅支持 struct 和 map 条件)</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>, <span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">INSERT</span> <span class="keyword">INTO</span> &quot;users&quot; (name) <span class="keyword">VALUES</span> (&quot;non_existing&quot;);</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">112</span>, Name: &quot;non_existing&quot;&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;Jinzhu&quot;&#125;).FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">111</span>, Name: &quot;Jinzhu&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Attrs</strong></p>
+<p>如果记录未找到，将使用参数创建 struct 和记录。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> <span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;).Attrs(<span class="keyword">User</span>&#123;Age: <span class="number">20</span>&#125;).FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;non_existing&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">INSERT</span> <span class="keyword">INTO</span> &quot;users&quot; (name, age) <span class="keyword">VALUES</span> (&quot;non_existing&quot;, <span class="number">20</span>);</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">112</span>, Name: &quot;non_existing&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;jinzhu&quot;&#125;).Attrs(<span class="keyword">User</span>&#123;Age: <span class="number">30</span>&#125;).FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">111</span>, Name: &quot;jinzhu&quot;, Age: <span class="number">20</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Assign</strong></p>
+<p>不管记录是否找到，都将参数赋值给 struct 并保存至数据库。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 未找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;non_existing&quot;&#125;).Assign(<span class="keyword">User</span>&#123;Age: <span class="number">20</span>&#125;).FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;non_existing&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">INSERT</span> <span class="keyword">INTO</span> &quot;users&quot; (name, age) <span class="keyword">VALUES</span> (&quot;non_existing&quot;, <span class="number">20</span>);</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">112</span>, Name: &quot;non_existing&quot;, Age: <span class="number">20</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 找到</span><br><span class="line">db.Where(<span class="keyword">User</span>&#123;Name: &quot;jinzhu&quot;&#125;).Assign(<span class="keyword">User</span>&#123;Age: <span class="number">30</span>&#125;).FirstOrCreate(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> age<span class="operator">=</span><span class="number">30</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">111</span>;</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">user</span> <span class="operator">-</span><span class="operator">&gt;</span> <span class="keyword">User</span>&#123;Id: <span class="number">111</span>, Name: &quot;jinzhu&quot;, Age: <span class="number">30</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="高级查询"><a href="#高级查询" class="headerlink" title="高级查询"></a>高级查询</h3><p><strong>子查询</strong></p>
+<p>基于 <code>*gorm.expr</code> 的子查询</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">db.Where(&quot;amount &gt; ?&quot;, db.Table(&quot;orders&quot;).<span class="keyword">Select</span>(&quot;AVG(amount)&quot;).<span class="keyword">Where</span>(&quot;state = ?&quot;, &quot;paid&quot;).SubQuery()).Find(<span class="operator">&amp;</span>orders)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> &quot;orders&quot;  <span class="keyword">WHERE</span> &quot;orders&quot;.&quot;deleted_at&quot; <span class="keyword">IS</span> <span class="keyword">NULL</span> <span class="keyword">AND</span> (amount <span class="operator">&gt;</span> (<span class="keyword">SELECT</span> <span class="built_in">AVG</span>(amount) <span class="keyword">FROM</span> &quot;orders&quot;  <span class="keyword">WHERE</span> (state <span class="operator">=</span> <span class="string">&#x27;paid&#x27;</span>)));</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>选择字段</strong></p>
+<p>Select，指定你想从数据库中检索出的字段，默认会选择全部字段。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">db.Select(&quot;name, age&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> name, age <span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line">db.Select([]string&#123;&quot;name&quot;, &quot;age&quot;&#125;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> name, age <span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;COALESCE(age,?)&quot;, <span class="number">42</span>).<span class="keyword">Rows</span>()</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="built_in">COALESCE</span>(age,<span class="string">&#x27;42&#x27;</span>) <span class="keyword">FROM</span> users;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>排序</strong></p>
+<p>Order，指定从数据库中检索出记录的顺序。设置第二个参数 reorder 为 true ，可以覆盖前面定义的排序条件。</p>
+<p><strong>数量</strong></p>
+<p>Limit，指定从数据库检索出的最大记录数。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.Limit(<span class="number">3</span>).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users LIMIT <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="number">-1</span> 取消 Limit 条件</span><br><span class="line">db.Limit(<span class="number">10</span>).Find(<span class="operator">&amp;</span>users1).Limit(<span class="number">-1</span>).Find(<span class="operator">&amp;</span>users2)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users LIMIT <span class="number">10</span>; (users1)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users; (users2)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>偏移</strong></p>
+<p>Offset，指定开始返回记录前要跳过的记录数。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.Offset(<span class="number">3</span>).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">OFFSET</span> <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> <span class="number">-1</span> 取消 <span class="keyword">Offset</span> 条件</span><br><span class="line">db.Offset(<span class="number">10</span>).Find(<span class="operator">&amp;</span>users1).<span class="keyword">Offset</span>(<span class="number">-1</span>).Find(<span class="operator">&amp;</span>users2)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">OFFSET</span> <span class="number">10</span>; (users1)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users; (users2)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>总数</strong></p>
+<p>Count，该 model 能获取的记录总数。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">db.Where(&quot;name = ?&quot;, &quot;jinzhu&quot;).<span class="keyword">Or</span>(&quot;name = ?&quot;, &quot;jinzhu 2&quot;).Find(<span class="operator">&amp;</span>users).<span class="built_in">Count</span>(<span class="operator">&amp;</span>count)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">from</span> USERS <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">OR</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu 2&#x27;</span>; (users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">OR</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu 2&#x27;</span>; (count)</span><br><span class="line"></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">User</span>&#123;&#125;).<span class="keyword">Where</span>(&quot;name = ?&quot;, &quot;jinzhu&quot;).<span class="built_in">Count</span>(<span class="operator">&amp;</span>count)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span>; (count)</span><br><span class="line"></span><br><span class="line">db.Table(&quot;deleted_users&quot;).<span class="built_in">Count</span>(<span class="operator">&amp;</span>count)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> deleted_users;</span><br><span class="line"></span><br><span class="line">db.Table(&quot;deleted_users&quot;).<span class="keyword">Select</span>(&quot;count(distinct(name))&quot;).<span class="built_in">Count</span>(<span class="operator">&amp;</span>count)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="built_in">count</span>( <span class="keyword">distinct</span>(name) ) <span class="keyword">FROM</span> deleted_users; (count)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>注意 <code>Count</code> 必须是链式查询的最后一个操作 ，因为它会覆盖前面的 <code>SELECT</code>，但如果里面使用了<code>count</code>时不会覆盖。</p>
+<p><strong>Group &amp; Having</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">rows</span>, err :<span class="operator">=</span> db.Table(&quot;orders&quot;).<span class="keyword">Select</span>(&quot;date(created_at) as date, sum(amount) as total&quot;).<span class="keyword">Group</span>(&quot;date(created_at)&quot;).<span class="keyword">Rows</span>()</span><br><span class="line"><span class="keyword">for</span> rows.Next() &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用Scan将多条结果扫描进事先准备好的结构体切片中</span><br><span class="line">type <span class="keyword">Result</span> struct &#123;</span><br><span class="line">	<span class="type">Date</span> time.Time</span><br><span class="line">	Total <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line">var rets []<span class="keyword">Result</span></span><br><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;date(created_at) as date, sum(age) as total&quot;).<span class="keyword">Group</span>(&quot;date(created_at)&quot;).Scan(<span class="operator">&amp;</span>rets)</span><br><span class="line"></span><br><span class="line"><span class="keyword">rows</span>, err :<span class="operator">=</span> db.Table(&quot;orders&quot;).<span class="keyword">Select</span>(&quot;date(created_at) as date, sum(amount) as total&quot;).<span class="keyword">Group</span>(&quot;date(created_at)&quot;).<span class="keyword">Having</span>(&quot;sum(amount) &gt; ?&quot;, <span class="number">100</span>).<span class="keyword">Rows</span>()</span><br><span class="line"><span class="keyword">for</span> rows.Next() &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type <span class="keyword">Result</span> struct &#123;</span><br><span class="line">  <span class="type">Date</span>  time.Time</span><br><span class="line">  Total int64</span><br><span class="line">&#125;</span><br><span class="line">db.Table(&quot;orders&quot;).<span class="keyword">Select</span>(&quot;date(created_at) as date, sum(amount) as total&quot;).<span class="keyword">Group</span>(&quot;date(created_at)&quot;).<span class="keyword">Having</span>(&quot;sum(amount) &gt; ?&quot;, <span class="number">100</span>).Scan(<span class="operator">&amp;</span>results)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="连接查询"><a href="#连接查询" class="headerlink" title="连接查询"></a>连接查询</h3><p>Joins，指定连接条件。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">rows</span>, err :<span class="operator">=</span> db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;users.name, emails.email&quot;).Joins(&quot;left join emails on emails.user_id = users.id&quot;).<span class="keyword">Rows</span>()</span><br><span class="line"><span class="keyword">for</span> rows.Next() &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;users.name, emails.email&quot;).Joins(&quot;left join emails on emails.user_id = users.id&quot;).Scan(<span class="operator">&amp;</span>results)</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 多连接及参数</span><br><span class="line">db.Joins(&quot;JOIN emails ON emails.user_id = users.id AND emails.email = ?&quot;, &quot;jinzhu@example.org&quot;).Joins(&quot;JOIN credit_cards ON credit_cards.user_id = users.id&quot;).<span class="keyword">Where</span>(&quot;credit_cards.number = ?&quot;, &quot;411111111111&quot;).Find(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong>样例</strong></p>
+<p>首先我们在mysql中创建了三张表：</p>
+<p><img src="https://img-blog.csdnimg.cn/bc9f3670f9ab4f8dbbc1547b91abb9f6.png" alt="在这里插入图片描述"></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">USE test01;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> student(</span><br><span class="line">	sno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	NAME <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">INT</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> grade (</span><br><span class="line">	sno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	grade <span class="type">INT</span>,</span><br><span class="line">	cno <span class="type">VARCHAR</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> course (</span><br><span class="line">	cno <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">	cname <span class="type">VARCHAR</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;01&quot;, &quot;张三&quot;, <span class="number">19</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;02&quot;, &quot;李四&quot;, <span class="number">20</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> student <span class="keyword">VALUES</span>(&quot;02&quot;, &quot;王五&quot;, <span class="number">21</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">90</span>, &quot;0001&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">80</span>, &quot;0002&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;01&quot;, <span class="number">30</span>, &quot;0003&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">80</span>, &quot;0001&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">50</span>, &quot;0002&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> grade <span class="keyword">VALUES</span>(&quot;02&quot;, <span class="number">60</span>, &quot;0003&quot;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0001&quot;, &quot;数学&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0002&quot;, &quot;语文&quot;);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> course <span class="keyword">VALUES</span>(&quot;0003&quot;, &quot;英语&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>目标是查询张三所有课程的成绩，要求显示学生姓名、课程名和分数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建映射结构体</span></span><br><span class="line"><span class="keyword">type</span> student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Sno <span class="type">string</span></span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Age <span class="type">int</span></span><br><span class="line">	Grades []grade <span class="string">`gorm:&quot;foreignKey:Sno;association_foreignkey:Sno&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(student)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;student&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> grade <span class="keyword">struct</span> &#123;</span><br><span class="line">	Sno <span class="type">string</span></span><br><span class="line">	Grade <span class="type">int</span></span><br><span class="line">	Cno <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(grade)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;grade&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> course <span class="keyword">struct</span> &#123;</span><br><span class="line">	Cno <span class="type">string</span></span><br><span class="line">	Cname <span class="type">string</span></span><br><span class="line">	Grades []grade <span class="string">`gorm:&quot;foreignKey:Cno&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(course)</span></span> TableName() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;course&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> result <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Cname <span class="type">string</span></span><br><span class="line">	Grade <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查询语句</span></span><br><span class="line"><span class="keyword">var</span> res []result</span><br><span class="line">	<span class="comment">// 注意：Select里面是原生的sql语句，这里的字段名是数据库中的字段名而不是model结构体中的字段名</span></span><br><span class="line">	db.Table(<span class="string">&quot;student&quot;</span>).Select(<span class="string">&quot;student.name, course.cname, grade.grade&quot;</span>).</span><br><span class="line">		Joins(<span class="string">&quot;join grade on student.Sno=grade.Sno&quot;</span>).Where(<span class="string">&quot;student.Name=?&quot;</span>, <span class="string">&quot;张三&quot;</span>).</span><br><span class="line">		Joins(<span class="string">&quot;join course on course.Cno=grade.Cno&quot;</span>).Scan(&amp;res)</span><br><span class="line">		</span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> res &#123;</span><br><span class="line">		fmt.Println(v)</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="Pluck"><a href="#Pluck" class="headerlink" title="Pluck"></a>Pluck</h3><p>Pluck，查询 model 中的一个列作为切片，如果您想要查询多个列, 您应该使用 <code>Scan</code> 。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">var ages []int64</span><br><span class="line">db.Find(<span class="operator">&amp;</span>users).Pluck(&quot;age&quot;, <span class="operator">&amp;</span>ages)</span><br><span class="line"></span><br><span class="line">var names []string</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">User</span>&#123;&#125;).Pluck(&quot;name&quot;, <span class="operator">&amp;</span>names)</span><br><span class="line"></span><br><span class="line">db.Table(&quot;deleted_users&quot;).Pluck(&quot;name&quot;, <span class="operator">&amp;</span>names)</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 想查询多个字段？ 这样做：</span><br><span class="line">db.Select(&quot;name, age&quot;).Find(<span class="operator">&amp;</span>users)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="扫描"><a href="#扫描" class="headerlink" title="扫描"></a>扫描</h3><p>Scan，扫描结果至一个 struct。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">type <span class="keyword">Result</span> struct &#123;</span><br><span class="line">  Name string</span><br><span class="line">  Age  <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">var <span class="keyword">result</span> <span class="keyword">Result</span></span><br><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;name, age&quot;).<span class="keyword">Where</span>(&quot;name = ?&quot;, &quot;Antonio&quot;).Scan(<span class="operator">&amp;</span><span class="keyword">result</span>)</span><br><span class="line"></span><br><span class="line">var results []<span class="keyword">Result</span></span><br><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Select</span>(&quot;name, age&quot;).<span class="keyword">Where</span>(&quot;id &gt; ?&quot;, <span class="number">0</span>).Scan(<span class="operator">&amp;</span>results)</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 原生 <span class="keyword">SQL</span></span><br><span class="line">db.Raw(&quot;SELECT name, age FROM users WHERE name = ?&quot;, &quot;Antonio&quot;).Scan(<span class="operator">&amp;</span><span class="keyword">result</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="链式操作相关"><a href="#链式操作相关" class="headerlink" title="链式操作相关"></a>链式操作相关</h2><h3 id="链式操作"><a href="#链式操作" class="headerlink" title="链式操作"></a>链式操作</h3><p>Method Chaining，Gorm 实现了链式操作接口，所以你可以把代码写成这样：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 创建一个查询</span><br><span class="line">tx :<span class="operator">=</span> db.Where(&quot;name = ?&quot;, &quot;jinzhu&quot;)</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 添加更多条件</span><br><span class="line">if someCondition &#123;</span><br><span class="line">  tx <span class="operator">=</span> tx.Where(&quot;age = ?&quot;, <span class="number">20</span>)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  tx <span class="operator">=</span> tx.Where(&quot;age = ?&quot;, <span class="number">30</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">if yetAnotherCondition &#123;</span><br><span class="line">  tx <span class="operator">=</span> tx.Where(&quot;active = ?&quot;, <span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在调用立即执行方法前不会生成Query语句，借助这个特性你可以创建一个函数来处理一些通用逻辑。</p>
+<h3 id="立即执行方法"><a href="#立即执行方法" class="headerlink" title="立即执行方法"></a>立即执行方法</h3><p>Immediate methods ，立即执行方法是指那些会立即生成<code>SQL</code>语句并发送到数据库的方法, 他们一般是<code>CRUD</code>方法，比如：</p>
+<p><code>Create</code>, <code>First</code>, <code>Find</code>, <code>Take</code>, <code>Save</code>, <code>UpdateXXX</code>, <code>Delete</code>, <code>Scan</code>, <code>Row</code>, <code>Rows</code>…</p>
+<p>这有一个基于上面链式方法代码的立即执行方法的例子：</p>
+<p>这有一个基于上面链式方法代码的立即执行方法的例子：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tx.Find(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>生成的SQL语句如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">where</span> name <span class="operator">=</span> <span class="string">&#x27;jinzhu&#x27;</span> <span class="keyword">AND</span> age <span class="operator">=</span> <span class="number">30</span> <span class="keyword">AND</span> active <span class="operator">=</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="范围"><a href="#范围" class="headerlink" title="范围"></a>范围</h3><p><code>Scopes</code>，Scope是建立在链式操作的基础之上的。</p>
+<p>基于它，你可以抽取一些通用逻辑，写出更多可重用的函数库。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">func AmountGreaterThan1000(db <span class="operator">*</span>gorm.DB) <span class="operator">*</span>gorm.DB &#123;</span><br><span class="line">  <span class="keyword">return</span> db.Where(&quot;amount &gt; ?&quot;, <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func PaidWithCreditCard(db <span class="operator">*</span>gorm.DB) <span class="operator">*</span>gorm.DB &#123;</span><br><span class="line">  <span class="keyword">return</span> db.Where(&quot;pay_mode_sign = ?&quot;, &quot;C&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func PaidWithCod(db <span class="operator">*</span>gorm.DB) <span class="operator">*</span>gorm.DB &#123;</span><br><span class="line">  <span class="keyword">return</span> db.Where(&quot;pay_mode_sign = ?&quot;, &quot;C&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func OrderStatus(status []string) func (db <span class="operator">*</span>gorm.DB) <span class="operator">*</span>gorm.DB &#123;</span><br><span class="line">  <span class="keyword">return</span> func (db <span class="operator">*</span>gorm.DB) <span class="operator">*</span>gorm.DB &#123;</span><br><span class="line">    <span class="keyword">return</span> db.Scopes(AmountGreaterThan1000).<span class="keyword">Where</span>(&quot;status IN (?)&quot;, status)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">db.Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find(<span class="operator">&amp;</span>orders)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查找所有金额大于 <span class="number">1000</span> 的信用卡订单</span><br><span class="line"></span><br><span class="line">db.Scopes(AmountGreaterThan1000, PaidWithCod).Find(<span class="operator">&amp;</span>orders)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查找所有金额大于 <span class="number">1000</span> 的 COD 订单</span><br><span class="line"></span><br><span class="line">db.Scopes(AmountGreaterThan1000, OrderStatus([]string&#123;&quot;paid&quot;, &quot;shipped&quot;&#125;)).Find(<span class="operator">&amp;</span>orders)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查找所有金额大于 <span class="number">1000</span> 且已付款或者已发货的订单</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="多个立即执行方法"><a href="#多个立即执行方法" class="headerlink" title="多个立即执行方法"></a>多个立即执行方法</h3><p>Multiple Immediate Methods，在 GORM 中使用多个立即执行方法时，后一个立即执行方法会复用前一个立即执行方法的条件 (不包括内联条件) 。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.Where(&quot;name LIKE ?&quot;, &quot;jinzhu%&quot;).Find(<span class="operator">&amp;</span>users, &quot;id IN (?)&quot;, []<span class="type">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;).<span class="built_in">Count</span>(<span class="operator">&amp;</span>count)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>生成的Sql</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;jinzhu%&#x27;</span> <span class="keyword">AND</span> id <span class="keyword">IN</span> (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;jinzhu%&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><h3 id="更新所有字段"><a href="#更新所有字段" class="headerlink" title="更新所有字段"></a>更新所有字段</h3><p><code>Save()</code>默认会更新该对象的所有字段，即使你没有赋值。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"></span><br><span class="line">user.Name <span class="operator">=</span> &quot;七米&quot;</span><br><span class="line">user.Age <span class="operator">=</span> <span class="number">99</span></span><br><span class="line">db.Save(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span>  <span class="keyword">UPDATE</span> `users` <span class="keyword">SET</span> `created_at` <span class="operator">=</span> <span class="string">&#x27;2020-02-16 12:52:20&#x27;</span>, `updated_at` <span class="operator">=</span> <span class="string">&#x27;2020-02-16 12:54:55&#x27;</span>, `deleted_at` <span class="operator">=</span> <span class="keyword">NULL</span>, `name` <span class="operator">=</span> <span class="string">&#x27;张三&#x27;</span>, `age` <span class="operator">=</span> <span class="number">99</span>, `active` <span class="operator">=</span> <span class="literal">true</span>  <span class="keyword">WHERE</span> `users`.`deleted_at` <span class="keyword">IS</span> <span class="keyword">NULL</span> <span class="keyword">AND</span> `users`.`id` <span class="operator">=</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="更新修改字段"><a href="#更新修改字段" class="headerlink" title="更新修改字段"></a>更新修改字段</h3><p>如果你只希望更新指定字段，可以使用<code>Update</code>或者<code>Updates</code></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 更新单个属性，如果它有变化</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Update</span>(&quot;name&quot;, &quot;hello&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, updated_at<span class="operator">=</span><span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 根据给定的条件更新单个属性</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Where</span>(&quot;active = ?&quot;, <span class="literal">true</span>).<span class="keyword">Update</span>(&quot;name&quot;, &quot;hello&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, updated_at<span class="operator">=</span><span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span> <span class="keyword">AND</span> active<span class="operator">=</span><span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用 map 更新多个属性，只会更新其中有变化的属性</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).Updates(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;hello&quot;, &quot;age&quot;: <span class="number">18</span>, &quot;active&quot;: <span class="literal">false</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, age<span class="operator">=</span><span class="number">18</span>, active<span class="operator">=</span><span class="literal">false</span>, updated_at<span class="operator">=</span><span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用 struct 更新多个属性，只会更新其中有变化且为非零值的字段</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).Updates(<span class="keyword">User</span>&#123;Name: &quot;hello&quot;, Age: <span class="number">18</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, age<span class="operator">=</span><span class="number">18</span>, updated_at <span class="operator">=</span> <span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">111</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 警告：当使用 struct 更新时，GORM只会更新那些非零值的字段</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 对于下面的操作，不会发生任何更新，&quot;&quot;, <span class="number">0</span>, <span class="literal">false</span> 都是其类型的零值</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).Updates(<span class="keyword">User</span>&#123;Name: &quot;&quot;, Age: <span class="number">0</span>, Active: <span class="literal">false</span>&#125;)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="更新选定字段"><a href="#更新选定字段" class="headerlink" title="更新选定字段"></a>更新选定字段</h3><p>如果你想更新或忽略某些字段，你可以使用 <code>Select</code>，<code>Omit</code></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Select</span>(&quot;name&quot;).Updates(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;hello&quot;, &quot;age&quot;: <span class="number">18</span>, &quot;active&quot;: <span class="literal">false</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, updated_at<span class="operator">=</span><span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span>;</span><br><span class="line"></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Omit</span>(&quot;name&quot;).Updates(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;hello&quot;, &quot;age&quot;: <span class="number">18</span>, &quot;active&quot;: <span class="literal">false</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> age<span class="operator">=</span><span class="number">18</span>, active<span class="operator">=</span><span class="literal">false</span>, updated_at<span class="operator">=</span><span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="无Hooks更新"><a href="#无Hooks更新" class="headerlink" title="无Hooks更新"></a>无Hooks更新</h3><p>上面的更新操作会自动运行 model 的 BeforeUpdate, AfterUpdate 方法，更新 UpdatedAt 时间戳, 在更新时保存其 Associations, 如果你不想调用这些方法，你可以使用 UpdateColumn， UpdateColumns。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 更新单个属性，类似于 `<span class="keyword">Update</span>`</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).UpdateColumn(&quot;name&quot;, &quot;hello&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">111</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 更新多个属性，类似于 `Updates`</span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).UpdateColumns(<span class="keyword">User</span>&#123;Name: &quot;hello&quot;, Age: <span class="number">18</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, age<span class="operator">=</span><span class="number">18</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">111</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="批量更新"><a href="#批量更新" class="headerlink" title="批量更新"></a>批量更新</h3><p>批量更新时Hooks（钩子函数）不会运行。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">db.Table(&quot;users&quot;).<span class="keyword">Where</span>(&quot;id IN (?)&quot;, []<span class="type">int</span>&#123;<span class="number">10</span>, <span class="number">11</span>&#125;).Updates(map[string]interface&#123;&#125;&#123;&quot;name&quot;: &quot;hello&quot;, &quot;age&quot;: <span class="number">18</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, age<span class="operator">=</span><span class="number">18</span> <span class="keyword">WHERE</span> id <span class="keyword">IN</span> (<span class="number">10</span>, <span class="number">11</span>);</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用 struct 更新时，只会更新非零值字段，若想更新所有字段，请使用map[string]interface&#123;&#125;</span><br><span class="line">db.Model(<span class="keyword">User</span>&#123;&#125;).Updates(<span class="keyword">User</span>&#123;Name: &quot;hello&quot;, Age: <span class="number">18</span>&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, age<span class="operator">=</span><span class="number">18</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 使用 `RowsAffected` 获取更新记录总数</span><br><span class="line">db.Model(<span class="keyword">User</span>&#123;&#125;).Updates(<span class="keyword">User</span>&#123;Name: &quot;hello&quot;, Age: <span class="number">18</span>&#125;).RowsAffected</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="使用SQL表达式更新"><a href="#使用SQL表达式更新" class="headerlink" title="使用SQL表达式更新"></a>使用SQL表达式更新</h3><p>先查询表中的第一条数据保存至user变量。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var <span class="keyword">user</span> <span class="keyword">User</span></span><br><span class="line">db.First(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Update</span>(&quot;age&quot;, gorm.Expr(&quot;age * ? + ?&quot;, <span class="number">2</span>, <span class="number">100</span>))</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> `users` <span class="keyword">SET</span> `age` <span class="operator">=</span> age <span class="operator">*</span> <span class="number">2</span> <span class="operator">+</span> <span class="number">100</span>, `updated_at` <span class="operator">=</span> <span class="string">&#x27;2020-02-16 13:10:20&#x27;</span>  <span class="keyword">WHERE</span> `users`.`id` <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).Updates(map[string]interface&#123;&#125;&#123;&quot;age&quot;: gorm.Expr(&quot;age * ? + ?&quot;, <span class="number">2</span>, <span class="number">100</span>)&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> &quot;users&quot; <span class="keyword">SET</span> &quot;age&quot; <span class="operator">=</span> age <span class="operator">*</span> <span class="string">&#x27;2&#x27;</span> <span class="operator">+</span> <span class="string">&#x27;100&#x27;</span>, &quot;updated_at&quot; <span class="operator">=</span> <span class="string">&#x27;2020-02-16 13:05:51&#x27;</span> <span class="keyword">WHERE</span> `users`.`id` <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).UpdateColumn(&quot;age&quot;, gorm.Expr(&quot;age - ?&quot;, <span class="number">1</span>))</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> &quot;users&quot; <span class="keyword">SET</span> &quot;age&quot; <span class="operator">=</span> age <span class="operator">-</span> <span class="number">1</span> <span class="keyword">WHERE</span> &quot;id&quot; <span class="operator">=</span> <span class="string">&#x27;1&#x27;</span>;</span><br><span class="line"></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Where</span>(&quot;age &gt; 10&quot;).UpdateColumn(&quot;age&quot;, gorm.Expr(&quot;age - ?&quot;, <span class="number">1</span>))</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> &quot;users&quot; <span class="keyword">SET</span> &quot;age&quot; <span class="operator">=</span> age <span class="operator">-</span> <span class="number">1</span> <span class="keyword">WHERE</span> &quot;id&quot; <span class="operator">=</span> <span class="string">&#x27;1&#x27;</span> <span class="keyword">AND</span> quantity <span class="operator">&gt;</span> <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="修改Hooks中的值"><a href="#修改Hooks中的值" class="headerlink" title="修改Hooks中的值"></a>修改Hooks中的值</h3><p>如果你想修改 BeforeUpdate, BeforeSave 等 Hooks 中更新的值，你可以使用 scope.SetColumn, 例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">func (<span class="keyword">user</span> <span class="operator">*</span><span class="keyword">User</span>) BeforeSave(<span class="keyword">scope</span> <span class="operator">*</span>gorm.Scope) (err error) &#123;</span><br><span class="line">  if pw, err :<span class="operator">=</span> bcrypt.GenerateFromPassword(user.Password, <span class="number">0</span>); err <span class="operator">=</span><span class="operator">=</span> nil &#123;</span><br><span class="line">    scope.SetColumn(&quot;EncryptedPassword&quot;, pw)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="其它更新选项"><a href="#其它更新选项" class="headerlink" title="其它更新选项"></a>其它更新选项</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 为 <span class="keyword">update</span> <span class="keyword">SQL</span> 添加其它的 <span class="keyword">SQL</span></span><br><span class="line">db.Model(<span class="operator">&amp;</span><span class="keyword">user</span>).<span class="keyword">Set</span>(&quot;gorm:update_option&quot;, &quot;OPTION (OPTIMIZE FOR UNKNOWN)&quot;).<span class="keyword">Update</span>(&quot;name&quot;, &quot;hello&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name<span class="operator">=</span><span class="string">&#x27;hello&#x27;</span>, updated_at <span class="operator">=</span> <span class="string">&#x27;2013-11-17 21:34:10&#x27;</span> <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">111</span> OPTION (OPTIMIZE <span class="keyword">FOR</span> <span class="literal">UNKNOWN</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><h3 id="删除记录"><a href="#删除记录" class="headerlink" title="删除记录"></a>删除记录</h3><p>删除记录时，请确保主键字段有值，GORM 会通过主键去删除记录，如果主键为空，GORM 会删除该 model 的所有记录。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> 删除现有记录</span><br><span class="line">db.Delete(<span class="operator">&amp;</span>email)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">DELETE</span> <span class="keyword">from</span> emails <span class="keyword">where</span> id<span class="operator">=</span><span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 为删除 <span class="keyword">SQL</span> 添加额外的 <span class="keyword">SQL</span> 操作</span><br><span class="line">db.Set(&quot;gorm:delete_option&quot;, &quot;OPTION (OPTIMIZE FOR UNKNOWN)&quot;).<span class="keyword">Delete</span>(<span class="operator">&amp;</span>email)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">DELETE</span> <span class="keyword">from</span> emails <span class="keyword">where</span> id<span class="operator">=</span><span class="number">10</span> OPTION (OPTIMIZE <span class="keyword">FOR</span> <span class="literal">UNKNOWN</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="批量删除"><a href="#批量删除" class="headerlink" title="批量删除"></a>批量删除</h3><p>删除全部匹配的记录</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">db.Where(&quot;email LIKE ?&quot;, &quot;%jinzhu%&quot;).<span class="keyword">Delete</span>(Email&#123;&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">DELETE</span> <span class="keyword">from</span> emails <span class="keyword">where</span> email <span class="keyword">LIKE</span> &quot;%jinzhu%&quot;;</span><br><span class="line"></span><br><span class="line">db.Delete(Email&#123;&#125;, &quot;email LIKE ?&quot;, &quot;%jinzhu%&quot;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">DELETE</span> <span class="keyword">from</span> emails <span class="keyword">where</span> email <span class="keyword">LIKE</span> &quot;%jinzhu%&quot;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="软删除"><a href="#软删除" class="headerlink" title="软删除"></a>软删除</h3><p>如果一个 model 有 DeletedAt 字段，他将自动获得软删除的功能！ 当调用 Delete 方法时， 记录不会真正的从数据库中被删除， 只会将DeletedAt 字段的值会被设置为当前时间。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">db.Delete(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> deleted_at<span class="operator">=</span>&quot;2013-10-29 10:23&quot; <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">111</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 批量删除</span><br><span class="line">db.Where(&quot;age = ?&quot;, <span class="number">20</span>).<span class="keyword">Delete</span>(<span class="operator">&amp;</span><span class="keyword">User</span>&#123;&#125;)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">UPDATE</span> users <span class="keyword">SET</span> deleted_at<span class="operator">=</span>&quot;2013-10-29 10:23&quot; <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> 查询记录时会忽略被软删除的记录</span><br><span class="line">db.Where(&quot;age = 20&quot;).Find(<span class="operator">&amp;</span><span class="keyword">user</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">20</span> <span class="keyword">AND</span> deleted_at <span class="keyword">IS</span> <span class="keyword">NULL</span>;</span><br><span class="line"></span><br><span class="line"><span class="operator">/</span><span class="operator">/</span> Unscoped 方法可以查询被软删除的记录</span><br><span class="line">db.Unscoped().<span class="keyword">Where</span>(&quot;age = 20&quot;).Find(<span class="operator">&amp;</span>users)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="物理删除"><a href="#物理删除" class="headerlink" title="物理删除"></a>物理删除</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">/</span><span class="operator">/</span> Unscoped 方法可以物理删除记录</span><br><span class="line">db.Unscoped().<span class="keyword">Delete</span>(<span class="operator">&amp;</span><span class="keyword">order</span>)</span><br><span class="line"><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span><span class="operator">/</span> <span class="keyword">DELETE</span> <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/Gorm/GORM%E8%BF%9E%E6%8E%A5MySQL/" rel="prev" title="Gorm连接MySQL">
+      <i class="fa fa-chevron-left"></i> Gorm连接MySQL
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/Gorm/GORM%20%E9%A2%84%E5%8A%A0%E8%BD%BD%E5%92%8C%E8%87%AA%E5%BC%95%E7%94%A8/" rel="next" title="GORM 预加载和自引用">
+      GORM 预加载和自引用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">创建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%AE%B0%E5%BD%95"><span class="nav-number">1.1.</span> <span class="nav-text">创建记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="nav-number">1.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E5%88%9B%E5%BB%BA%E9%80%89%E9%A1%B9"><span class="nav-number">1.3.</span> <span class="nav-text">扩展创建选项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.</span> <span class="nav-text">查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E8%88%AC%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.1.</span> <span class="nav-text">一般查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Where%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.2.</span> <span class="nav-text">Where条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Not-%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.3.</span> <span class="nav-text">Not 条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Or%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.4.</span> <span class="nav-text">Or条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E8%81%94%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.5.</span> <span class="nav-text">内联条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%9D%E5%A4%96%E6%9F%A5%E8%AF%A2%E9%80%89%E9%A1%B9"><span class="nav-number">2.6.</span> <span class="nav-text">额外查询选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FirstOrInit"><span class="nav-number">2.7.</span> <span class="nav-text">FirstOrInit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FirstOrCreate"><span class="nav-number">2.8.</span> <span class="nav-text">FirstOrCreate</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E7%BA%A7%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.9.</span> <span class="nav-text">高级查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.10.</span> <span class="nav-text">连接查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pluck"><span class="nav-number">2.11.</span> <span class="nav-text">Pluck</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%AB%E6%8F%8F"><span class="nav-number">2.12.</span> <span class="nav-text">扫描</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%93%BE%E5%BC%8F%E6%93%8D%E4%BD%9C%E7%9B%B8%E5%85%B3"><span class="nav-number">3.</span> <span class="nav-text">链式操作相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%93%BE%E5%BC%8F%E6%93%8D%E4%BD%9C"><span class="nav-number">3.1.</span> <span class="nav-text">链式操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%8B%E5%8D%B3%E6%89%A7%E8%A1%8C%E6%96%B9%E6%B3%95"><span class="nav-number">3.2.</span> <span class="nav-text">立即执行方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8C%83%E5%9B%B4"><span class="nav-number">3.3.</span> <span class="nav-text">范围</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E7%AB%8B%E5%8D%B3%E6%89%A7%E8%A1%8C%E6%96%B9%E6%B3%95"><span class="nav-number">3.4.</span> <span class="nav-text">多个立即执行方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0"><span class="nav-number">4.</span> <span class="nav-text">更新</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%89%80%E6%9C%89%E5%AD%97%E6%AE%B5"><span class="nav-number">4.1.</span> <span class="nav-text">更新所有字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E4%BF%AE%E6%94%B9%E5%AD%97%E6%AE%B5"><span class="nav-number">4.2.</span> <span class="nav-text">更新修改字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E9%80%89%E5%AE%9A%E5%AD%97%E6%AE%B5"><span class="nav-number">4.3.</span> <span class="nav-text">更新选定字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0Hooks%E6%9B%B4%E6%96%B0"><span class="nav-number">4.4.</span> <span class="nav-text">无Hooks更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%B9%E9%87%8F%E6%9B%B4%E6%96%B0"><span class="nav-number">4.5.</span> <span class="nav-text">批量更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8SQL%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%9B%B4%E6%96%B0"><span class="nav-number">4.6.</span> <span class="nav-text">使用SQL表达式更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9Hooks%E4%B8%AD%E7%9A%84%E5%80%BC"><span class="nav-number">4.7.</span> <span class="nav-text">修改Hooks中的值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E5%AE%83%E6%9B%B4%E6%96%B0%E9%80%89%E9%A1%B9"><span class="nav-number">4.8.</span> <span class="nav-text">其它更新选项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">5.</span> <span class="nav-text">删除</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E8%AE%B0%E5%BD%95"><span class="nav-number">5.1.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%B9%E9%87%8F%E5%88%A0%E9%99%A4"><span class="nav-number">5.2.</span> <span class="nav-text">批量删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AF%E5%88%A0%E9%99%A4"><span class="nav-number">5.3.</span> <span class="nav-text">软删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%88%A0%E9%99%A4"><span class="nav-number">5.4.</span> <span class="nav-text">物理删除</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">94</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
