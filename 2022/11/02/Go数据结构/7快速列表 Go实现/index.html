@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="快速列表（quicklist）是Redis中特有的一种数据结构，主要是为了解决双端链表的弊端：双端链表的附加空间比较高，因为prev和next指针会占掉一部分的空间（64位系统占用8 + 8 &#x3D; 16字节）.而且链表的每个节点都是单独分配内存，会加剧内存的碎片化。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="快速列表 Go实现">
+<meta property="og:url" content="http://example.com/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="快速列表（quicklist）是Redis中特有的一种数据结构，主要是为了解决双端链表的弊端：双端链表的附加空间比较高，因为prev和next指针会占掉一部分的空间（64位系统占用8 + 8 &#x3D; 16字节）.而且链表的每个节点都是单独分配内存，会加剧内存的碎片化。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/86856884560f4d48ab1888e1a1a4c957.png">
+<meta property="article:published_time" content="2022-11-02T03:41:52.041Z">
+<meta property="article:modified_time" content="2022-11-02T07:55:20.990Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/86856884560f4d48ab1888e1a1a4c957.png">
+
+<link rel="canonical" href="http://example.com/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>快速列表 Go实现 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          快速列表 Go实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 11:41:52 / 修改时间：15:55:20" itemprop="dateCreated datePublished" datetime="2022-11-02T11:41:52+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">Go数据结构</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/" class="post-meta-item leancloud_visitors" data-flag-title="快速列表 Go实现" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">快速列表（quicklist）是Redis中特有的一种数据结构，主要是为了解决双端链表的弊端：双端链表的附加空间比较高，因为prev和next指针会占掉一部分的空间（64位系统占用8 + 8 = 16字节）.而且链表的每个节点都是单独分配内存，会加剧内存的碎片化。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="快速列表介绍"><a href="#快速列表介绍" class="headerlink" title="快速列表介绍"></a>快速列表介绍</h2><p>快速列表（quicklist）是Redis中特有的一种数据结构，主要是为了解决双端链表的弊端：双端链表的附加空间比较高，因为<code>prev</code>和<code>next</code>指针会占掉一部分的空间（64位系统占用8 + 8 &#x3D; 16字节）.而且链表的每个节点都是单独分配内存，会加剧内存的碎片化。</p>
+<p>Redis中的快速列表实际上是zipList（经过优化过的数组）和linkedList的混合体，它把zipList放在linkedList的每个结点中，实现紧凑存储。如下图所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/86856884560f4d48ab1888e1a1a4c957.png" alt="在这里插入图片描述"></p>
+<h2 id="实现快速列表"><a href="#实现快速列表" class="headerlink" title="实现快速列表"></a>实现快速列表</h2><h3 id="快速列表的结构"><a href="#快速列表的结构" class="headerlink" title="快速列表的结构"></a>快速列表的结构</h3><p>由于Go语言自带slice这种操作方便的“动态数组”结构，所以我给链表的每个节点中都分配一个容量为1024大小的切片，那么一个链表节点就可以看作是一页，页大小就是1024。</p>
+<p><strong>页大小</strong></p>
+<p>首先定义页大小为1024：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pageSize 一页的大小</span></span><br><span class="line"><span class="keyword">const</span> pageSize = <span class="number">1024</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>表头结构</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// QuickList 快速列表是在页（切片）之上建立的链表</span></span><br><span class="line"><span class="comment">// QuickList 比普通链表的插入、遍历以及内存有着更好的性能</span></span><br><span class="line"><span class="keyword">type</span> QuickList <span class="keyword">struct</span> &#123;</span><br><span class="line">	data *list.List <span class="comment">// 每一页就是interface&#123;&#125;的切片，大小为1024</span></span><br><span class="line">	size <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>表头结构中的data字段直接使用了Go语言<code>list</code>包中的List结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 双向链表标头结构</span></span><br><span class="line"><span class="keyword">type</span> List <span class="keyword">struct</span> &#123;</span><br><span class="line">	root Element <span class="comment">// 哨兵节点</span></span><br><span class="line">	<span class="built_in">len</span>  <span class="type">int</span>     <span class="comment">// 链表的节点个数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 双向链表的节点</span></span><br><span class="line"><span class="keyword">type</span> Element <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 前向和后向指针</span></span><br><span class="line">	next, prev *Element</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 表头结构</span></span><br><span class="line">	list *List</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 值域</span></span><br><span class="line">	Value <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Go语言自带的list包实现了对双向链表的封装，双向链表的节点元素是interface{}类型，利用这种方式实现了泛型。<br>我们对快速列表的实现，使得上述双向链表节点中存储的实际上是容量为1024的切片，此后对于链表的相关操作，直接调用list包向外暴露的API即可。</p>
+<h3 id="快速列表的迭代器"><a href="#快速列表的迭代器" class="headerlink" title="快速列表的迭代器"></a>快速列表的迭代器</h3><p>快速列表的迭代器中有三个字段：链表的节点node（可以看成一页），元素在页中的偏移量、表头结构。<br>这样实现的迭代器，使得迭代器既可以在元素之前迭代，也可以在页之间快速迭代。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// iterator 快速列表的迭代器，在[-1, ql.Len()]之间迭代</span></span><br><span class="line"><span class="keyword">type</span> iterator <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 快速列表的一页</span></span><br><span class="line">	node *list.Element</span><br><span class="line">	<span class="comment">// 元素下标在页中的偏移量</span></span><br><span class="line">	offset <span class="type">int</span></span><br><span class="line">	ql     *QuickList</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>使用迭代器返回一个元素</strong></p>
+<p>使用迭代器返回一个元素的复杂度为<code>O(1)</code>，一个元素的位置可以通过 页的位置 + 该元素在页中的位置 快速定位。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用迭代器返回一个元素</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(iter *iterator)</span></span> get() <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">return</span> iter.page()[iter.offset]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>返回迭代器对应的那一页</strong></p>
+<p>上面我们说过，链表的节点元素其实就是一个容量为1024的slice，通过类型断言直接返回即可。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 返回迭代器对应的那一页</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(iter *iterator)</span></span> page() []<span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">return</span> iter.node.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>根据元素下标返回对应的迭代器</strong></p>
+<p>快速列表查找元素效率比双向列表要快，首先利用迭代器一页一页进行迭代，当确定了元素在哪一页后，利用元素的下标直接在页内的slice中直接定位即可。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ql *QuickList)</span></span> find(index <span class="type">int</span>) *iterator &#123;</span><br><span class="line">	<span class="keyword">if</span> ql == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;list is nil&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> index &lt; <span class="number">0</span> || index &gt;= ql.size &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;index out of bound&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> n *list.Element</span><br><span class="line">	<span class="comment">// 保存当前页的所有元素</span></span><br><span class="line">	<span class="keyword">var</span> page []<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	<span class="comment">// 累加遍历到当前页为止，前面的所有元素数量</span></span><br><span class="line">	<span class="keyword">var</span> pageBeg <span class="type">int</span></span><br><span class="line">	<span class="keyword">if</span> index &lt; ql.size/<span class="number">2</span> &#123;</span><br><span class="line">		<span class="comment">// 从表头进行查找</span></span><br><span class="line">		n = ql.data.Front()</span><br><span class="line">		pageBeg = <span class="number">0</span></span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			page = n.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">			<span class="keyword">if</span> pageBeg+<span class="built_in">len</span>(page) &gt; index &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			pageBeg += <span class="built_in">len</span>(page)</span><br><span class="line">			n = n.Next()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// 从表尾进行查找</span></span><br><span class="line">		n = ql.data.Back()</span><br><span class="line">		pageBeg = ql.size</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			page = n.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">			pageBeg -= <span class="built_in">len</span>(page)</span><br><span class="line">			<span class="keyword">if</span> pageBeg &lt;= index &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			n = n.Prev()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	pageOffset := index - pageBeg</span><br><span class="line">	<span class="keyword">return</span> &amp;iterator&#123;</span><br><span class="line">		node:   n,</span><br><span class="line">		offset: pageOffset,</span><br><span class="line">		ql:     ql,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>向后迭代一位</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// next 页内迭代器，向后迭代一位</span></span><br><span class="line"><span class="comment">// 如果当前元素下标未出界且不在最后一位，就向后移动一位，返回true</span></span><br><span class="line"><span class="comment">// 如果当前元素下标在快速列表的最后一页且是最后一个元素，直接返回false</span></span><br><span class="line"><span class="comment">// 如果当前元素下标不在快速列表的最后一页，但是是当前页的最后一个元素，跳转到下一页，返回true</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(iter *iterator)</span></span> next() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="comment">// 得到迭代器对应的那一页</span></span><br><span class="line">	page := iter.page()</span><br><span class="line">	<span class="comment">// 当前位置未出界且不在最后一位，就向后移动一位，返回true</span></span><br><span class="line">	<span class="keyword">if</span> iter.offset &lt; <span class="built_in">len</span>(page)<span class="number">-1</span> &#123;</span><br><span class="line">		iter.offset++</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 当前元素在快速列表的最后一页且是最后一个元素，直接返回false</span></span><br><span class="line">	<span class="keyword">if</span> iter.node == iter.ql.data.Back() &#123;</span><br><span class="line">		<span class="comment">// already at last node</span></span><br><span class="line">		iter.offset = <span class="built_in">len</span>(page)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 当前元素不在快速列表的最后一页，但是是当前页的最后一个元素，跳转到下一页，返回true</span></span><br><span class="line">	iter.offset = <span class="number">0</span></span><br><span class="line">	iter.node = iter.node.Next()</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>往前迭代一位</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// prev 页内迭代器，向前迭代一位</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(iter *iterator)</span></span> prev() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> iter.offset &gt; <span class="number">0</span> &#123;</span><br><span class="line">		iter.offset--</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> iter.node == iter.ql.data.Front() &#123;</span><br><span class="line">		iter.offset = <span class="number">-1</span></span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	iter.node = iter.node.Prev()</span><br><span class="line">	prevPage := iter.node.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	iter.offset = <span class="built_in">len</span>(prevPage) - <span class="number">1</span></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="添加和插入元素"><a href="#添加和插入元素" class="headerlink" title="添加和插入元素"></a>添加和插入元素</h3><p><strong>向表尾添加一个元素</strong></p>
+<p>向表尾添加元素需要考虑三种情况：</p>
+<ol>
+<li>列表是空的，创建新的一页，添加到表尾即可。</li>
+<li>表尾节点那一页是满的，获取表尾节点，创建新的一页，添加到表尾节点的后面即可。</li>
+<li>表尾节点那一页不是满的，正常添加到表尾即可。</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Add 添加元素到表尾</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ql *QuickList)</span></span> Add(val <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">	ql.size++</span><br><span class="line">	<span class="comment">// 列表是空的</span></span><br><span class="line">	<span class="keyword">if</span> ql.data.Len() == <span class="number">0</span> &#123;</span><br><span class="line">		page := <span class="built_in">make</span>([]<span class="keyword">interface</span>&#123;&#125;, <span class="number">0</span>, pageSize)</span><br><span class="line">		page = <span class="built_in">append</span>(page, val)</span><br><span class="line">		ql.data.PushBack(page)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 获取表尾节点</span></span><br><span class="line">	backNode := ql.data.Back()</span><br><span class="line">	backPage := backNode.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="comment">// 表尾节点页满了，需要新创建一页</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(backPage) == <span class="built_in">cap</span>(backPage) &#123;</span><br><span class="line">		page := <span class="built_in">make</span>([]<span class="keyword">interface</span>&#123;&#125;, <span class="number">0</span>, pageSize)</span><br><span class="line">		page = <span class="built_in">append</span>(page, val)</span><br><span class="line">		ql.data.PushBack(page)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 默认将节点添加进表尾页中</span></span><br><span class="line">	backPage = <span class="built_in">append</span>(backPage, val)</span><br><span class="line">	backNode.Value = backPage</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>根据下标插入一个元素</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Insert 插入元素</span></span><br><span class="line"><span class="comment">// 插入元素的策略分三种情况：</span></span><br><span class="line"><span class="comment">// 1. 向最后一页的最后一个位置插入元素，直接掉用ql.Add()插入即可</span></span><br><span class="line"><span class="comment">// 2. 某一页插入一个元素，且该页未满，直接插入该页即可</span></span><br><span class="line"><span class="comment">// 3. 某一页插入一个元素，该页满了，就新创建一页，然后将前512个元素留在原来那页，将后512个元素移到新的页中，</span></span><br><span class="line"><span class="comment">//    新插入的元素，如果下标在[0,512]之间，就插入到原来页，如果下标在[516, 1024]之间，就插入到新创建的页中</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ql *QuickList)</span></span> Insert(index <span class="type">int</span>, val <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">	<span class="comment">// 向表尾插入元素</span></span><br><span class="line">	<span class="keyword">if</span> index == ql.size &#123;</span><br><span class="line">		ql.Add(val)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	iter := ql.find(index)</span><br><span class="line">	page := iter.node.Value.([]<span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="comment">// 如果待插入页的元素小于1024，直接插入到该页即可</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(page) &lt; pageSize &#123;</span><br><span class="line">		<span class="comment">// insert into not full page</span></span><br><span class="line">		page = <span class="built_in">append</span>(page[:iter.offset+<span class="number">1</span>], page[iter.offset:]...)</span><br><span class="line">		page[iter.offset] = val</span><br><span class="line">		iter.node.Value = page</span><br><span class="line">		ql.size++</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 待插入页的元素已经满1024，就需要新创建一页</span></span><br><span class="line">	<span class="keyword">var</span> nextPage []<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	<span class="comment">// 后一半的元素放在新创建的页中，前一半元素放在原来的页中</span></span><br><span class="line">	nextPage = <span class="built_in">append</span>(nextPage, page[pageSize/<span class="number">2</span>:]...) <span class="comment">// pageSize must be even</span></span><br><span class="line">	page = page[:pageSize/<span class="number">2</span>]</span><br><span class="line">	<span class="comment">// 待插入元素的下标小于512，插到前面那页</span></span><br><span class="line">	<span class="keyword">if</span> iter.offset &lt; <span class="built_in">len</span>(page) &#123;</span><br><span class="line">		page = <span class="built_in">append</span>(page[:iter.offset+<span class="number">1</span>], page[iter.offset:]...)</span><br><span class="line">		page[iter.offset] = val</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// 待插入元素的下标大于512，插到后面那页</span></span><br><span class="line">		i := iter.offset - pageSize/<span class="number">2</span></span><br><span class="line">		nextPage = <span class="built_in">append</span>(nextPage[:i+<span class="number">1</span>], nextPage[i:]...)</span><br><span class="line">		nextPage[i] = val</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 储存当前页和新创建的下一页</span></span><br><span class="line">	iter.node.Value = page</span><br><span class="line">	ql.data.InsertAfter(nextPage, iter.node)</span><br><span class="line">	ql.size++</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="删除元素"><a href="#删除元素" class="headerlink" title="删除元素"></a>删除元素</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 删除元素</span></span><br><span class="line"><span class="comment">// 删除元素分为三种情况：</span></span><br><span class="line"><span class="comment">// 1.删除后的页不为空，且删除的不是该页的最后一个元素，什么都不用管</span></span><br><span class="line"><span class="comment">// 2.删除后的页不为空，且删除的是该页的最后一个元素，需要将迭代器移动到下一页的最后一个元素</span></span><br><span class="line"><span class="comment">// 3.删除的页为空（需要删除该页），且删除的页是最后一页，将迭代器置空</span></span><br><span class="line"><span class="comment">// 4.删除的页为空（需要删除该页），且删除的页不是最后一页，将迭代器指向下一页</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(iter *iterator)</span></span> remove() <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">	page := iter.page()</span><br><span class="line">	val := page[iter.offset]</span><br><span class="line">	<span class="comment">// 先直接在页中删除这个元素</span></span><br><span class="line">	page = <span class="built_in">append</span>(page[:iter.offset], page[iter.offset+<span class="number">1</span>:]...)</span><br><span class="line">	<span class="comment">// 如果删除后的页不为空，只更新iter.offset即可</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(page) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		iter.node.Value = page</span><br><span class="line">		<span class="comment">// 如果删除的是页中的最后一个元素，那么迭代器需要移动到下一页的第一个元素</span></span><br><span class="line">		<span class="keyword">if</span> iter.offset == <span class="built_in">len</span>(page) &#123;</span><br><span class="line">			<span class="keyword">if</span> iter.node != iter.ql.data.Back() &#123;</span><br><span class="line">				iter.node = iter.node.Next()</span><br><span class="line">				iter.offset = <span class="number">0</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// 如果删除后的页为空，需要删除该页</span></span><br><span class="line">		<span class="comment">// 如果删除的是最后一页，迭代器需要置空</span></span><br><span class="line">		<span class="keyword">if</span> iter.node == iter.ql.data.Back() &#123;</span><br><span class="line">			iter.ql.data.Remove(iter.node)</span><br><span class="line">			iter.node = <span class="literal">nil</span></span><br><span class="line">			iter.offset = <span class="number">0</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 如果删除的不是最后一页，迭代器需要指向下一页</span></span><br><span class="line">			nextNode := iter.node.Next()</span><br><span class="line">			iter.ql.data.Remove(iter.node)</span><br><span class="line">			iter.node = nextNode</span><br><span class="line">			iter.offset = <span class="number">0</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	iter.ql.size--</span><br><span class="line">	<span class="keyword">return</span> val</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="遍历快速列表"><a href="#遍历快速列表" class="headerlink" title="遍历快速列表"></a>遍历快速列表</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Consumer 用于遍历中断的函数，返回true表示继续遍历，可以在Consumer中调用自定义函数</span></span><br><span class="line"><span class="keyword">type</span> Consumer <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>, v <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">bool</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ForEach 遍历快速列表中的元素</span></span><br><span class="line"><span class="comment">// 如果consumer返回false，结束遍历</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ql *QuickList)</span></span> ForEach(consumer Consumer) &#123;</span><br><span class="line">	<span class="keyword">if</span> ql == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;list is nil&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ql.Len() == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	iter := ql.find(<span class="number">0</span>)</span><br><span class="line">	i := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		goNext := consumer(i, iter.get())</span><br><span class="line">		<span class="keyword">if</span> !goNext &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		i++</span><br><span class="line">		<span class="comment">// 遍历到表尾，结束</span></span><br><span class="line">		<span class="keyword">if</span> !iter.next() &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="完整实现"><a href="#完整实现" class="headerlink" title="完整实现"></a>完整实现</h2><p><a target="_blank" rel="noopener" href="https://github.com/omlight95/GoRedis/blob/master/datastruct/list/quicklist.go">https://github.com/omlight95/GoRedis/blob/master/datastruct/list/quicklist.go</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/Go%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/6%E8%B7%B3%E8%B7%83%E8%A1%A8%20Go%E5%AE%9E%E7%8E%B0/" rel="prev" title="跳跃表 Go实现">
+      <i class="fa fa-chevron-left"></i> 跳跃表 Go实现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/Go/Golang%20sync.Map%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" rel="next" title="Golang sync.Map原理分析">
+      Golang sync.Map原理分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">快速列表介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8"><span class="nav-number">2.</span> <span class="nav-text">实现快速列表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">快速列表的结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8%E7%9A%84%E8%BF%AD%E4%BB%A3%E5%99%A8"><span class="nav-number">2.2.</span> <span class="nav-text">快速列表的迭代器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%92%8C%E6%8F%92%E5%85%A5%E5%85%83%E7%B4%A0"><span class="nav-number">2.3.</span> <span class="nav-text">添加和插入元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%85%83%E7%B4%A0"><span class="nav-number">2.4.</span> <span class="nav-text">删除元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%8D%E5%8E%86%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8"><span class="nav-number">2.5.</span> <span class="nav-text">遍历快速列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">完整实现</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">138</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

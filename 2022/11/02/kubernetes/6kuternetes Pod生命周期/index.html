@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="我们一般将pod对象从创建至终的这段时间范围称为pod的生命周期。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kuternetes Pod生命周期">
+<meta property="og:url" content="http://example.com/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="我们一般将pod对象从创建至终的这段时间范围称为pod的生命周期。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/351bf896f47a4e62b71d4a080810e6bb.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/1f1d9b95496644de9fcad400edc74b7a.png">
+<meta property="article:published_time" content="2022-11-02T03:35:04.071Z">
+<meta property="article:modified_time" content="2022-11-02T07:30:50.597Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/351bf896f47a4e62b71d4a080810e6bb.png">
+
+<link rel="canonical" href="http://example.com/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kuternetes Pod生命周期 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kuternetes Pod生命周期
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 11:35:04 / 修改时间：15:30:50" itemprop="dateCreated datePublished" datetime="2022-11-02T11:35:04+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubernetes/" itemprop="url" rel="index"><span itemprop="name">kubernetes</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="post-meta-item leancloud_visitors" data-flag-title="kuternetes Pod生命周期" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/kubernetes/6kuternetes%20Pod%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">我们一般将pod对象从创建至终的这段时间范围称为pod的生命周期。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>我们一般将pod对象从创建至终的这段时间范围称为pod的生命周期，它主要包含下面的过程：</p>
+<ul>
+<li><p>pod创建过程</p>
+</li>
+<li><p>运行初始化容器（init container）过程</p>
+</li>
+<li><p>运行主容器（main container）</p>
+<ul>
+<li><p>容器启动后钩子（post start）、容器终止前钩子（pre stop）</p>
+</li>
+<li><p>容器的存活性探测（liveness probe）、就绪性探测（readiness probe）</p>
+</li>
+</ul>
+</li>
+<li><p>pod终止过程</p>
+</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/351bf896f47a4e62b71d4a080810e6bb.png" alt="在这里插入图片描述"><br>在整个生命周期中，Pod会出现5种<strong>状态</strong>（<strong>相位</strong>），分别如下：</p>
+<ul>
+<li>挂起（Pending）：apiserver已经创建了pod资源对象，但它尚未被调度完成或者仍处于下载镜像的过程中</li>
+<li>运行中（Running）：pod已经被调度至某节点，并且所有容器都已经被kubelet创建完成</li>
+<li>成功（Succeeded）：pod中的所有容器都已经成功终止并且不会被重启</li>
+<li>失败（Failed）：所有容器都已经终止，但至少有一个容器终止失败，即容器返回了非0值的退出状态</li>
+<li>未知（Unknown）：apiserver无法正常获取到pod对象的状态信息，通常由网络通信失败所导致</li>
+</ul>
+<h2 id="1-创建和终止"><a href="#1-创建和终止" class="headerlink" title="1.创建和终止"></a>1.创建和终止</h2><p><strong>pod的创建过程</strong></p>
+<ol>
+<li><p>用户通过kubectl或其他api客户端提交需要创建的pod信息给apiServer</p>
+</li>
+<li><p>apiServer开始生成pod对象的信息，并将信息存入etcd，然后返回确认信息至客户端</p>
+</li>
+<li><p>apiServer开始反映etcd中的pod对象的变化，其它组件使用watch机制来跟踪检查apiServer上的变动</p>
+</li>
+<li><p>scheduler发现有新的pod对象要创建，开始为Pod分配主机并将结果信息更新至apiServer</p>
+</li>
+<li><p>node节点上的kubelet发现有pod调度过来，尝试调用docker启动容器，并将结果回送至apiServer</p>
+</li>
+<li><p>apiServer将接收到的pod状态信息存入etcd中</p>
+</li>
+</ol>
+<p><img src="https://img-blog.csdnimg.cn/1f1d9b95496644de9fcad400edc74b7a.png" alt="在这里插入图片描述"><br><strong>pod的终止过程</strong></p>
+<ol>
+<li>用户向apiServer发送删除pod对象的命令</li>
+<li>apiServcer中的pod对象信息会随着时间的推移而更新，在宽限期内（默认30s），pod被视为dead</li>
+<li>将pod标记为terminating状态</li>
+<li>kubelet在监控到pod对象转为terminating状态的同时启动pod关闭过程</li>
+<li>端点控制器监控到pod对象的关闭行为时将其从所有匹配到此端点的service资源的端点列表中移除</li>
+<li>如果当前pod对象定义了preStop钩子处理器，则在其标记为terminating后即会以同步的方式启动执行</li>
+<li>pod对象中的容器进程收到停止信号</li>
+<li>宽限期结束后，若pod中还存在仍在运行的进程，那么pod对象会收到立即终止的信号</li>
+<li>kubelet请求apiServer将此pod资源的宽限期设置为0从而完成删除操作，此时pod对于用户已不可见</li>
+</ol>
+<h2 id="2-初始化容器"><a href="#2-初始化容器" class="headerlink" title="2. 初始化容器"></a>2. 初始化容器</h2><p>初始化容器是在pod的主容器启动之前要运行的容器，主要是做一些主容器的前置工作，它具有两大特征：</p>
+<ol>
+<li>初始化容器必须运行完成直至结束，若某初始化容器运行失败，那么kubernetes需要重启它直到成功完成</li>
+<li>初始化容器必须按照定义的顺序执行，当且仅当前一个成功之后，后面的一个才能运行</li>
+</ol>
+<p>初始化容器有很多的应用场景，下面列出的是最常见的几个：</p>
+<ul>
+<li>提供主容器镜像中不具备的工具程序或自定义代码</li>
+<li>初始化容器要先于应用容器串行启动并运行完成，因此可用于延后应用容器的启动直至其依赖的条件得到满足</li>
+</ul>
+<p>接下来做一个案例，模拟下面这个需求：</p>
+<p>​    假设要以主容器来运行nginx，但是要求在运行nginx之前先要能够连接上mysql和redis所在服务器</p>
+<p>​    为了简化测试，事先规定好mysql<code>(192.168.109.201)</code>和redis<code>(192.168.109.202)</code>服务器的地址</p>
+<p>创建<code>pod-initcontainer.yaml</code>，内容如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-initcontainer</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">main-container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span> </span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">  <span class="attr">initContainers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test-mysql</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox:1.30</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&#x27;sh&#x27;</span>, <span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;until ping 192.168.109.201 -c 1 ; do echo waiting for mysql...; sleep 2; done;&#x27;</span>]</span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test-redis</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox:1.30</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&#x27;sh&#x27;</span>, <span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;until ping 192.168.109.202 -c 1 ; do echo waiting for reids...; sleep 2; done;&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-initcontainer.yaml</span></span><br><span class="line">pod/pod<span class="literal">-initcontainer</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看pod状态</span></span><br><span class="line"><span class="comment"># 发现pod卡在启动第一个初始化容器过程中，后面的容器不会运行</span></span><br><span class="line">root@master ~]<span class="comment"># kubectl describe pod  pod-initcontainer -n dev</span></span><br><span class="line">........</span><br><span class="line">Events:</span><br><span class="line">  <span class="built_in">Type</span>    Reason     Age   From               Message</span><br><span class="line">  <span class="literal">----</span>    <span class="literal">------</span>     <span class="literal">----</span>  <span class="literal">----</span>               <span class="literal">-------</span></span><br><span class="line">  Normal  Scheduled  <span class="number">49</span>s   default<span class="literal">-scheduler</span>  Successfully assigned dev/pod<span class="literal">-initcontainer</span> to node1</span><br><span class="line">  Normal  Pulled     <span class="number">48</span>s   kubelet, node1     Container image <span class="string">&quot;busybox:1.30&quot;</span> already present on machine</span><br><span class="line">  Normal  Created    <span class="number">48</span>s   kubelet, node1     Created container <span class="built_in">test-mysql</span></span><br><span class="line">  Normal  Started    <span class="number">48</span>s   kubelet, node1     Started container <span class="built_in">test-mysql</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 动态查看pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get pods pod-initcontainer -n dev -w</span></span><br><span class="line">NAME                             READY   STATUS     RESTARTS   AGE</span><br><span class="line">pod<span class="literal">-initcontainer</span>                <span class="number">0</span>/<span class="number">1</span>     Init:<span class="number">0</span>/<span class="number">2</span>   <span class="number">0</span>          <span class="number">15</span>s</span><br><span class="line">pod<span class="literal">-initcontainer</span>                <span class="number">0</span>/<span class="number">1</span>     Init:<span class="number">1</span>/<span class="number">2</span>   <span class="number">0</span>          <span class="number">52</span>s</span><br><span class="line">pod<span class="literal">-initcontainer</span>                <span class="number">0</span>/<span class="number">1</span>     Init:<span class="number">1</span>/<span class="number">2</span>   <span class="number">0</span>          <span class="number">53</span>s</span><br><span class="line">pod<span class="literal">-initcontainer</span>                <span class="number">0</span>/<span class="number">1</span>     PodInitializing   <span class="number">0</span>          <span class="number">89</span>s</span><br><span class="line">pod<span class="literal">-initcontainer</span>                <span class="number">1</span>/<span class="number">1</span>     Running           <span class="number">0</span>          <span class="number">90</span>s</span><br><span class="line"></span><br><span class="line"><span class="comment"># 接下来新开一个shell，为当前服务器新增两个ip，观察pod的变化</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># ifconfig ens33:1 192.168.109.201 netmask 255.255.255.0 up</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># ifconfig ens33:2 192.168.109.202 netmask 255.255.255.0 up</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="3-钩子函数"><a href="#3-钩子函数" class="headerlink" title="3. 钩子函数"></a>3. 钩子函数</h2><p>钩子函数能够感知自身生命周期中的事件，并在相应的时刻到来时运行用户指定的程序代码。</p>
+<p>kubernetes在主容器的启动之后和停止之前提供了两个钩子函数：</p>
+<ul>
+<li>post start：容器创建之后执行，如果失败了会重启容器</li>
+<li>pre stop  ：容器终止之前执行，执行完成之后容器将成功终止，在其完成之前会阻塞删除容器的操作</li>
+</ul>
+<p>钩子处理器支持使用下面三种方式定义动作：</p>
+<ul>
+<li><p>Exec命令：在容器内执行一次命令</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span></span><br><span class="line">  <span class="attr">lifecycle:</span></span><br><span class="line">    <span class="attr">postStart:</span> </span><br><span class="line">      <span class="attr">exec:</span></span><br><span class="line">        <span class="attr">command:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">cat</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">/tmp/healthy</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>TCPSocket：在当前容器尝试访问指定的socket</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span>      </span><br><span class="line">  <span class="attr">lifecycle:</span></span><br><span class="line">    <span class="attr">postStart:</span></span><br><span class="line">      <span class="attr">tcpSocket:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>HTTPGet：在当前容器中向某url发起http请求</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span></span><br><span class="line">  <span class="attr">lifecycle:</span></span><br><span class="line">    <span class="attr">postStart:</span></span><br><span class="line">      <span class="attr">httpGet:</span></span><br><span class="line">        <span class="attr">path:</span> <span class="string">/</span> <span class="comment">#URI地址</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">80</span> <span class="comment">#端口号</span></span><br><span class="line">        <span class="attr">host:</span> <span class="number">192.168</span><span class="number">.109</span><span class="number">.100</span> <span class="comment">#主机地址</span></span><br><span class="line">        <span class="attr">scheme:</span> <span class="string">HTTP</span> <span class="comment">#支持的协议，http或者https</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>接下来，以exec方式为例，演示下钩子函数的使用，创建<code>pod-hook-exec.yaml</code>文件，内容如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-hook-exec</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">main-container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">lifecycle:</span></span><br><span class="line">      <span class="attr">postStart:</span> </span><br><span class="line">        <span class="attr">exec:</span> <span class="comment"># 在容器启动的时候执行一个命令，修改掉nginx的默认首页内容</span></span><br><span class="line">          <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;echo postStart... &gt; /usr/share/nginx/html/index.html&quot;</span>]</span><br><span class="line">      <span class="attr">preStop:</span></span><br><span class="line">        <span class="attr">exec:</span> <span class="comment"># 在容器停止之前停止nginx服务</span></span><br><span class="line">          <span class="attr">command:</span> [<span class="string">&quot;/usr/sbin/nginx&quot;</span>,<span class="string">&quot;-s&quot;</span>,<span class="string">&quot;quit&quot;</span>]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-hook-exec.yaml</span></span><br><span class="line">pod/pod<span class="literal">-hook-exec</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get pods  pod-hook-exec -n dev -o wide</span></span><br><span class="line">NAME           READY   STATUS     RESTARTS   AGE    IP            NODE    </span><br><span class="line">pod<span class="literal">-hook-exec</span>  <span class="number">1</span>/<span class="number">1</span>     Running    <span class="number">0</span>          <span class="number">29</span>s    <span class="number">10.244</span>.<span class="number">2.48</span>   node2   </span><br><span class="line"></span><br><span class="line"><span class="comment"># 访问pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># curl 10.244.2.48</span></span><br><span class="line">postStart...</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-容器探测"><a href="#4-容器探测" class="headerlink" title="4. 容器探测"></a>4. 容器探测</h2><p>容器探测用于检测容器中的应用实例是否正常工作，是保障业务可用性的一种传统机制。如果经过探测，实例的状态不符合预期，那么kubernetes就会把该问题实例” 摘除 “，不承担业务流量。kubernetes提供了两种探针来实现容器探测，分别是：</p>
+<ul>
+<li><p>liveness probes：存活性探针，用于检测应用实例当前是否处于正常运行状态，如果不是，k8s会重启容器</p>
+</li>
+<li><p>readiness probes：就绪性探针，用于检测应用实例当前是否可以接收请求，如果不能，k8s不会转发流量</p>
+</li>
+</ul>
+<blockquote>
+<p>livenessProbe 决定是否重启容器，readinessProbe 决定是否将请求转发给容器。</p>
+</blockquote>
+<p>上面两种探针目前均支持三种探测方式：</p>
+<ul>
+<li><p>Exec命令：在容器内执行一次命令，如果命令执行的退出码为0，则认为程序正常，否则不正常</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span></span><br><span class="line">  <span class="attr">livenessProbe:</span></span><br><span class="line">    <span class="attr">exec:</span></span><br><span class="line">      <span class="attr">command:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cat</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/tmp/healthy</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>TCPSocket：将会尝试访问一个用户容器的端口，如果能够建立这条连接，则认为程序正常，否则不正常</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span>      </span><br><span class="line">  <span class="attr">livenessProbe:</span></span><br><span class="line">    <span class="attr">tcpSocket:</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>HTTPGet：调用容器内Web应用的URL，如果返回的状态码在200和399之间，则认为程序正常，否则不正常</p>
+  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">……</span></span><br><span class="line">  <span class="attr">livenessProbe:</span></span><br><span class="line">    <span class="attr">httpGet:</span></span><br><span class="line">      <span class="attr">path:</span> <span class="string">/</span> <span class="comment">#URI地址</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span> <span class="comment">#端口号</span></span><br><span class="line">      <span class="attr">host:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="comment">#主机地址</span></span><br><span class="line">      <span class="attr">scheme:</span> <span class="string">HTTP</span> <span class="comment">#支持的协议，http或者https</span></span><br><span class="line"><span class="string">……</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>下面以<code>liveness probes</code>为例，做几个演示：</p>
+<p><strong>方式一：Exec</strong></p>
+<p>创建<code>pod-liveness-exec.yaml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-liveness-exec</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span> </span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">exec:</span></span><br><span class="line">        <span class="attr">command:</span> [<span class="string">&quot;/bin/cat&quot;</span>,<span class="string">&quot;/tmp/hello.txt&quot;</span>] <span class="comment"># 执行一个查看文件的命令</span></span><br></pre></td></tr></table></figure>
+
+<p>创建pod，观察效果</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建Pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-liveness-exec.yaml</span></span><br><span class="line">pod/pod<span class="literal">-liveness-exec</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看Pod详情</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl describe pods pod-liveness-exec -n dev</span></span><br><span class="line">......</span><br><span class="line">  Normal   Created    <span class="number">20</span>s (x2 over <span class="number">50</span>s)  kubelet, node1     Created container nginx</span><br><span class="line">  Normal   Started    <span class="number">20</span>s (x2 over <span class="number">50</span>s)  kubelet, node1     Started container nginx</span><br><span class="line">  Normal   Killing    <span class="number">20</span>s                kubelet, node1     Container nginx failed liveness probe, will be restarted</span><br><span class="line">  Warning  Unhealthy  <span class="number">0</span>s (x5 over <span class="number">40</span>s)   kubelet, node1     Liveness probe failed: <span class="built_in">cat</span>: can<span class="string">&#x27;t open &#x27;</span>/tmp/hello11.txt<span class="string">&#x27;: No such file or directory</span></span><br><span class="line"><span class="string">  </span></span><br><span class="line"><span class="string"># 观察上面的信息就会发现nginx容器启动之后就进行了健康检查</span></span><br><span class="line"><span class="string"># 检查失败之后，容器被kill掉，然后尝试进行重启（这是重启策略的作用，后面讲解）</span></span><br><span class="line"><span class="string"># 稍等一会之后，再观察pod信息，就可以看到RESTARTS不再是0，而是一直增长</span></span><br><span class="line"><span class="string">[root@master ~]# kubectl get pods pod-liveness-exec -n dev</span></span><br><span class="line"><span class="string">NAME                READY   STATUS             RESTARTS   AGE</span></span><br><span class="line"><span class="string">pod-liveness-exec   0/1     CrashLoopBackOff   2          3m19s</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"># 当然接下来，可以修改成一个存在的文件，比如/tmp/hello.txt，再试，结果就正常了......</span></span><br></pre></td></tr></table></figure>
+
+
+<p><strong>方式二：TCPSocket</strong></p>
+<p>创建<code>pod-liveness-tcpsocket.yaml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-liveness-tcpsocket</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span> </span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">tcpSocket:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span> <span class="comment"># 尝试访问8080端口</span></span><br></pre></td></tr></table></figure>
+
+<p> 创建pod，观察效果</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建Pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-liveness-tcpsocket.yaml</span></span><br><span class="line">pod/pod<span class="literal">-liveness-tcpsocket</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看Pod详情</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl describe pods pod-liveness-tcpsocket -n dev</span></span><br><span class="line">......</span><br><span class="line">  Normal   Scheduled  <span class="number">31</span>s                            default<span class="literal">-scheduler</span>  Successfully assigned dev/pod<span class="literal">-liveness-tcpsocket</span> to node2</span><br><span class="line">  Normal   Pulled     &lt;invalid&gt;                      kubelet, node2     Container image <span class="string">&quot;nginx:1.17.1&quot;</span> already present on machine</span><br><span class="line">  Normal   Created    &lt;invalid&gt;                      kubelet, node2     Created container nginx</span><br><span class="line">  Normal   Started    &lt;invalid&gt;                      kubelet, node2     Started container nginx</span><br><span class="line">  Warning  Unhealthy  &lt;invalid&gt; (x2 over &lt;invalid&gt;)  kubelet, node2     Liveness probe failed: dial tcp <span class="number">10.244</span>.<span class="number">2.44</span>:<span class="number">8080</span>: connect: connection refused</span><br><span class="line">  </span><br><span class="line"><span class="comment"># 观察上面的信息，发现尝试访问8080端口,但是失败了</span></span><br><span class="line"><span class="comment"># 稍等一会之后，再观察pod信息，就可以看到RESTARTS不再是0，而是一直增长</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get pods pod-liveness-tcpsocket  -n dev</span></span><br><span class="line">NAME                     READY   STATUS             RESTARTS   AGE</span><br><span class="line">pod<span class="literal">-liveness-tcpsocket</span>   <span class="number">0</span>/<span class="number">1</span>     CrashLoopBackOff   <span class="number">2</span>          <span class="number">3</span>m19s</span><br><span class="line"></span><br><span class="line"><span class="comment"># 当然接下来，可以修改成一个可以访问的端口，比如80，再试，结果就正常了......</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>方式三：HTTPGet</strong></p>
+<p>创建<code>pod-liveness-httpget.yaml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-liveness-httpget</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">httpGet:</span>  <span class="comment"># 其实就是访问http://127.0.0.1:80/hello  </span></span><br><span class="line">        <span class="attr">scheme:</span> <span class="string">HTTP</span> <span class="comment">#支持的协议，http或者https</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">80</span> <span class="comment">#端口号</span></span><br><span class="line">        <span class="attr">path:</span> <span class="string">/hello</span> <span class="comment">#URI地址</span></span><br></pre></td></tr></table></figure>
+
+<p>创建pod，观察效果</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建Pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-liveness-httpget.yaml</span></span><br><span class="line">pod/pod<span class="literal">-liveness-httpget</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看Pod详情</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl describe pod pod-liveness-httpget -n dev</span></span><br><span class="line">.......</span><br><span class="line">  Normal   Pulled     <span class="number">6</span>s (x3 over <span class="number">64</span>s)  kubelet, node1     Container image <span class="string">&quot;nginx:1.17.1&quot;</span> already present on machine</span><br><span class="line">  Normal   Created    <span class="number">6</span>s (x3 over <span class="number">64</span>s)  kubelet, node1     Created container nginx</span><br><span class="line">  Normal   Started    <span class="number">6</span>s (x3 over <span class="number">63</span>s)  kubelet, node1     Started container nginx</span><br><span class="line">  Warning  Unhealthy  <span class="number">6</span>s (x6 over <span class="number">56</span>s)  kubelet, node1     Liveness probe failed: HTTP probe failed with statuscode: <span class="number">404</span></span><br><span class="line">  Normal   Killing    <span class="number">6</span>s (x2 over <span class="number">36</span>s)  kubelet, node1     Container nginx failed liveness probe, will be restarted</span><br><span class="line">  </span><br><span class="line"><span class="comment"># 观察上面信息，尝试访问路径，但是未找到,出现404错误</span></span><br><span class="line"><span class="comment"># 稍等一会之后，再观察pod信息，就可以看到RESTARTS不再是0，而是一直增长</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get pod pod-liveness-httpget -n dev</span></span><br><span class="line">NAME                   READY   STATUS    RESTARTS   AGE</span><br><span class="line">pod<span class="literal">-liveness-httpget</span>   <span class="number">1</span>/<span class="number">1</span>     Running   <span class="number">5</span>          <span class="number">3</span>m17s</span><br><span class="line"></span><br><span class="line"><span class="comment"># 当然接下来，可以修改成一个可以访问的路径path，比如/，再试，结果就正常了......</span></span><br></pre></td></tr></table></figure>
+
+
+<p>至此，已经使用liveness Probe演示了三种探测方式，但是查看livenessProbe的子属性，会发现除了这三种方式，还有一些其他的配置，在这里一并解释下：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl explain pod.spec.containers.livenessProbe</span></span><br><span class="line">FIELDS:</span><br><span class="line">   exec &lt;Object&gt;  </span><br><span class="line">   tcpSocket    &lt;Object&gt;</span><br><span class="line">   httpGet      &lt;Object&gt;</span><br><span class="line">   initialDelaySeconds  &lt;integer&gt;  <span class="comment"># 容器启动后等待多少秒执行第一次探测</span></span><br><span class="line">   timeoutSeconds       &lt;integer&gt;  <span class="comment"># 探测超时时间。默认1秒，最小1秒</span></span><br><span class="line">   periodSeconds        &lt;integer&gt;  <span class="comment"># 执行探测的频率。默认是10秒，最小1秒</span></span><br><span class="line">   failureThreshold     &lt;integer&gt;  <span class="comment"># 连续探测失败多少次才被认定为失败。默认是3。最小值是1</span></span><br><span class="line">   successThreshold     &lt;integer&gt;  <span class="comment"># 连续探测成功多少次才被认定为成功。默认是1</span></span><br></pre></td></tr></table></figure>
+
+<p>下面稍微配置两个，演示下效果即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">root@master</span> <span class="string">~</span>]<span class="comment"># more pod-liveness-httpget.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-liveness-httpget</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">httpGet:</span></span><br><span class="line">        <span class="attr">scheme:</span> <span class="string">HTTP</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">80</span> </span><br><span class="line">        <span class="attr">path:</span> <span class="string">/</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">30</span> <span class="comment"># 容器启动后30s开始探测</span></span><br><span class="line">      <span class="attr">timeoutSeconds:</span> <span class="number">5</span> <span class="comment"># 探测超时时间为5s</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="5-重启策略"><a href="#5-重启策略" class="headerlink" title="5. 重启策略"></a>5. 重启策略</h2><p>在上一节中，一旦容器探测出现了问题，kubernetes就会对容器所在的Pod进行重启，其实这是由pod的重启策略决定的，pod的重启策略有 3 种，分别如下：</p>
+<ul>
+<li>Always ：容器失效时，自动重启该容器，这也是默认值。</li>
+<li>OnFailure ： 容器终止运行且退出码不为0时重启</li>
+<li>Never ： 不论状态为何，都不重启该容器</li>
+</ul>
+<p>​    重启策略适用于pod对象中的所有容器，首次需要重启的容器，将在其需要时立即进行重启，随后再次需要重启的操作将由kubelet延迟一段时间后进行，且反复的重启操作的延迟时长以此为10s、20s、40s、80s、160s和300s，300s是最大延迟时长。</p>
+<p>创建<code>pod-restartpolicy.yaml</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pod-restartpolicy</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17.1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">      <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">httpGet:</span></span><br><span class="line">        <span class="attr">scheme:</span> <span class="string">HTTP</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">        <span class="attr">path:</span> <span class="string">/hello</span></span><br><span class="line">  <span class="attr">restartPolicy:</span> <span class="string">Never</span> <span class="comment"># 设置重启策略为Never</span></span><br></pre></td></tr></table></figure>
+
+<p>运行Pod测试</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建Pod</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create -f pod-restartpolicy.yaml</span></span><br><span class="line">pod/pod<span class="literal">-restartpolicy</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看Pod详情，发现nginx容器失败</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl  describe pods pod-restartpolicy  -n dev</span></span><br><span class="line">......</span><br><span class="line">  Warning  Unhealthy  <span class="number">15</span>s (x3 over <span class="number">35</span>s)  kubelet, node1     Liveness probe failed: HTTP probe failed with statuscode: <span class="number">404</span></span><br><span class="line">  Normal   Killing    <span class="number">15</span>s                kubelet, node1     Container nginx failed liveness probe</span><br><span class="line">  </span><br><span class="line"><span class="comment"># 多等一会，再观察pod的重启次数，发现一直是0，并未重启   </span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl  get pods pod-restartpolicy -n dev</span></span><br><span class="line">NAME                   READY   STATUS    RESTARTS   AGE</span><br><span class="line">pod<span class="literal">-restartpolicy</span>      <span class="number">0</span>/<span class="number">1</span>     Running   <span class="number">0</span>          <span class="number">5</span>min42s</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/kubernetes/5kuternetes%20Pod%E4%BB%8B%E7%BB%8D%E4%B8%8E%E9%85%8D%E7%BD%AE/" rel="prev" title="kuternetes Pod介绍与配置">
+      <i class="fa fa-chevron-left"></i> kuternetes Pod介绍与配置
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/kubernetes/7kubernetes%20Pod%E8%B0%83%E5%BA%A6/" rel="next" title="kubernetes Pod调度">
+      kubernetes Pod调度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%92%8C%E7%BB%88%E6%AD%A2"><span class="nav-number">1.</span> <span class="nav-text">1.创建和终止</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%88%9D%E5%A7%8B%E5%8C%96%E5%AE%B9%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">2. 初始化容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0"><span class="nav-number">3.</span> <span class="nav-text">3. 钩子函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E5%AE%B9%E5%99%A8%E6%8E%A2%E6%B5%8B"><span class="nav-number">4.</span> <span class="nav-text">4. 容器探测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E9%87%8D%E5%90%AF%E7%AD%96%E7%95%A5"><span class="nav-number">5.</span> <span class="nav-text">5. 重启策略</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">138</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

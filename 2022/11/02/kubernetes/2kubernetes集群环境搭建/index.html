@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="kubernetes集群大体上分为两类：一主多从和多主多从。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kubernetes集群环境搭建">
+<meta property="og:url" content="http://example.com/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="kubernetes集群大体上分为两类：一主多从和多主多从。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/437faa3af6be4e5287b4a909511172c4.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/71e994842d34444eb8014d53849d9637.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8bd0d689a01b4dd28196d5011a43bc6e.png">
+<meta property="article:published_time" content="2022-11-02T03:33:52.921Z">
+<meta property="article:modified_time" content="2022-11-02T07:27:24.995Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/437faa3af6be4e5287b4a909511172c4.png">
+
+<link rel="canonical" href="http://example.com/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kubernetes集群环境搭建 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kubernetes集群环境搭建
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 11:33:52 / 修改时间：15:27:24" itemprop="dateCreated datePublished" datetime="2022-11-02T11:33:52+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubernetes/" itemprop="url" rel="index"><span itemprop="name">kubernetes</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" class="post-meta-item leancloud_visitors" data-flag-title="kubernetes集群环境搭建" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/kubernetes/2kubernetes%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">kubernetes集群大体上分为两类：一主多从和多主多从。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-环境规划"><a href="#1-环境规划" class="headerlink" title="1. 环境规划"></a>1. 环境规划</h2><h3 id="1-1-集群类型"><a href="#1-1-集群类型" class="headerlink" title="1.1 集群类型"></a>1.1 集群类型</h3><p>kubernetes集群大体上分为两类：<strong>一主多从</strong>和<strong>多主多从</strong>。</p>
+<ul>
+<li>一主多从：一台Master节点和多台Node节点，搭建简单，但是有单机故障风险，适合用于测试环境</li>
+<li>多主多从：多台Master节点和多台Node节点，搭建麻烦，安全性高，适合用于生产环境</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/437faa3af6be4e5287b4a909511172c4.png" alt="在这里插入图片描述"><br>为了测试简单，本次搭建的是<strong>一主两从</strong>类型的集群。</p>
+<h3 id="1-2-安装方式"><a href="#1-2-安装方式" class="headerlink" title="1.2 安装方式"></a>1.2 安装方式</h3><p>kubernetes有多种部署方式，目前主流的方式有kubeadm、minikube、二进制包</p>
+<ul>
+<li>minikube：一个用于快速搭建单节点kubernetes的工具</li>
+<li>kubeadm：一个用于快速搭建kubernetes集群的工具</li>
+<li>二进制包 ：从官网下载每个组件的二进制包，依次去安装，此方式对于理解kubernetes组件更加有效</li>
+</ul>
+<blockquote>
+<p>说明：现在需要安装kubernetes的集群环境，但是又不想过于麻烦，所以选择使用kubeadm方式</p>
+</blockquote>
+<h3 id="1-3-主机规划"><a href="#1-3-主机规划" class="headerlink" title="1.3 主机规划"></a>1.3 主机规划</h3><table>
+<thead>
+<tr>
+<th>作用</th>
+<th>IP地址</th>
+<th>操作系统</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Master</td>
+<td>192.168.109.101</td>
+<td>Centos7.5    基础设施服务器</td>
+<td>2颗CPU  2G内存   50G硬盘</td>
+</tr>
+<tr>
+<td>Node1</td>
+<td>192.168.109.102</td>
+<td>Centos7.5    基础设施服务器</td>
+<td>2颗CPU  2G内存   50G硬盘</td>
+</tr>
+<tr>
+<td>Node2</td>
+<td>192.168.109.103</td>
+<td>Centos7.5    基础设施服务器</td>
+<td>2颗CPU  2G内存   50G硬盘</td>
+</tr>
+</tbody></table>
+<p><strong>注意:</strong> centos的版本要在7.5或7.5以上.</p>
+<h2 id="2-环境搭建"><a href="#2-环境搭建" class="headerlink" title="2. 环境搭建"></a>2. 环境搭建</h2><p>本次环境搭建需要安装三台Centos服务器（一主二从），然后在每台服务器中分别安装docker（18.06.3），kubeadm（1.17.4）、kubelet（1.17.4）、kubectl（1.17.4）程序。</p>
+<h3 id="2-1-主机安装"><a href="#2-1-主机安装" class="headerlink" title="2.1 主机安装"></a>2.1 主机安装</h3><p>安装虚拟机过程中注意下面选项的设置：</p>
+<ul>
+<li><p>操作系统环境：CPU（2C）    内存（2G）   硬盘（50G）    </p>
+</li>
+<li><p>语言选择：中文简体</p>
+</li>
+<li><p>软件选择：基础设施服务器</p>
+</li>
+<li><p>分区选择：自动分区</p>
+</li>
+<li><p>网络配置：按照下面配置网路地址信息</p>
+</li>
+</ul>
+<figure class="highlight md"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">网络地址：192.168.109.100  （每台主机都不一样  分别为100、101、102）</span><br><span class="line">子网掩码：255.255.255.0</span><br><span class="line">默认网关：192.168.109.2</span><br><span class="line">DNS：    223.5.5.5</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>主机名设置：按照下面信息设置主机名</li>
+</ul>
+<figure class="highlight md"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">master节点： master</span><br><span class="line">node节点：   node1</span><br><span class="line">node节点：   node2</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-环境初始化"><a href="#2-2-环境初始化" class="headerlink" title="2.2 环境初始化"></a>2.2 环境初始化</h3><ol>
+<li>检查操作系统的版本</li>
+</ol>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># cat /etc/redhat-release</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/71e994842d34444eb8014d53849d9637.png" alt="在这里插入图片描述"></p>
+<ol start="2">
+<li>主机名解析</li>
+</ol>
+<p>为了方便后面集群节点间的直接调用，在这配置一下主机名解析，企业中推荐使用内部DNS服务器</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 主机名成解析 编辑三台服务器的/etc/hosts文件，添加下面内容</span></span><br><span class="line"><span class="number">192.168</span>.<span class="number">109.100</span>  master</span><br><span class="line"><span class="number">192.168</span>.<span class="number">109.101</span>  node1</span><br><span class="line"><span class="number">192.168</span>.<span class="number">109.102</span>  node2</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>时间同步</li>
+</ol>
+<p>kubernetes要求集群中的节点时间必须精确一致，这里直接使用chronyd服务从网络同步时间。</p>
+<p>企业中建议配置内部的时间同步服务器</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启动chronyd服务</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl start chronyd</span></span><br><span class="line"><span class="comment"># 设置chronyd服务开机自启</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl enable chronyd</span></span><br><span class="line"><span class="comment"># chronyd服务启动稍等几秒钟，就可以使用date命令验证时间了</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># date</span></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>禁用iptables和firewalld服务</li>
+</ol>
+<p>kubernetes和docker在运行中会产生大量的iptables规则，为了不让系统规则跟它们混淆，直接关闭系统的规则</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1 关闭firewalld服务</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl stop firewalld</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl disable firewalld</span></span><br><span class="line"><span class="comment"># 2 关闭iptables服务</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl stop iptables</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl disable iptables</span></span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>禁用selinux</li>
+</ol>
+<p> selinux是linux系统下的一个安全服务，如果不关闭它，在安装集群中会产生各种各样的奇葩问题</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 编辑 /etc/selinux/config 文件，修改SELINUX的值为disabled</span></span><br><span class="line"><span class="comment"># 注意修改完毕之后需要重启linux服务</span></span><br><span class="line">SELINUX=disabled</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>禁用swap分区</li>
+</ol>
+<p>swap分区指的是虚拟内存分区，它的作用是在物理内存使用完之后，将磁盘空间虚拟成内存来使用</p>
+<p>启用swap设备会对系统的性能产生非常负面的影响，因此kubernetes要求每个节点都要禁用swap设备</p>
+<p>但是如果因为某些原因确实不能关闭swap分区，就需要在集群安装过程中通过明确的参数进行配置说明</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 编辑分区配置文件/etc/fstab，注释掉swap分区一行</span></span><br><span class="line"><span class="comment"># 注意修改完毕之后需要重启linux服务</span></span><br><span class="line"> UUID=<span class="number">455</span>cc753<span class="literal">-7a60-4c17-a424-7741728c44a1</span> /boot    xfs     defaults        <span class="number">0</span> <span class="number">0</span></span><br><span class="line"> /dev/mapper/centos<span class="literal">-home</span> /home                      xfs     defaults        <span class="number">0</span> <span class="number">0</span></span><br><span class="line"><span class="comment"># /dev/mapper/centos-swap swap                      swap    defaults        0 0</span></span><br></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>修改linux的内核参数</li>
+</ol>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 修改linux的内核参数，添加网桥过滤和地址转发功能</span></span><br><span class="line"><span class="comment"># 编辑/etc/sysctl.d/kubernetes.conf文件，添加如下配置:</span></span><br><span class="line">net.bridge.bridge<span class="literal">-nf-call-ip6tables</span> = <span class="number">1</span></span><br><span class="line">net.bridge.bridge<span class="literal">-nf-call-iptables</span> = <span class="number">1</span></span><br><span class="line">net.ipv4.ip_forward = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 重新加载配置</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># sysctl -p</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载网桥过滤模块</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># modprobe br_netfilter</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看网桥过滤模块是否加载成功</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># lsmod | grep br_netfilter</span></span><br></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>配置ipvs功能</li>
+</ol>
+<p>在kubernetes中service有两种代理模型，一种是基于iptables的，一种是基于ipvs的</p>
+<p>两者比较的话，ipvs的性能明显要高一些，但是如果要使用它，需要手动载入ipvs模块</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1 安装ipset和ipvsadm</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># yum install ipset ipvsadmin -y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2 添加需要加载的模块写入脚本文件</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># cat &lt;&lt;EOF &gt;  /etc/sysconfig/modules/ipvs.modules</span></span><br><span class="line"><span class="comment">#!/bin/bash</span></span><br><span class="line">modprobe <span class="literal">--</span> ip_vs</span><br><span class="line">modprobe <span class="literal">--</span> ip_vs_rr</span><br><span class="line">modprobe <span class="literal">--</span> ip_vs_wrr</span><br><span class="line">modprobe <span class="literal">--</span> ip_vs_sh</span><br><span class="line">modprobe <span class="literal">--</span> nf_conntrack_ipv4</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3 为脚本文件添加执行权限</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># chmod +x /etc/sysconfig/modules/ipvs.modules</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4 执行脚本文件</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># /bin/bash /etc/sysconfig/modules/ipvs.modules</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 5 查看对应的模块是否加载成功</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># lsmod | grep -e ip_vs -e nf_conntrack_ipv4</span></span><br></pre></td></tr></table></figure>
+
+<p>9） 重启服务器</p>
+<p>上面步骤完成之后，需要重新启动linux系统</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># reboot</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-安装docker"><a href="#2-3-安装docker" class="headerlink" title="2.3 安装docker"></a>2.3 安装docker</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1 切换镜像源</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># wget https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo -O /etc/yum.repos.d/docker-ce.repo</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2 查看当前镜像源中支持的docker版本</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># yum list docker-ce --showduplicates</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3 安装特定版本的docker-ce</span></span><br><span class="line"><span class="comment"># 必须指定--setopt=obsoletes=0，否则yum会自动安装更高版本</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># yum install --setopt=obsoletes=0 docker-ce-18.06.3.ce-3.el7 -y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4 添加一个配置文件</span></span><br><span class="line"><span class="comment"># Docker在默认情况下使用的Cgroup Driver为cgroupfs，而kubernetes推荐使用systemd来代替cgroupfs</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># mkdir /etc/docker</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># cat &lt;&lt;EOF &gt;  /etc/docker/daemon.json</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;exec-opts&quot;</span>: [<span class="string">&quot;native.cgroupdriver=systemd&quot;</span>],</span><br><span class="line">  <span class="string">&quot;registry-mirrors&quot;</span>: [<span class="string">&quot;https://kn0t2bca.mirror.aliyuncs.com&quot;</span>]</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5 启动docker</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl restart docker</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl enable docker</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 6 检查docker状态和版本</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># docker version</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-安装kubernetes组件"><a href="#2-4-安装kubernetes组件" class="headerlink" title="2.4 安装kubernetes组件"></a>2.4 安装kubernetes组件</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 由于kubernetes的镜像源在国外，速度比较慢，这里切换成国内的镜像源</span></span><br><span class="line"><span class="comment"># 编辑/etc/yum.repos.d/kubernetes.repo，添加下面的配置 </span></span><br><span class="line">[<span class="type">kubernetes</span>]</span><br><span class="line">name=Kubernetes</span><br><span class="line">baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes<span class="literal">-el7-x86_64</span></span><br><span class="line">enabled=<span class="number">1</span></span><br><span class="line">gpgcheck=<span class="number">0</span></span><br><span class="line">repo_gpgcheck=<span class="number">0</span></span><br><span class="line">gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum<span class="literal">-key</span>.gpg</span><br><span class="line">       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm<span class="literal">-package-key</span>.gpg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装kubeadm、kubelet和kubectl</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># yum install --setopt=obsoletes=0 kubeadm-1.17.4-0 kubelet-1.17.4-0 kubectl-1.17.4-0 -y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置kubelet的cgroup</span></span><br><span class="line"><span class="comment"># 编辑/etc/sysconfig/kubelet，添加下面的配置</span></span><br><span class="line">KUBELET_CGROUP_ARGS=<span class="string">&quot;--cgroup-driver=systemd&quot;</span></span><br><span class="line">KUBE_PROXY_MODE=<span class="string">&quot;ipvs&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4 设置kubelet开机自启</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># systemctl enable kubelet</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-5-准备集群镜像"><a href="#2-5-准备集群镜像" class="headerlink" title="2.5 准备集群镜像"></a>2.5 准备集群镜像</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在安装kubernetes集群之前，必须要提前准备好集群需要的镜像，所需镜像可以通过下面命令查看</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubeadm config images list</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载镜像</span></span><br><span class="line"><span class="comment"># 此镜像在kubernetes的仓库中,由于网络原因,无法连接，下面提供了一种替代方案</span></span><br><span class="line">images=(</span><br><span class="line">    kube<span class="literal">-apiserver</span>:v1.<span class="number">17.4</span></span><br><span class="line">    kube<span class="literal">-controller-manager</span>:v1.<span class="number">17.4</span></span><br><span class="line">    kube<span class="literal">-scheduler</span>:v1.<span class="number">17.4</span></span><br><span class="line">    kube<span class="literal">-proxy</span>:v1.<span class="number">17.4</span></span><br><span class="line">    pause:<span class="number">3.1</span></span><br><span class="line">    etcd:<span class="number">3.4</span>.<span class="number">3</span><span class="literal">-0</span></span><br><span class="line">    coredns:<span class="number">1.6</span>.<span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> imageName <span class="keyword">in</span> <span class="variable">$</span>&#123;images[<span class="selector-tag">@</span>]&#125; ; <span class="keyword">do</span></span><br><span class="line">	docker pull registry.cn<span class="literal">-hangzhou</span>.aliyuncs.com/google_containers/<span class="variable">$imageName</span></span><br><span class="line">	docker tag registry.cn<span class="literal">-hangzhou</span>.aliyuncs.com/google_containers/<span class="variable">$imageName</span> 		k8s.gcr.io/<span class="variable">$imageName</span></span><br><span class="line">	docker rmi registry.cn<span class="literal">-hangzhou</span>.aliyuncs.com/google_containers/<span class="variable">$imageName</span></span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-6-集群初始化"><a href="#2-6-集群初始化" class="headerlink" title="2.6 集群初始化"></a>2.6 集群初始化</h3><p>下面开始对集群进行初始化，并将node节点加入到集群中</p>
+<blockquote>
+<p>下面的操作只需要在<code>master</code>节点上执行即可</p>
+</blockquote>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建集群</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubeadm init \</span></span><br><span class="line">	<span class="literal">--kubernetes-version</span>=v1.<span class="number">17.4</span> \</span><br><span class="line">    <span class="literal">--pod-network-cidr</span>=<span class="number">10.244</span>.<span class="number">0.0</span>/<span class="number">16</span> \</span><br><span class="line">    <span class="literal">--service-cidr</span>=<span class="number">10.96</span>.<span class="number">0.0</span>/<span class="number">12</span> \</span><br><span class="line">    <span class="literal">--apiserver-advertise-address</span>=<span class="number">192.168</span>.<span class="number">109.100</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建必要文件</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># mkdir -p $HOME/.kube</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># sudo chown $(id -u):$(id -g) $HOME/.kube/config</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>下面的操作只需要在<code>node</code>节点上执行即可</p>
+</blockquote>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将node节点加入集群</span></span><br><span class="line"><span class="comment"># 每个人执行时的token会不一样, kubeadm init 执行完毕之后可以看到</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubeadm join 192.168.109.100:6443 \ </span></span><br><span class="line">	<span class="literal">--token</span> <span class="number">8507</span>uc.o0knircuri8etnw2 \</span><br><span class="line">	<span class="literal">--discovery-token-ca-cert-hash</span> \</span><br><span class="line">	sha256:acc37967fb5b0acf39d7598f8a439cc7dc88f439a3f4d0c9cae88e7901b9d3f</span><br><span class="line">	</span><br><span class="line"><span class="comment"># 查看集群状态 此时的集群状态为NotReady，这是因为还没有配置网络插件</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get nodes</span></span><br><span class="line">NAME     STATUS     ROLES    AGE     VERSION</span><br><span class="line">master   NotReady   master   <span class="number">6</span>m43s   v1.<span class="number">17.4</span></span><br><span class="line">node1    NotReady   &lt;none&gt;   <span class="number">22</span>s     v1.<span class="number">17.4</span></span><br><span class="line">node2    NotReady   &lt;none&gt;   <span class="number">19</span>s     v1.<span class="number">17.4</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-7-安装网络插件"><a href="#2-7-安装网络插件" class="headerlink" title="2.7 安装网络插件"></a>2.7 安装网络插件</h3><p>kubernetes支持多种网络插件，比如flannel、calico、canal等等，任选一种使用即可，本次选择flannel</p>
+<blockquote>
+<p>下面操作依旧只在<code>master</code>节点执行即可，插件使用的是DaemonSet的控制器，它会在每个节点上都运行</p>
+</blockquote>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 获取fannel的配置文件</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改文件中quay.io仓库为quay-mirror.qiniu.com</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用配置文件启动fannel</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl apply -f kube-flannel.yml</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 稍等片刻，再次查看集群节点的状态</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get nodes</span></span><br><span class="line">NAME     STATUS   ROLES    AGE     VERSION</span><br><span class="line">master   Ready    master   <span class="number">15</span>m     v1.<span class="number">17.4</span></span><br><span class="line">node1    Ready    &lt;none&gt;   <span class="number">8</span>m53s   v1.<span class="number">17.4</span></span><br><span class="line">node2    Ready    &lt;none&gt;   <span class="number">8</span>m50s   v1.<span class="number">17.4</span></span><br></pre></td></tr></table></figure>
+
+<p>至此，kubernetes的集群环境搭建完成</p>
+<h2 id="3-服务部署"><a href="#3-服务部署" class="headerlink" title="3. 服务部署"></a>3. 服务部署</h2><p>接下来在kubernetes集群中部署一个nginx程序，测试下集群是否在正常工作。</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 部署nginx</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl create deployment nginx --image=nginx:1.14-alpine</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暴露端口</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl expose deployment nginx --port=80 --type=NodePort</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看服务状态</span></span><br><span class="line">[<span class="type">root</span>@<span class="type">master</span> ~]<span class="comment"># kubectl get pods,service</span></span><br><span class="line">NAME                         READY   STATUS    RESTARTS   AGE</span><br><span class="line">pod/nginx<span class="literal">-86c57db685-fdc2k</span>   <span class="number">1</span>/<span class="number">1</span>     Running   <span class="number">0</span>          <span class="number">18</span>m</span><br><span class="line"></span><br><span class="line">NAME                 <span class="built_in">TYPE</span>        CLUSTER<span class="literal">-IP</span>      EXTERNAL<span class="literal">-IP</span>   PORT(S)        AGE</span><br><span class="line">service/kubernetes   ClusterIP   <span class="number">10.96</span>.<span class="number">0.1</span>       &lt;none&gt;        <span class="number">443</span>/TCP        <span class="number">82</span>m</span><br><span class="line">service/nginx        NodePort    <span class="number">10.104</span>.<span class="number">121.45</span>   &lt;none&gt;        <span class="number">80</span>:<span class="number">30073</span>/TCP   <span class="number">17</span>m</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4 最后在电脑上访问下部署的nginx服务</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/8bd0d689a01b4dd28196d5011a43bc6e.png" alt="在这里插入图片描述"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/kubernetes/1kubernetes%20%E4%BB%8B%E7%BB%8D%EF%BC%88%E7%BB%84%E4%BB%B6%E3%80%81%E6%A6%82%E5%BF%B5%EF%BC%89/" rel="prev" title="kubernetes 介绍（组件、概念）">
+      <i class="fa fa-chevron-left"></i> kubernetes 介绍（组件、概念）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/kubernetes/3kubermetes%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86%EF%BC%88YAML%E4%BB%8B%E7%BB%8D%E3%80%81%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F%EF%BC%89/" rel="next" title="kubermetes资源管理（YAML介绍、资源管理方式）">
+      kubermetes资源管理（YAML介绍、资源管理方式） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%8E%AF%E5%A2%83%E8%A7%84%E5%88%92"><span class="nav-number">1.</span> <span class="nav-text">1. 环境规划</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E9%9B%86%E7%BE%A4%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 集群类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 安装方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E4%B8%BB%E6%9C%BA%E8%A7%84%E5%88%92"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 主机规划</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">2. 环境搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E4%B8%BB%E6%9C%BA%E5%AE%89%E8%A3%85"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 主机安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E7%8E%AF%E5%A2%83%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 环境初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E5%AE%89%E8%A3%85docker"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 安装docker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-%E5%AE%89%E8%A3%85kubernetes%E7%BB%84%E4%BB%B6"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 安装kubernetes组件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-%E5%87%86%E5%A4%87%E9%9B%86%E7%BE%A4%E9%95%9C%E5%83%8F"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 准备集群镜像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-%E9%9B%86%E7%BE%A4%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.6.</span> <span class="nav-text">2.6 集群初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-7-%E5%AE%89%E8%A3%85%E7%BD%91%E7%BB%9C%E6%8F%92%E4%BB%B6"><span class="nav-number">2.7.</span> <span class="nav-text">2.7 安装网络插件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%9C%8D%E5%8A%A1%E9%83%A8%E7%BD%B2"><span class="nav-number">3.</span> <span class="nav-text">3. 服务部署</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">138</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
