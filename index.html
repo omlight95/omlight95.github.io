@@ -196,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -210,7 +210,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/" class="post-title-link" itemprop="url">六、Docker Dockerfile</a>
+            <a href="/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="post-title-link" itemprop="url">数据库与缓存一致性解决方案</a>
         </h2>
 
         <div class="post-meta">
@@ -221,7 +221,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:48:22 / 修改时间：23:06:22" itemprop="dateCreated datePublished" datetime="2022-11-01T22:48:22+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:06:07 / 修改时间：09:46:49" itemprop="dateCreated datePublished" datetime="2022-11-02T09:06:07+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,12 +229,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/" class="post-meta-item leancloud_visitors" data-flag-title="六、Docker Dockerfile" title="阅读次数">
+            <span id="/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="post-meta-item leancloud_visitors" data-flag-title="数据库与缓存一致性解决方案" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -249,8 +249,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -265,10 +265,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Dockerfile是一个创建镜像所有命令的文本文件, 包含了一条条指令和说明, 每条指令构建一层, 通过docker build命令,根据Dockerfile的内容构建镜像,因此每一条指令的内容, 就是描述该层如何构建.有了Dockefile, 就可以制定自己的docker镜像规则,只需要在Dockerfile上添加或者修改指令, 就可生成docker 镜像。</p>
+          <p>项目中如果用到了缓存，就会涉及到数据库与缓存的双写，由于这两个操作不是原子性的，在并发的场景下，容易产生数据库与缓存不一致的情况。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E5%85%AD%E3%80%81Docker%20Dockerfile/">
+              <a class="btn" href="/2022/11/02/MySQL/21%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -292,7 +292,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -306,7 +306,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/" class="post-title-link" itemprop="url">五、Docker应用部署</a>
+            <a href="/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/" class="post-title-link" itemprop="url">MySQL日志</a>
         </h2>
 
         <div class="post-meta">
@@ -317,7 +317,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:47:51 / 修改时间：22:56:39" itemprop="dateCreated datePublished" datetime="2022-11-01T22:47:51+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:05:22 / 修改时间：09:46:15" itemprop="dateCreated datePublished" datetime="2022-11-02T09:05:22+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -325,12 +325,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/" class="post-meta-item leancloud_visitors" data-flag-title="五、Docker应用部署" title="阅读次数">
+            <span id="/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL日志" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -345,8 +345,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -361,10 +361,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在Docker容器中部署MySQL，并通过外部MySQL客户端操作MySQL Server。</p>
+          <p>在任何一种数据库中，都会有各种各样的日志，记录着数据库工作的方方面面，以帮助数据库管理员追踪数据库曾经发生过的各种事件。MySQL 也不例外，在 MySQL 中，有4种不同的日志，分别是错误日志、二进制日志（BINLOG 日志）、查询日志和慢查询日志，这些日志记录着数据库在不同方面的踪迹。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E4%BA%94%E3%80%81Docker%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2/">
+              <a class="btn" href="/2022/11/02/MySQL/20mysql%E6%97%A5%E5%BF%97/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -388,7 +388,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -402,7 +402,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/" class="post-title-link" itemprop="url">四、Docker容器数据卷</a>
+            <a href="/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/" class="post-title-link" itemprop="url">MySQL复制</a>
         </h2>
 
         <div class="post-meta">
@@ -413,7 +413,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:47:31 / 修改时间：22:56:02" itemprop="dateCreated datePublished" datetime="2022-11-01T22:47:31+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:05:10 / 修改时间：09:41:18" itemprop="dateCreated datePublished" datetime="2022-11-02T09:05:10+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -421,12 +421,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/" class="post-meta-item leancloud_visitors" data-flag-title="四、Docker容器数据卷" title="阅读次数">
+            <span id="/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL复制" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -441,8 +441,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -457,10 +457,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>数据卷（Data Volumes）是宿主机中的一个目录或文件，数据卷的设计目的就是数据的持久化，完全独立于容器的生存周期，因此Docker不会在容器删除时删除其挂载的数据卷。当容器目录和数据卷目录绑定后，对方的修改会立即同步，一个数据卷可以被多个容器同时挂载，一个容器也可以被挂载多个数据卷。</p>
+          <p>复制是指将主数据库的 DDL 和 DML 操作通过二进制日志传到从库服务器中，然后在从库上对这些日志重新执行（也叫重做），从而使得从库和主库的数据保持同步。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E5%9B%9B%E3%80%81Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/">
+              <a class="btn" href="/2022/11/02/MySQL/19mysql%E5%A4%8D%E5%88%B6/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -484,7 +484,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -498,7 +498,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">三、Docker容器使用及命令</a>
+            <a href="/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">MySQL锁问题</a>
         </h2>
 
         <div class="post-meta">
@@ -509,7 +509,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:47:15 / 修改时间：22:55:21" itemprop="dateCreated datePublished" datetime="2022-11-01T22:47:15+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:03:46 / 修改时间：09:40:30" itemprop="dateCreated datePublished" datetime="2022-11-02T09:03:46+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -517,12 +517,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/" class="post-meta-item leancloud_visitors" data-flag-title="三、Docker容器使用及命令" title="阅读次数">
+            <span id="/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL锁问题" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -537,8 +537,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -553,10 +553,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>容器就是镜像的一个实例，相当于面向对象中的类和对象，镜像相当于类，而容器则相当于对象。</p>
+          <p>锁是计算机协调多个进程或线程并发访问某一资源的机制（避免争抢）。在数据库中，除传统的计算资源（如 CPU、RAM、I/O 等）的争用以外，数据也是一种供许多用户共享的资源。如何保证数据并发访问的一致性、有效性是所有数据库必须解决的一个问题，锁冲突也是影响数据库并发访问性能的一个重要因素。从这个角度来说，锁对数据库而言显得尤其重要，也更加复杂。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E4%B8%89%E3%80%81Docker%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%91%BD%E4%BB%A4/">
+              <a class="btn" href="/2022/11/02/MySQL/18mysql%E9%94%81%E9%97%AE%E9%A2%98/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -580,7 +580,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -594,7 +594,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">二、Docker镜像使用和命令</a>
+            <a href="/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/" class="post-title-link" itemprop="url">MySQL内存管理和并发参数调整</a>
         </h2>
 
         <div class="post-meta">
@@ -605,7 +605,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:47:01 / 修改时间：22:54:22" itemprop="dateCreated datePublished" datetime="2022-11-01T22:47:01+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:03:05 / 修改时间：09:38:13" itemprop="dateCreated datePublished" datetime="2022-11-02T09:03:05+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -613,12 +613,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/" class="post-meta-item leancloud_visitors" data-flag-title="二、Docker镜像使用和命令" title="阅读次数">
+            <span id="/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL内存管理和并发参数调整" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -633,8 +633,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -649,10 +649,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>镜像就是一个轻量级的，可执行的独立软件包，用来打包软件运行环境和基于运行环境开发的软件，它包含运行某个软件所需的所有内容，包括代码、运行时、库、环境变量和配置文件。</p>
+          <p>Innodb用一块内存区做IO缓存池，该缓存池不仅用来缓存Innodb的索引块，而且也用来缓存Innodb的数据块。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E4%BA%8C%E3%80%81Docker%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8%E5%92%8C%E5%91%BD%E4%BB%A4/">
+              <a class="btn" href="/2022/11/02/MySQL/17mysql%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%92%8C%E5%B9%B6%E5%8F%91%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -676,7 +676,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -690,7 +690,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/" class="post-title-link" itemprop="url">一、CentOS7安装/卸载Docker</a>
+            <a href="/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">MySQL查询缓存优化</a>
         </h2>
 
         <div class="post-meta">
@@ -701,7 +701,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-01 22:46:32 / 修改时间：22:54:31" itemprop="dateCreated datePublished" datetime="2022-11-01T22:46:32+08:00">2022-11-01</time>
+              <time title="创建时间：2022-11-02 09:01:57 / 修改时间：09:37:11" itemprop="dateCreated datePublished" datetime="2022-11-02T09:01:57+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -709,12 +709,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/" class="post-meta-item leancloud_visitors" data-flag-title="一、CentOS7安装/卸载Docker" title="阅读次数">
+            <span id="/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL查询缓存优化" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -729,8 +729,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -745,10 +745,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的镜像中，然后发布到任何流行的 Linux或Windows操作系统的机器上，也可以实现虚拟化。容器是完全使用沙箱机制，相互之间不会有任何接口。</p>
+          <p>开启Mysql的查询缓存，当执行完全相同的SQL语句的时候，服务器就会直接从缓存中读取结果，当数据被修改，之前的缓存会失效，修改比较频繁的表不适合做查询缓存。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/11/01/Docker/%E4%B8%80%E3%80%81CentOS7%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8D%B8%E8%BD%BDDocker/">
+              <a class="btn" href="/2022/11/02/MySQL/16mysql%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -772,7 +772,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -786,7 +786,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 18.Redis网络连接库分析</a>
+            <a href="/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">MySQL应用优化</a>
         </h2>
 
         <div class="post-meta">
@@ -797,7 +797,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-31 17:27:10 / 修改时间：19:30:28" itemprop="dateCreated datePublished" datetime="2022-10-31T17:27:10+08:00">2022-10-31</time>
+              <time title="创建时间：2022-11-02 09:01:38 / 修改时间：09:36:35" itemprop="dateCreated datePublished" datetime="2022-11-02T09:01:38+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -805,12 +805,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 18.Redis网络连接库分析" title="阅读次数">
+            <span id="/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL应用优化" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -825,8 +825,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -841,10 +841,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Redis网络连接库对应的文件是networking.c，这个文件主要负责客户端的创建与释放、命令接收与命令回复、Redis通信协议分析、CLIENT 命令的实现。</p>
+          <p>在前面，我们介绍了很多数据库的优化措施。但是在实际生产环境中，由于数据库本身的性能局限，就必须要对前台的应用进行一些优化，来降低数据库的访问压力。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2018.Redis%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%86%E6%9E%90/">
+              <a class="btn" href="/2022/11/02/MySQL/15mysql%E5%BA%94%E7%94%A8%E4%BC%98%E5%8C%96/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -868,7 +868,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -882,7 +882,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 17.Redis事件处理</a>
+            <a href="/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/" class="post-title-link" itemprop="url">MySQL常用sql技巧</a>
         </h2>
 
         <div class="post-meta">
@@ -893,7 +893,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-31 17:26:55 / 修改时间：19:28:43" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:55+08:00">2022-10-31</time>
+              <time title="创建时间：2022-11-02 09:00:43 / 修改时间：09:35:32" itemprop="dateCreated datePublished" datetime="2022-11-02T09:00:43+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -901,12 +901,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 17.Redis事件处理" title="阅读次数">
+            <span id="/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL常用sql技巧" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -921,8 +921,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -937,10 +937,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Redis服务器是一个事件驱动程序，所谓事件驱动就是输入一条命令并且按下回车，然后消息被组装成Redis协议的格式发送给Redis服务器，这个时候就会产生一个事件，Redis服务器会接收改命令，处理该命令和发送回复，而当我们没有与服务器进行交互时，服务器就会处于阻塞等待状态，它会让出CPU然后进入睡眠状态，当事件触发时，就会被操作系统唤醒.</p>
+          <p>SQL执行顺序、正则表达式使用、MySQL常用函数</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2017.Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86/">
+              <a class="btn" href="/2022/11/02/MySQL/14mysql%E5%B8%B8%E7%94%A8sql%E6%8A%80%E5%B7%A7/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -964,7 +964,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -978,7 +978,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 16.AOF持久化机制</a>
+            <a href="/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">MySQL SQL优化</a>
         </h2>
 
         <div class="post-meta">
@@ -989,7 +989,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-31 17:26:43 / 修改时间：19:27:17" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:43+08:00">2022-10-31</time>
+              <time title="创建时间：2022-11-02 08:58:58 / 修改时间：09:34:31" itemprop="dateCreated datePublished" datetime="2022-11-02T08:58:58+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -997,12 +997,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 16.AOF持久化机制" title="阅读次数">
+            <span id="/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL SQL优化" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1017,8 +1017,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1033,10 +1033,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>除了RDB持久化功能之外，Redis 还提供了AOF ( Append Only File )持久化功能。与RDB持久化通过保存数据库中的键值对来记录数据库状态不同，AOF持久化是以日志的方式记录Redis服务器所执行的写命令来记录数据库状态的。</p>
+          <p>SQL优化，就是对SQL语句进行优化，让语句的运行更高、更快、更强</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2016.AOF%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
+              <a class="btn" href="/2022/11/02/MySQL/13mysqlSQL%E4%BC%98%E5%8C%96/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1060,7 +1060,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -1074,7 +1074,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 15.RDB持久化机制</a>
+            <a href="/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/" class="post-title-link" itemprop="url">MySQL优化SQL步骤</a>
         </h2>
 
         <div class="post-meta">
@@ -1085,7 +1085,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-31 17:26:33 / 修改时间：19:26:15" itemprop="dateCreated datePublished" datetime="2022-10-31T17:26:33+08:00">2022-10-31</time>
+              <time title="创建时间：2022-11-02 08:58:39 / 修改时间：09:29:41" itemprop="dateCreated datePublished" datetime="2022-11-02T08:58:39+08:00">2022-11-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1093,12 +1093,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 15.RDB持久化机制" title="阅读次数">
+            <span id="/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL优化SQL步骤" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1113,8 +1113,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1129,10 +1129,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>因为Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见.</p>
+          <p>在应用的开发过程中，由于初期数据量小，开发人员写 SQL 语句时更重视功能上的实现，但是当应用系统正式上线后，随着生产数据量的急剧增长，很多 SQL 语句开始逐渐显露出性能问题，对生产的影响也越来越大，此时这些有问题的 SQL 语句就成为整个系统性能的瓶颈，因此我们必须要对它们进行优化，本章将详细介绍在 MySQL 中优化 SQL 语句的方法。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%2015.RDB%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6/">
+              <a class="btn" href="/2022/11/02/MySQL/12mysql%E4%BC%98%E5%8C%96SQL%E6%AD%A5%E9%AA%A4/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1155,7 +1155,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1223,14 +1223,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">85</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>

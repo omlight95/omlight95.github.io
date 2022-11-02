@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="对表中的数据进行限制，保证数据的正确性、有效性和完整性。一个表如果添加了约束，不正确的数据将无法插入到表中。约束在创建表的时候添加比较合适。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL数据库表的约束、级联操作">
+<meta property="og:url" content="http://example.com/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="对表中的数据进行限制，保证数据的正确性、有效性和完整性。一个表如果添加了约束，不正确的数据将无法插入到表中。约束在创建表的时候添加比较合适。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-02T00:48:21.265Z">
+<meta property="article:modified_time" content="2022-11-02T01:13:51.685Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL数据库表的约束、级联操作 | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL数据库表的约束、级联操作
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-02 08:48:21 / 修改时间：09:13:51" itemprop="dateCreated datePublished" datetime="2022-11-02T08:48:21+08:00">2022-11-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL数据库表的约束、级联操作" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/02/MySQL/3%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E3%80%81%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">对表中的数据进行限制，保证数据的正确性、有效性和完整性。一个表如果添加了约束，不正确的数据将无法插入到表中。约束在创建表的时候添加比较合适。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="约束的作用"><a href="#约束的作用" class="headerlink" title="约束的作用"></a>约束的作用</h2><p>对表中的数据进行限制，保证数据的正确性、有效性和完整性。一个表如果添加了约束，不正确的数据将无法插入到表中。约束在创建表的时候添加比较合适。</p>
+<h2 id="约束种类"><a href="#约束种类" class="headerlink" title="约束种类"></a>约束种类</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">primary</span> key  # 主键</span><br><span class="line"><span class="keyword">unique</span>       # 唯一</span><br><span class="line"><span class="keyword">not</span> <span class="keyword">null</span>     # 非空</span><br><span class="line"><span class="keyword">foreign</span> key  # 外键</span><br><span class="line"><span class="keyword">check</span>        # 检查约束 （mysql不支持）</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="PRIMARY-KEY"><a href="#PRIMARY-KEY" class="headerlink" title="PRIMARY KEY"></a>PRIMARY KEY</h3><p><strong>主键的作用</strong></p>
+<p>用来唯一标识数据库中的每一条记录。</p>
+<p><strong>哪个字段应该作为表的主键</strong></p>
+<p>通常不用业务字段作为主键，单独给每张表设计一个id，把id作为主键。<code>主键是给数据库和程序使用的，不是给最终的客户使用的。所以主键有没有含义没有关系，只要不重复，非空就行。</code></p>
+<p>比如：身份证、学号不建议做成主键。</p>
+<p><strong>创建和删除主键</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 在创建表的时候给字段添加主键</span><br><span class="line">字段名 字段类型 <span class="keyword">PRIMARY</span> KEY</span><br><span class="line"></span><br><span class="line"># 在已有的表中添加主键</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 <span class="keyword">ADD</span> <span class="keyword">PRIMARY</span> KEY(字段名);</span><br><span class="line"></span><br><span class="line"># 在已有的表中删除主键</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 <span class="keyword">DROP</span> <span class="keyword">PRIMARY</span> KEY;</span><br></pre></td></tr></table></figure>
+
+
+<p>举例</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"># 创建学生表st，包含字段(id, name, age)将id作为主键</span><br><span class="line"></span><br><span class="line"># 创建表的时候给字段添加主键</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> st(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">int</span></span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"># 在已有的表中添加主键</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> st(</span><br><span class="line">	id <span class="type">int</span>,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">int</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> st <span class="keyword">add</span> <span class="keyword">primary</span> key(id);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 删除st表中的主键</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> st <span class="keyword">drop</span> <span class="keyword">primary</span> key;</span><br></pre></td></tr></table></figure>
+
+<p><strong>主键自增</strong></p>
+<p>主键如果让我们自己添加很有可能重复,我们通常希望在每次插入新记录时,数据库自动生成主键字段的值。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 表示自动增长(字段类型必须是整数类型)</span><br><span class="line">字段名 字段类型 <span class="keyword">PRIMARY</span> KEY AUTO_INCREMENT </span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 在st表中插入新的学生信息</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> st <span class="keyword">values</span>(<span class="keyword">null</span>, <span class="string">&#x27;张三&#x27;</span>, <span class="number">18</span>);</span><br><span class="line"># id会自动增长</span><br></pre></td></tr></table></figure>
+
+<p><strong>修改自增长的默认值</strong></p>
+<p>默认地 AUTO_INCREMENT 的开始值是 1，如果希望修改起始值,请使用下列 SQL 语法。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 创建表时指定自增长起始值</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</span><br><span class="line">	列名 <span class="type">int</span> <span class="keyword">primary</span> key AUTO_INCREMENT</span><br><span class="line">)AUTO_INCREMENT<span class="operator">=</span>起始值;</span><br><span class="line"></span><br><span class="line"># 创建好以后指定自增长起始值</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 AUTO_INCREMENT<span class="operator">=</span>起始值;</span><br></pre></td></tr></table></figure>
+
+<p><strong>DELETE和TRUNCATE对自增长的影响</strong></p>
+<ul>
+<li>DELETE删除所有的记录以后，自增长没有影响。</li>
+<li>TRUNCATE删除以后，自增长又重新开始。</li>
+</ul>
+<h3 id="UNIQUE"><a href="#UNIQUE" class="headerlink" title="UNIQUE"></a>UNIQUE</h3><p>什么是唯一约束： 表中某一列不能出现重复的值。</p>
+<p><strong>唯一约束的格式</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字段名 字段类型 <span class="keyword">UNIQUE</span>;</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 创建学生表st，包含字段(id, name), name这一列设置唯一约束</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> st(</span><br><span class="line">	id <span class="type">int</span>,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>) <span class="keyword">unique</span></span><br><span class="line">);</span><br><span class="line"># 设置完以后，不能出现同名的学生</span><br></pre></td></tr></table></figure>
+
+<h3 id="NOT-NULL"><a href="#NOT-NULL" class="headerlink" title="NOT NULL"></a>NOT NULL</h3><p>什么是非空约束：某一列不能为null。</p>
+<p><strong>非空约束的语法格式</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字段名 字段类型 <span class="keyword">NOT</span> <span class="keyword">NULL</span></span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 创建表学生表 st, 包含字段(id,name,gender)，其中 name 不能为 <span class="keyword">NULL</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> st (</span><br><span class="line">	id <span class="type">int</span>,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>) <span class="keyword">not</span> <span class="keyword">null</span>,</span><br><span class="line">	gender <span class="type">char</span>(<span class="number">1</span>)</span><br><span class="line">);</span><br><span class="line"># 之后添加记录的时候，name字段不能为空</span><br></pre></td></tr></table></figure>
+
+<h3 id="DEFAULT"><a href="#DEFAULT" class="headerlink" title="DEFAULT"></a>DEFAULT</h3><p>什么是默认值：如果插入一条记录的某个字段为空，恰好该字段为DEFAULT，那么会使用先前设置的默认值。</p>
+<p><strong>默认值的语法格式</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字段名 字段类型 <span class="keyword">DEFAULT</span> 默认值</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 创建一个学生表 st，包含字段(id,name,address)， 地址默认值是广州</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> st9 (</span><br><span class="line">	 id <span class="type">int</span>,</span><br><span class="line">	 name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	 address <span class="type">varchar</span>(<span class="number">20</span>) <span class="keyword">default</span> <span class="string">&#x27;广州&#x27;</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p><strong>主键与非空+唯一的区别</strong></p>
+<p>如果一个字段设置了非空与唯一约束，该字段与主键的区别是什么？</p>
+<ul>
+<li>主键在一个表中只能有一个。主键可以单列，也可以多列。</li>
+<li>自增长只能用在主键上。</li>
+</ul>
+<h3 id="FOREIGN-KEY"><a href="#FOREIGN-KEY" class="headerlink" title="FOREIGN KEY"></a>FOREIGN KEY</h3><p>什么是外键约束：<br>一张表的一个字段受限于另外一张表的一个字段对应的值。这里涉及到两张表：被引用的表叫主表（父表），另外一张叫从表（子表）。</p>
+<p>优点：可以解决单表的数据冗余问题。</p>
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># 创建一个员工表包含如下列(id, name, age, dep_name, dep_location),id 主键并自动增长,添加 <span class="number">5</span> 条数据</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> emp (</span><br><span class="line">	id <span class="type">INT</span> <span class="keyword">PRIMARY</span> KEY AUTO_INCREMENT,</span><br><span class="line">	NAME <span class="type">VARCHAR</span>(<span class="number">30</span>),</span><br><span class="line">	age <span class="type">INT</span>,</span><br><span class="line">	dep_name <span class="type">VARCHAR</span>(<span class="number">30</span>),</span><br><span class="line">	dep_location <span class="type">VARCHAR</span>(<span class="number">30</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"># 添加数据</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;张三&#x27;</span>, <span class="number">20</span>, <span class="string">&#x27;研发部&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;李四&#x27;</span>, <span class="number">21</span>, <span class="string">&#x27;研发部&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;王五&#x27;</span>, <span class="number">20</span>, <span class="string">&#x27;研发部&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;老王&#x27;</span>, <span class="number">20</span>, <span class="string">&#x27;销售部&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;大王&#x27;</span>, <span class="number">22</span>, <span class="string">&#x27;销售部&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> emp (NAME, age, dep_name, dep_location) <span class="keyword">VALUES</span> (<span class="string">&#x27;小王&#x27;</span>, <span class="number">18</span>, <span class="string">&#x27;销售部&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 以上数据表的缺点非常明显，就是数据冗余，后期还会出现增删改的问题</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>外键约束的基本语法</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 新建表时增加外键</span><br><span class="line">[<span class="keyword">CONSTRAINT</span>] [外键约束名称] <span class="keyword">FOREIGN</span> KEY(外键字段名) <span class="keyword">REFERENCES</span> 主表名(主键字段名)</span><br><span class="line"></span><br><span class="line">#已有表增加外键</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 从表 <span class="keyword">ADD</span> [<span class="keyword">CONSTRAINT</span>] [外键约束名称] <span class="keyword">FOREIGN</span> KEY (外键字段名) <span class="keyword">REFERENCES</span> 主表(主</span><br><span class="line">键字段名);</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"># 先建立主表：department表</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> department(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key auto_increment,</span><br><span class="line">	dep_name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	dep_location <span class="type">varchar</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">#  创建从表 employee 并添加外键约束 emp_depid_fk</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> employee(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key auto_increment,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">int</span>,</span><br><span class="line">	dep_id <span class="type">int</span>, <span class="comment">-- 外键对应主表的主键</span></span><br><span class="line">	<span class="comment">-- 创建外键约束</span></span><br><span class="line">	<span class="keyword">constraint</span> emp_depid_fk <span class="keyword">foreign</span> key (dep_id) <span class="keyword">references</span> department(id)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"># 添加 <span class="number">2</span> 个部门</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> department <span class="keyword">values</span>(<span class="keyword">null</span>, <span class="string">&#x27;研发部&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>), (<span class="keyword">null</span>, <span class="string">&#x27;销售部&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>);</span><br><span class="line"></span><br><span class="line"># 添加员工</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> employee (name, age, dep_id) <span class="keyword">values</span> (<span class="string">&#x27;张三&#x27;</span>, <span class="number">20</span>, <span class="number">1</span>);</span><br><span class="line"># 这个员工就对应主表中的&quot;研发部 广州&quot;</span><br><span class="line"></span><br><span class="line"># 如果插入不存在的部门，会提示错误。</span><br></pre></td></tr></table></figure>
+
+<p><strong>删除外键</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 从表 <span class="keyword">drop</span> <span class="keyword">foreign</span> key 外键名称;</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 删除employee表的emp_depid_fk外键</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> employee <span class="keyword">drop</span> <span class="keyword">foreign</span> key emp_depid_fk;</span><br><span class="line"></span><br><span class="line"># 在 employee 表情存在的情况下添加外键</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> employee <span class="keyword">add</span> <span class="keyword">constraint</span> emp_depid_fk</span><br><span class="line"><span class="keyword">foreign</span> key (dep_id) <span class="keyword">references</span> department(id);</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="级联操作"><a href="#级联操作" class="headerlink" title="级联操作"></a>级联操作</h3><p>在修改和删除主表的主键时，同时更新或删除副表的外键值，称为级联操作。</p>
+<p>我们可以在创建数据表之前禁用所有的外键约束：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> FOREIGN_KEY_CHECKS <span class="operator">=</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>也可以像下面一样，禁用某一个数据表的外键约束：</p>
+<p><strong>级联操作的语法</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 级联更新，只能是创建表的时候创建级联关系。更新主表中的主键，从表中的外键列也自动同步更新</span><br><span class="line"><span class="keyword">ON</span> <span class="keyword">UPDATE</span> CASCADE</span><br><span class="line"></span><br><span class="line"># 级联删除</span><br><span class="line"><span class="keyword">ON</span> <span class="keyword">DELETE</span> CASCADE</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># 删除 employee 表，重新创建 employee 表，添加级联更新和级联删除</span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">table</span> employee;</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> employee(</span><br><span class="line">	id <span class="type">int</span> <span class="keyword">primary</span> key auto_increment,</span><br><span class="line">	name <span class="type">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	age <span class="type">int</span>,</span><br><span class="line">	dep_id <span class="type">int</span>, # 外键对应主表的主键</span><br><span class="line">	# 创建外键约束时添加级联更新和删除</span><br><span class="line">	<span class="keyword">constraint</span> emp_depid_fk <span class="keyword">foreign</span> key (dep_id) <span class="keyword">references</span></span><br><span class="line">	 department(id) <span class="keyword">on</span> <span class="keyword">update</span> cascade <span class="keyword">on</span> <span class="keyword">delete</span> cascade</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/02/MySQL/1centos%E5%AE%89%E8%A3%85mysql/" rel="prev" title="CentOS安装MySQL">
+      <i class="fa fa-chevron-left"></i> CentOS安装MySQL
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/02/MySQL/4%E8%A1%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB%E3%80%81%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AE%BE%E8%AE%A1/" rel="next" title="MySQL表之间的关系、数据库设计">
+      MySQL表之间的关系、数据库设计 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">约束的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E7%A7%8D%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">约束种类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PRIMARY-KEY"><span class="nav-number">2.1.</span> <span class="nav-text">PRIMARY KEY</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UNIQUE"><span class="nav-number">2.2.</span> <span class="nav-text">UNIQUE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NOT-NULL"><span class="nav-number">2.3.</span> <span class="nav-text">NOT NULL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DEFAULT"><span class="nav-number">2.4.</span> <span class="nav-text">DEFAULT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FOREIGN-KEY"><span class="nav-number">2.5.</span> <span class="nav-text">FOREIGN KEY</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C"><span class="nav-number">2.6.</span> <span class="nav-text">级联操作</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -196,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -210,7 +210,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/" class="post-title-link" itemprop="url">Golang 匿名函数的活用</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 5.整数集合</a>
         </h2>
 
         <div class="post-meta">
@@ -221,7 +221,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:39:51 / 修改时间：23:40:45" itemprop="dateCreated datePublished" datetime="2022-09-07T23:39:51+08:00">2022-09-07</time>
+              <time title="创建时间：2022-10-31 17:24:15 / 修改时间：17:30:58" itemprop="dateCreated datePublished" datetime="2022-10-31T17:24:15+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,12 +229,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 匿名函数的活用" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 5.整数集合" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -249,8 +249,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -265,10 +265,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>golang支持匿名函数，如果某些函数仅想在特定位置使用一次，那么可以考虑使用匿名函数。匿名函数也可以实现多次调用。</p>
+          <p>整数集合（intset）是集合键的底层实现之一，当一个集合只包含整数值元素，并且这个集合的元素数量不多时，Redis就会使用整数集合作为集合键的底层实现.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E7%9A%84%E6%B4%BB%E7%94%A8/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%205.%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -292,7 +292,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -306,7 +306,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" class="post-title-link" itemprop="url">Golang Tag语法</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 4.跳跃表</a>
         </h2>
 
         <div class="post-meta">
@@ -317,7 +317,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:38:53 / 修改时间：23:39:38" itemprop="dateCreated datePublished" datetime="2022-09-07T23:38:53+08:00">2022-09-07</time>
+              <time title="创建时间：2022-10-31 17:24:00 / 修改时间：17:30:12" itemprop="dateCreated datePublished" datetime="2022-10-31T17:24:00+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -325,12 +325,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Tag语法" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 4.跳跃表" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -345,8 +345,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -361,10 +361,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>tag被定义在结构体字段的后面，以字符串的形式出现。</p>
+          <p>跳跃表（skiplist）是一种有序的数据结构，它通过建立多层"索引"，从而达到快速访问节点的目的. 跳跃表支持平均O(logN)，最坏O(N)复杂度的节点查找，还可以通过顺序性操作来批量处理节点.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20Tag%E8%AF%AD%E6%B3%95/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%204.%E8%B7%B3%E8%B7%83%E8%A1%A8/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -388,7 +388,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -402,7 +402,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" class="post-title-link" itemprop="url">Golang Mutex剖析</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 3.字典</a>
         </h2>
 
         <div class="post-meta">
@@ -413,7 +413,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:37:18 / 修改时间：23:38:40" itemprop="dateCreated datePublished" datetime="2022-09-07T23:37:18+08:00">2022-09-07</time>
+              <time title="创建时间：2022-10-31 17:23:47 / 修改时间：17:28:59" itemprop="dateCreated datePublished" datetime="2022-10-31T17:23:47+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -421,12 +421,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Mutex剖析" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 3.字典" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -441,8 +441,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -457,10 +457,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>state 储存的是互斥锁的状态，加锁和解锁都是通过atomic包提供的函数原子性操作来操作该字段。sema 用作一个信号量，主要用作等待队列。</p>
+          <p>Redis构建了自己的字典实现. 字典在Redis中的应用相当广泛，比如哈希对象在满足条件的情况下会使用字典作为底层实现，以及Redis中的数据库也是使用字典来作为底层实现的，对数据库的增、删、查、改操作也是构建在对字典的操作之上的.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20Mutex%E5%89%96%E6%9E%90/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -484,7 +484,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20GC/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -498,7 +498,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20GC/" class="post-title-link" itemprop="url">Golang GC</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 2.链表</a>
         </h2>
 
         <div class="post-meta">
@@ -509,7 +509,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:36:22 / 修改时间：23:37:07" itemprop="dateCreated datePublished" datetime="2022-09-07T23:36:22+08:00">2022-09-07</time>
+              <time title="创建时间：2022-10-31 17:22:08 / 修改时间：17:23:33" itemprop="dateCreated datePublished" datetime="2022-10-31T17:22:08+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -517,12 +517,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20GC/" class="post-meta-item leancloud_visitors" data-flag-title="Golang GC" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 2.链表" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -537,8 +537,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20GC/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20GC/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -553,10 +553,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户goroutine可并发运行，但需要一定时间的 STW(stop the world)，STW的过程中，CPU不执行用户代码，全部用于垃圾回收，这个过程的影响很大，Golang进行了多次的迭代优化来解决这个问题。</p>
+          <p>链表在Redis中的应用非常广泛，比如列表键的底层实现之一就是链表. 当一个列表键包含了数量比较多的元素，又或者列表键中包含的元素都是比较长的字符串时，Redis就会使用链表作为列表键的底层实现（短的话用压缩列表）.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20GC/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -580,7 +580,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -594,7 +594,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/" class="post-title-link" itemprop="url">Golang 实现RPC的几种方式</a>
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 1.简单动态字符串</a>
         </h2>
 
         <div class="post-meta">
@@ -605,7 +605,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:35:22 / 修改时间：23:36:02" itemprop="dateCreated datePublished" datetime="2022-09-07T23:35:22+08:00">2022-09-07</time>
+              <time title="创建时间：2022-10-31 16:42:23 / 修改时间：17:17:01" itemprop="dateCreated datePublished" datetime="2022-10-31T16:42:23+08:00">2022-10-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -613,12 +613,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 实现RPC的几种方式" title="阅读次数">
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 1.简单动态字符串" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -633,8 +633,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -649,10 +649,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>远程过程调用（Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。 该协议允许运行于一台计算机的程序调用另一台计算机的子程序，而程序员无需额外地为这个交互作用编程。 如果涉及的软件采用面向对象编程，那么远程过程调用亦可称作远程调用或远程方法调用。</p>
+          <p>Redis没有直接使用C语言传统的字符串表示（以空字符结尾的字符数组，以下简称C字符串），而是自己构建了一种名为简单动态字符串（simple dynamic string，``SDS`` ）的抽象类型，并将``SDS``用作Redis的默认字符串表示.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E5%AE%9E%E7%8E%B0RPC%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%201.%E7%AE%80%E5%8D%95%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -676,7 +676,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -690,7 +690,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">Golang 调度器调度场景</a>
+            <a href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-title-link" itemprop="url">四、Redis持久化</a>
         </h2>
 
         <div class="post-meta">
@@ -701,7 +701,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:34:35 / 修改时间：23:35:07" itemprop="dateCreated datePublished" datetime="2022-09-07T23:34:35+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-09 23:29:31 / 修改时间：23:44:06" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:31+08:00">2022-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -709,12 +709,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 调度器调度场景" title="阅读次数">
+            <span id="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="post-meta-item leancloud_visitors" data-flag-title="四、Redis持久化" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -729,8 +729,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -745,10 +745,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>P拥有G1，M1获取P后开始运行G1，G1使用 go func() 创建了G2，为了局部性G2优先加入到P1的本地队列。</p>
+          <p>Redis有两种持久化方案：RDB持久化和AOF持久化。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E8%B0%83%E5%BA%A6%E5%99%A8%E8%B0%83%E5%BA%A6%E5%9C%BA%E6%99%AF/">
+              <a class="btn" href="/2022/09/09/Redis/%E5%9B%9B%E3%80%81Redis%E6%8C%81%E4%B9%85%E5%8C%96/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -772,7 +772,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -786,7 +786,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/" class="post-title-link" itemprop="url">Golang 协程调度器原理及GMP设计思想</a>
+            <a href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">三、Redis事务和锁机制</a>
         </h2>
 
         <div class="post-meta">
@@ -797,7 +797,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:33:21 / 修改时间：23:34:22" itemprop="dateCreated datePublished" datetime="2022-09-07T23:33:21+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-09 23:29:14 / 修改时间：23:43:48" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:14+08:00">2022-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -805,12 +805,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 协程调度器原理及GMP设计思想" title="阅读次数">
+            <span id="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" class="post-meta-item leancloud_visitors" data-flag-title="三、Redis事务和锁机制" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -825,8 +825,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -841,10 +841,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在Go中，线程是运行goroutine的实体，调度器的功能是把可运行的goroutine分配到工作线程上。</p>
+          <p>Redis事务就是一个命令执行的队列，将一系列预定义命令包装成一个整体（一个队列）。当执行时，一次性按照添加顺序依次执行，中间不会被打断或者干扰。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86%E5%8F%8AGMP%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3/">
+              <a class="btn" href="/2022/09/09/Redis/%E4%B8%89%E3%80%81Redis%20%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81%E6%9C%BA%E5%88%B6/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -868,7 +868,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -882,7 +882,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" class="post-title-link" itemprop="url">Golang 协程和IO多路复用</a>
+            <a href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="post-title-link" itemprop="url">二、Redis常用命令以及数据类型</a>
         </h2>
 
         <div class="post-meta">
@@ -893,7 +893,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:32:12 / 修改时间：23:33:01" itemprop="dateCreated datePublished" datetime="2022-09-07T23:32:12+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-09 23:29:02 / 修改时间：23:43:30" itemprop="dateCreated datePublished" datetime="2022-09-09T23:29:02+08:00">2022-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -901,12 +901,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 协程和IO多路复用" title="阅读次数">
+            <span id="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="post-meta-item leancloud_visitors" data-flag-title="二、Redis常用命令以及数据类型" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -921,8 +921,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -937,10 +937,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>我们知道。通过操作系统记录的进程控制信息，可以找到``打开文件描述符表``。其中，打开的文件、创建的socket等等，都会记录到这张表里面。</p>
+          <p>通用指令是部分数据类型的，都可以使用的指令，常见的有KEYS、DEL、EXISTS、EXPIRE、TTL等等，此外Redis还有五大数据类型。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E5%92%8CIO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/">
+              <a class="btn" href="/2022/09/09/Redis/%E4%BA%8C%E3%80%81Redis%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%BB%A5%E5%8F%8A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -964,7 +964,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -978,7 +978,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/" class="post-title-link" itemprop="url">Golang 协程是什么</a>
+            <a href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">一、Redis的安装与配置</a>
         </h2>
 
         <div class="post-meta">
@@ -989,7 +989,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:30:57 / 修改时间：23:31:49" itemprop="dateCreated datePublished" datetime="2022-09-07T23:30:57+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-09 23:28:48 / 修改时间：23:43:11" itemprop="dateCreated datePublished" datetime="2022-09-09T23:28:48+08:00">2022-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -997,12 +997,12 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
                 </span>
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 协程是什么" title="阅读次数">
+            <span id="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="post-meta-item leancloud_visitors" data-flag-title="一、Redis的安装与配置" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1017,8 +1017,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1033,10 +1033,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>我们都知道，线程是进程中的执行体，拥有一个执行路口，以及从进程虚拟地址空间中分配的栈。包括用户栈和内核栈。</p>
+          <p>Redis在Linux环境下的安装与配置。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88/">
+              <a class="btn" href="/2022/09/09/Redis/%E4%B8%80%E3%80%81Redis%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1060,7 +1060,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -1074,7 +1074,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/" class="post-title-link" itemprop="url">Golang 标准库之反射</a>
+            <a href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" class="post-title-link" itemprop="url">Golang 自定义排序</a>
         </h2>
 
         <div class="post-meta">
@@ -1085,7 +1085,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-09-07 23:30:03 / 修改时间：23:30:35" itemprop="dateCreated datePublished" datetime="2022-09-07T23:30:03+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-08 13:26:00 / 修改时间：13:27:20" itemprop="dateCreated datePublished" datetime="2022-09-08T13:26:00+08:00">2022-09-08</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1098,7 +1098,7 @@
             </span>
 
           
-            <span id="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 标准库之反射" title="阅读次数">
+            <span id="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 自定义排序" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1113,8 +1113,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1129,10 +1129,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>反射是指在程序运行期对程序本身进行访问和修改的能力。程序在编译时，变量被转换为内存地址，变量名不会被编译器写入到可执行部分。在运行程序时,程序无法获取自身的信息。</p>
+          <p>C++中实现自定义排序，可以在sort函数的最后一个参数位上，加上一个自定义的比大小函数或者仿函数来实现. Go语言中通过sort包提供的接口和函数，也可以实现自定义排序.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/09/07/Go/Golang%20%E6%A0%87%E5%87%86%E5%BA%93%E4%B9%8B%E5%8F%8D%E5%B0%84/">
+              <a class="btn" href="/2022/09/08/Go/Golang%20%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1155,7 +1155,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1223,14 +1223,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">85</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
