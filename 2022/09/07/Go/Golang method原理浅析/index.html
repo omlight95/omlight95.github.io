@@ -27,20 +27,17 @@
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="方法即method，Go语言支持为自定义类型实现方法，method在具体实现上与普通的函数并无不同，只不过会通过运行时栈多传递一个隐含的参数，这个隐含的参数就是所谓的接收者。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23274923b511411aa5b8df19b3056224~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ebd14b243ad4cf3bcaa129ca871796e~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32b65bb3491348c7b6b5e16d0e8d13bd~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07c550f05a20409a9a96dfc0bfc8ceda~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ea57bcd807a14c368a9104ebf8486877~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf5e160cc88849519ce18f78c882949a~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1fca4392d57e4796a755950fe3f80728~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25f2642b7a034d8aa14ab5a161883739~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/61cad817a21e4e80a3340cd5054885c4.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e70d780bf70a409c8bc70fe66182552f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d2cde70df4554bdb8b6907593c6620c9.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/4a1e75835b7b4d9e9f3c93f1ceaa0f9f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/96850a3d04774280935386972c230d6a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/35e77b30c4ed49afab4c7203c153d835.png">
 <meta property="article:published_time" content="2022-09-07T15:22:25.489Z">
-<meta property="article:modified_time" content="2022-09-07T15:22:58.748Z">
+<meta property="article:modified_time" content="2022-11-21T15:42:25.424Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/61cad817a21e4e80a3340cd5054885c4.png">
 
 <link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20method%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
 
@@ -231,10 +228,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-07 23:22:25 / 修改时间：23:22:58" itemprop="dateCreated datePublished" datetime="2022-09-07T23:22:25+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-07 23:22:25" itemprop="dateCreated datePublished" datetime="2022-09-07T23:22:25+08:00">2022-09-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-21 23:42:25" itemprop="dateModified" datetime="2022-11-21T23:42:25+08:00">2022-11-21</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -292,11 +295,11 @@
 <p>因为Go语言反射获取的函数类型只跟参数和返回值有关，既然t1和t2相等，就说明类型A的方法本质上和函数NameOfA相同。也就进一步验证了：方法本质上就是普通的函数，而接收者就是隐含的第一个参数。</p>
 <h2 id="值接收者"><a href="#值接收者" class="headerlink" title="值接收者"></a>值接收者</h2><p>接下来，我们看看上面第一个示例中，a.Name()执行时函数调用栈是什么情况。</p>
 <p>main函数栈帧中局部变量a只有一个string类型的成员，a.Name()会由编译器转换为A.Name(a)这样的函数调用。局部变量a作为要传入的参数，被直接拷贝到参数空间。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f9d33a122404fb4a9446a4ad28b7278~tplv-k3u1fbpfcp-zoom-1.image" alt="值接收者方法调用栈"></p>
+<p><img src="https://img-blog.csdnimg.cn/61cad817a21e4e80a3340cd5054885c4.png" alt="在这里插入图片描述"></p>
 <p>A.Name(a)执行时,修改的是参数空间的a.name，string底层指向的字符串内容发生了变化。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23274923b511411aa5b8df19b3056224~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/e70d780bf70a409c8bc70fe66182552f.png" alt="在这里插入图片描述"></p>
 <p>函数返回前将返回值写入返回值空间，对应到这个例子，就是拷贝参数a的成员name到返回值空间。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ebd14b243ad4cf3bcaa129ca871796e~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/d2cde70df4554bdb8b6907593c6620c9.png" alt="在这里插入图片描述"></p>
 <p>通过值接收者调用方法时，值接收者会作为第一个参数，而Go语言中传参都是值拷贝，所以执行a.Name()修改的并不是局部变量a，而是拷贝过去的参数。要想修改a，还得用指针接收者。</p>
 <h2 id="指针接收者"><a href="#指针接收者" class="headerlink" title="指针接收者"></a>指针接收者</h2><p>我们把上个例子改为指针接收者，然后看看通过指针接收者调用方法时，函数调用栈又会是怎样的情况。 </p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pa *A)</span></span> Name() <span class="type">string</span> &#123;</span><br><span class="line">    pa.name = <span class="string">&quot;Hi! &quot;</span> + pa.name</span><br><span class="line">    <span class="keyword">return</span> pa.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">    pa := &amp;a</span><br><span class="line">    fmt.Println(pa.Name())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -304,18 +307,17 @@
 
 
 <p>main函数栈帧有两个局部变量，pa存储的是a的地址。pa.Name()会由编译器转换为（*A).Name(pa)函数调用，所以参数空间拷贝参数pa的值，也就是局部变量a的地址。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32b65bb3491348c7b6b5e16d0e8d13bd~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/4a1e75835b7b4d9e9f3c93f1ceaa0f9f.png" alt="在这里插入图片描述"></p>
 <p>(*A).Name(pa)执行时，修改的是pa指向的结构体，也就是局部变量a.name的值。这个string类型的成员会指向新的底层字符串，而返回值空间被写入的也是pa指向的结构体的成员name。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07c550f05a20409a9a96dfc0bfc8ceda~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/96850a3d04774280935386972c230d6a.png" alt="在这里插入图片描述"></p>
 <p>通过指针类型接收者调用方法时，指针会作为参数传入，传参时拷贝的就是地址，所以这里能够实现对原来变量a的修改。</p>
 <h2 id="更甜的语法糖"><a href="#更甜的语法糖" class="headerlink" title="更甜的语法糖"></a>更甜的语法糖</h2><p>再次修改上面的例子，这一次既有值接收者的方法，又有指针接收者的方法。对于a.GetName()和pa.SetName()这两种形式的方法调用我们已经了然。但是下面这pa.GetName()和a.SetName()也能正常执行是几个意思？ </p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> GetName() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pa *A)</span></span> SetName() <span class="type">string</span> &#123;</span><br><span class="line">    pa.name = <span class="string">&quot;Hi! &quot;</span> + pa.name</span><br><span class="line">    <span class="keyword">return</span> pa.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">    pa := &amp;a</span><br><span class="line">    </span><br><span class="line">    fmt.Println(pa.GetName())</span><br><span class="line">    fmt.Println(a.SetName())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-
 <p>不用展开函数调用栈，只需告诉你这是语法糖，理解起来也就没有问题了。编译期间，会把pa.GetName()这种方法调用转换成(*pa).GetName()，也就等价于执行A.GetName(<em>pa)。而a.SetName()会被转换成(&amp;a).SetName()，也相当于执行（</em>A).SetName(&amp;a)。所以，看似值接收者和指针接收者交叉访问了对方的方法，实际上依然遵循之前介绍的执行过程。</p>
 <p><em>如果定义的方法不涉及到任何接口类型时是这样的，详细情况以后详述，目前这样理解无碍。</em></p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ea57bcd807a14c368a9104ebf8486877~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/35e77b30c4ed49afab4c7203c153d835.png" alt="在这里插入图片描述"></p>
 <p>既然这种语法糖是在编译期间发挥作用的，像下面这种编译期间不能拿到地址的字面量，就不能享受语法糖，转换成对应的指针接收者调用了。    </p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println((A&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;).SetName())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -328,7 +330,6 @@
 
 
 <h2 id="Method-Expression-amp-Method-Value"><a href="#Method-Expression-amp-Method-Value" class="headerlink" title="Method Expression &amp; Method Value"></a>Method Expression &amp; Method Value</h2><p>我们已经知道，Go语言中函数作为变量、参数和返回值时，都是以Function Value的形式存在的。也知道闭包只是有捕获列表(catch list)的Funtion Value而已。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf5e160cc88849519ce18f78c882949a~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
 <p>那么如果把方法赋给一个变量，这个变量又是怎样的存在呢？   </p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> A <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a A)</span></span> GetName() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a.name</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := A&#123;name:<span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    f1 := A.GetName      <span class="comment">//方法表达式</span></span><br><span class="line">    f1(a)                <span class="comment">//eggo</span></span><br><span class="line"></span><br><span class="line">    f2 := a.GetName      <span class="comment">//方法变量</span></span><br><span class="line">    f2()                 <span class="comment">//eggo</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -340,7 +341,6 @@
 
 
 <p>所以，f1实际上就是一个普通的Function Value，执行时需要传入一个A类型的变量作为第一个参数。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1fca4392d57e4796a755950fe3f80728~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
 <h3 id="2-方法变量-作为局部变量"><a href="#2-方法变量-作为局部变量" class="headerlink" title="2.方法变量 (作为局部变量)"></a>2.方法变量 (作为局部变量)</h3><p>然而，像f2这样，通过a.GetName进行赋值，这样的变量被称为<code>方法变量</code>。通过方法变量执行方法时，我们无需再传入方法接收者作为第一个参数，这是因为编译器替我们做了处理。方法变量也是一个Function Value，在这个例子中，编译阶段f2()会被转换为A.GetName(a)。但是这只是方法变量作为<code>局部变量</code>的情况。</p>
 <h3 id="3-方法变量-作为返回值"><a href="#3-方法变量-作为返回值" class="headerlink" title="3.方法变量 (作为返回值)"></a>3.方法变量 (作为返回值)</h3><p>如果像下面的GetFunc函数这样，把方法变量作为<code>返回值</code>。这个返回值实际上是一个捕获了局部变量a的Function Value，也就是说f3是一个<code>闭包对象</code>。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">...... </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetFunc</span><span class="params">()</span></span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo in GetFunc&quot;</span>&#125;</span><br><span class="line">    <span class="keyword">return</span> a.GetName</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := A&#123;name: <span class="string">&quot;eggo in main&quot;</span>&#125;</span><br><span class="line">    f2 := a.GetName</span><br><span class="line">    fmt.Println(f2()) <span class="comment">//这里输出：eggo in main</span></span><br><span class="line"></span><br><span class="line">    f3 := GetFunc()</span><br><span class="line">    fmt.Println(f3()) <span class="comment">//这里输出：eggo in GetFunc</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -353,7 +353,6 @@
 
 
 <p>f3是一个闭包对象，它执行时用到的是自己捕获的变量，也就是函数GetFunc的局部变量a。而f2这个方法变量，使用的是main函数的局部变量a。这样就很好理解上面这段示例程序的输出结果了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25f2642b7a034d8aa14ab5a161883739~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
 
     </div>
 

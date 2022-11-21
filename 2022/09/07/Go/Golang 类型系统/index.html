@@ -27,18 +27,18 @@
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="到了执行阶段，为了支持反射、接口动态派发、类型断言这些语言特性或机制，编译器会给每种类型生成对应的类型描述信息写入可执行文件，这些类型描述信息就是“类型元数据”。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp29c8ffaa561b44b6ade510f74f711e40~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp7f61054f418e445aaaa09ddbd0bf44a2~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp54632a744be8439ab64e2e88aa1ce59e~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcpfc4ba34510314ad1bc86392a51bc8f94~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp31099a5f42b346aba5c60977e41d9e60~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp6986661f01314e348bd44b6136bcc6bf~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp24b021ea931c4f188b43a825859b0006~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2fc4c30edf324af48429a9e3b309494f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c57ff44f523248acbac3abdb28983b3f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/63cf0a59ad5142b0bab1a1d46d4da516.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b071622330854350938679b3ea25ebe8.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/36e2adf581de4eb79a052faa1388bd9a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/3f6b8e4cffd14a4e829f83fa873086c5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fa233136675b48e89edac65c2c4f8554.png">
 <meta property="article:published_time" content="2022-09-07T15:23:16.650Z">
-<meta property="article:modified_time" content="2022-09-07T15:24:39.575Z">
+<meta property="article:modified_time" content="2022-11-21T15:53:03.477Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp29c8ffaa561b44b6ade510f74f711e40~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/2fc4c30edf324af48429a9e3b309494f.png">
 
 <link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F/">
 
@@ -229,10 +229,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-07 23:23:16 / 修改时间：23:24:39" itemprop="dateCreated datePublished" datetime="2022-09-07T23:23:16+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-07 23:23:16" itemprop="dateCreated datePublished" datetime="2022-09-07T23:23:16+08:00">2022-09-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-21 23:53:03" itemprop="dateModified" datetime="2022-11-21T23:53:03+08:00">2022-11-21</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -277,37 +283,44 @@
 
       
         <h2 id="类型系统"><a href="#类型系统" class="headerlink" title="类型系统"></a>类型系统</h2><p>如果我们自定义一个结构体类型T，并给它关联一个方法F1。我们知道变量t的内存布局只包含一个字符串变量，那它和F1之间怎样建立关联？</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> T <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t T)</span></span> F1() &#123;</span><br><span class="line">    fmt.Println(t.name)</span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    t = T&#123;name eggo&#125;</span><br><span class="line">    t.F1()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> T <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t T)</span></span> F1() &#123;</span><br><span class="line">    fmt.Println(t.name)</span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    t := T&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">    t.F1()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 
 
 <p>由于编译阶段，编译器知道每种类型定义了哪些方法，之前我们也介绍过，方法本质上就是函数，只不过在调用时，接收者会作为第一个参数传入。所以通过变量t来调用方法F1时，编译器自然知道要调用哪个函数。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp29c8ffaa561b44b6ade510f74f711e40~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/2fc4c30edf324af48429a9e3b309494f.png" alt="在这里插入图片描述"></p>
 <p>但是到了执行阶段，为了支持反射、接口动态派发、类型断言这些语言特性或机制，编译器会给每种类型生成对应的类型描述信息写入可执行文件，这些类型描述信息就是“类型元数据”。</p>
 <p>在Go语言里，int、float、string、slice、map、interface等属于内置类型（built-in），而我们自己通过下面这三种方式定义的类型，都属于自定义类型。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> T1 <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> T2 <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> T3 <span class="keyword">interface</span> &#123;</span><br><span class="line">    F1()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+
+
 <p> 给内置类型定义方法是不被允许的，而接口类型是无效的方法接收者，所以我们只能给上面第一、第二种形式的自定义类型定义方法。</p>
 <p>数据类型虽然很多，但是不管是内置类型还是自定义类型，它的“类型元数据”都是全局唯一的。这些类型元数据共同构成了Go语言的类型系统。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp7f61054f418e445aaaa09ddbd0bf44a2~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/c57ff44f523248acbac3abdb28983b3f.png" alt="在这里插入图片描述"></p>
 <p>下面就把类型元数据展开，看看里面究竟是什么结构，有什么内容。</p>
 <h2 id="内置类型元数据"><a href="#内置类型元数据" class="headerlink" title="内置类型元数据"></a>内置类型元数据</h2><p>像类型名称，大小，对齐边界，是否为自定义类型等信息，是每个类型元数据都要记录的。所以被放到了runtime._type结构体中，作为每个类型元数据的Header。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> _type <span class="keyword">struct</span> &#123;</span><br><span class="line">    size       <span class="type">uintptr</span></span><br><span class="line">    ptrdata    <span class="type">uintptr</span></span><br><span class="line">    hash       <span class="type">uint32</span></span><br><span class="line">    tflag      tflag</span><br><span class="line">    align      <span class="type">uint8</span></span><br><span class="line">    fieldalign <span class="type">uint8</span></span><br><span class="line">    kind       <span class="type">uint8</span></span><br><span class="line">    alg        typeAlg</span><br><span class="line">    gcdata     <span class="type">byte</span></span><br><span class="line">    str        nameOff</span><br><span class="line">    ptrToThis  typeOff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> _type <span class="keyword">struct</span> &#123;</span><br><span class="line">    size       <span class="type">uintptr</span></span><br><span class="line">    ptrdata    <span class="type">uintptr</span></span><br><span class="line">    hash       <span class="type">uint32</span></span><br><span class="line">    tflag      tflag</span><br><span class="line">    align      <span class="type">uint8</span></span><br><span class="line">    fieldalign <span class="type">uint8</span></span><br><span class="line">    kind       <span class="type">uint8</span></span><br><span class="line">    alg        *typeAlg</span><br><span class="line">    gcdata     *<span class="type">byte</span></span><br><span class="line">    str        nameOff</span><br><span class="line">    ptrToThis  typeOff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-<p>在_type之后存储的是各类型额外需要描述的信息，例如slice的类型元数据在_type结构体后面，记录着一个_type，指向其存储的元素的类型元数据。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> slicetype <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ   _type</span><br><span class="line">    elem  _type</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在_type之后存储的是各类型额外需要描述的信息，例如slice的类型元数据在_type结构体后面，记录着一个*_type，指向其存储的元素的类型元数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> slicetype <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ   _type</span><br><span class="line">    elem  *_type</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
 
 <p> 如果是存储string的slice类型，这个指针就指向string类型的元数据。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp54632a744be8439ab64e2e88aa1ce59e~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
-<p>再看看指针类型的元数据，它在_type后面也额外存储了一个_type，指向指针类型指向的那个类型的元数据。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ptrtype <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ   _type</span><br><span class="line">    elem  _type</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://img-blog.csdnimg.cn/63cf0a59ad5142b0bab1a1d46d4da516.png" alt="在这里插入图片描述"></p>
+<p>再看看指针类型的元数据，它在_type后面也额外存储了一个*_type，指向指针类型指向的那个类型的元数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ptrtype <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ   _type</span><br><span class="line">    elem  *_type</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
 
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcpfc4ba34510314ad1bc86392a51bc8f94~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/b071622330854350938679b3ea25ebe8.png" alt="在这里插入图片描述"></p>
 <p>内置类型的元数据都是这样的结构，可以到runtime包下的type.go查看struct、map等类型的元数据信息。</p>
 <h2 id="自定义类型元数据"><a href="#自定义类型元数据" class="headerlink" title="自定义类型元数据"></a>自定义类型元数据</h2><p>然而如果是自定义类型，这后面还会有一个uncommontype结构体。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> uncommontype <span class="keyword">struct</span> &#123;</span><br><span class="line">    pkgpath nameOff</span><br><span class="line">    mcount  <span class="type">uint16</span> </span><br><span class="line">    _       <span class="type">uint16</span>  unused</span><br><span class="line">    moff    <span class="type">uint32</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> uncommontype <span class="keyword">struct</span> &#123;</span><br><span class="line">    pkgpath nameOff</span><br><span class="line">    mcount  <span class="type">uint16</span> </span><br><span class="line">    _       <span class="type">uint16</span> <span class="comment">// unused</span></span><br><span class="line">    moff    <span class="type">uint32</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 
 
 <ul>
@@ -318,17 +331,19 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> method <span class="keyword">struct</span> &#123;</span><br><span class="line">    name nameOff</span><br><span class="line">    mtyp typeOff</span><br><span class="line">    ifn  textOff</span><br><span class="line">    tfn  textOff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
+
 <p>例如，我们基于[]string定义一个新类型myslice，它就是一个自定义类型，可以给它定义两个方法Len和Cap。</p>
 <p>myslice的类型元数据中，首先是slicetype类型描述信息，然后在后面加上uncommontype结构体。注意通过uncommontype这里记录的信息，我们就可以找到myslice的方法元数据列表了。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp31099a5f42b346aba5c60977e41d9e60~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/36e2adf581de4eb79a052faa1388bd9a.png" alt="在这里插入图片描述"></p>
 <h2 id="alias"><a href="#alias" class="headerlink" title="alias"></a>alias</h2><p>现在我们可以利用类型元数据来描述下面这两种写法的不同了：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MyType1 = <span class="type">int32</span></span><br><span class="line"><span class="keyword">type</span> MyType2 <span class="type">int32</span></span><br></pre></td></tr></table></figure>
 
 
+
 <p>MyType1这种写法，叫做给类型int32取别名，实际上MyType1和int32会关联到同一个类型元数据，属于同一种类型。rune和int32就是这样的关系。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp6986661f01314e348bd44b6136bcc6bf~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/3f6b8e4cffd14a4e829f83fa873086c5.png" alt="在这里插入图片描述"></p>
 <p>而MyType2这种写法，属于基于已有类型创建新类型，MyType2会自立门户，拥有自己的类型元数据，即使MyType2相对于int32来说没有做任何改变，它们两个对应的类型元数据也已经不同了。</p>
-<p><img src="/httpsp3-juejin.byteimg.comtos-cn-i-k3u1fbpfcp24b021ea931c4f188b43a825859b0006~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/fa233136675b48e89edac65c2c4f8554.png" alt="在这里插入图片描述"></p>
 <p>既然每种类型都有唯一对应的类型元数据，而类型定义的方法能通过类型元数据找到，那么，很多问题就变得好解释了，例如接下来的“接口”。</p>
 
     </div>
