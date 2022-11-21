@@ -27,31 +27,31 @@
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="我们已经知道，当前执行的goroutine持有一个defer链表的头指针。其实它也有一个panic链表头指针。panic链表链起来的是一个一个_panic结构体。和defer链表一样，发生新的panic时，也是在链表头上插入一个_panic结构体。而链表头上的panic就是当前正在执行的那一个。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/df6ba79c1c3a4063b11daff4dd721d51~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/92de984d1bca4556ac80fa68db3ce006~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c9840ae2c84e47c4ab6b5e3b0b320786~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5326556477f44c1f8362ac46a38315c1~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/96f7311e15d440498cdf2afa672b8fce~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/05a8af4fc35043deb135541d524914cf~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2db14fc403d44c06bbbca67a31f6bf7e~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2c599b8a7d0b4eecb6483c14d11c3427~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/783ff71e604040fead7b3a6ca698464b~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/92a18fb4b78446bb990890497f764c96~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b37ca442326d4b07b5c83a446d93a2a1~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2f58368ca6364052a1cea5512bb1877b~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5dabe644f02a42a6944ff4af9d5c9345~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9db490bfd1f549f0bd2f8ab942ad4667~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e2a5836186d487ea0f8fdc3fb9c9dc6~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9593a3315a034f6298bb427590ab73c5~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d56fd18866cc4f7ab5506b0746dcafc0~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/395a09713e314d16922374879d29bb93~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c99cd4e2dfca434086502706a0f8311a~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3e8daf5d06564eeaaa29213c226c7aee~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/06e9a411121e4ab0a0751b20d63472c1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/24fc80b527f943659ca48a363c6e0853.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/bcb123d0601e485bb2371bce64b2f0a2.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8bf3bcd9500a461faa883ee6b8a8dbd6.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ef9d388fccc6495bbba7022614c44529.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/178ebe4cf18c4eed829af6f481766a30.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/cf824d6349684bb9a0ab2caa3f6be5a7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/70447d221e8948ac9bdcd515d7832754.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/3088df6cd8834b52a297a2843b16e6a2.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/818f7ecc07354c03a6f9deb1cc00830e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6a0dad73bc4246edab3022e8a68c9875.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d6bc4d11f5d54f8793aed979e835dd72.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b4af212c15d94f119bd1bb48a4fc2bb3.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/47c8fa96a73c467f8a995f677391cd86.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9126d8e2c54d4f508435ff6334c4888b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8c1a02c4dae04231a32a4f8865797f97.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/041ca603580948749560d2d4f16c7c7f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/01c13618179f4da4a300f4e41e39ecaa.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/dd5a306f6cfd457f9331ff745931acab.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/cad8f3334d13458a8ae2f79e0c768914.png">
 <meta property="article:published_time" content="2022-09-07T15:20:49.478Z">
-<meta property="article:modified_time" content="2022-09-07T15:22:04.959Z">
+<meta property="article:modified_time" content="2022-11-21T15:05:56.577Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/df6ba79c1c3a4063b11daff4dd721d51~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/06e9a411121e4ab0a0751b20d63472c1.png">
 
 <link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20panic%E5%92%8Crecover%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90/">
 
@@ -242,10 +242,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-07 23:20:49 / 修改时间：23:22:04" itemprop="dateCreated datePublished" datetime="2022-09-07T23:20:49+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-07 23:20:49" itemprop="dateCreated datePublished" datetime="2022-09-07T23:20:49+08:00">2022-09-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-21 23:05:56" itemprop="dateModified" datetime="2022-11-21T23:05:56+08:00">2022-11-21</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -290,35 +296,30 @@
 
       
         <p>我们已经知道，当前执行的goroutine持有一个defer链表的头指针。其实它也有一个panic链表头指针。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/df6ba79c1c3a4063b11daff4dd721d51~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/06e9a411121e4ab0a0751b20d63472c1.png" alt="在这里插入图片描述"></p>
 <p>panic链表链起来的是一个一个_panic结构体。和defer链表一样，发生新的panic时，也是在链表头上插入一个_panic结构体。而链表头上的panic就是当前正在执行的那一个。</p>
 <h2 id="panic"><a href="#panic" class="headerlink" title="panic"></a>panic</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> A1()</span><br><span class="line">    <span class="keyword">defer</span> A2()</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;这里不会被执行&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A2</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;A2正常结束&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A1</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;A1正常结束&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-
 <p>这个例子中，函数A注册两个defer函数A1和A2之后发生panic。panic发生前，defer链表中已经注册了A1和A2，我们同样用函数名作为区分标记。发生panic后，它后面的代码就不会执行了，而是进入panic处理逻辑。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/92de984d1bca4556ac80fa68db3ce006~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/24fc80b527f943659ca48a363c6e0853.png" alt="在这里插入图片描述"></p>
 <p>首先，会在panic链表头处增加一项，我们把它记为<code>panicA</code>，现在它就是当前执行的panic。然后就该执行defer链表了，从defer链表头开始执行，不过与函数正常流程执行defer有些许不同，还记得_defer结构体的内容吗？（Go1.12版本）</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">type</span> _defer <span class="keyword">struct</span> &#123;</span><br><span class="line">    siz       <span class="type">int32</span></span><br><span class="line">    started   <span class="type">bool</span>    <span class="comment">// panic执行defer时会把它标记为true</span></span><br><span class="line">    sp        <span class="type">uintptr</span> </span><br><span class="line">    pc        <span class="type">uintptr</span></span><br><span class="line">    fn        *funcval</span><br><span class="line">    _panic    *_panic <span class="comment">// 记录触发defer执行的_panic指针</span></span><br><span class="line">    link      *_defer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-
-
 <p>panic执行到一个defer时，会先把它的<code>_defer.started</code>置为true，标记它已经开始执行；并且会把<code>_defer._panic</code>字段指向当前执行的panic，表示这个defer是由这个panic触发的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c9840ae2c84e47c4ab6b5e3b0b320786~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/bcb123d0601e485bb2371bce64b2f0a2.png" alt="在这里插入图片描述"></p>
 <p>把A2对应的_defer标记好以后，A2开始执行。这里函数A2能够正常结束，也就是没有发生panic或调用runtime.Goexit函数，所以A2这一项就会被移除，继续执行下个defer。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5326556477f44c1f8362ac46a38315c1~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/8bf3bcd9500a461faa883ee6b8a8dbd6.png" alt="在这里插入图片描述"></p>
 <p>之所以要等到defer函数正常返回以后再移除对应的defer链表项，主要是为了应对defer函数没有正常结束的情况，就像下面这个例子。</p>
 <h2 id="panic之后又panic"><a href="#panic之后又panic" class="headerlink" title="panic之后又panic"></a>panic之后又panic</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> A1()</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA&quot;</span>)</span><br><span class="line">&#125;   </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A1</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;A1再次panic&quot;</span>)</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA1&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-
 <p>函数A中panic发生后，panic链表增加一项，记为panicA。然后就要执行defer链表了，设置A1对应的_defer.started与_defer._panic字段，然后调用函数A1。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/96f7311e15d440498cdf2afa672b8fce~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/ef9d388fccc6495bbba7022614c44529.png" alt="在这里插入图片描述"></p>
 <p>A1执行时，再次发生panic,同样要在panic链表头插入一个新的_panic，记为panicA1。现在这个panicA1成为当前执行的panic了。它同样会去执行defer链表，但是发现A1已经执行，并且触发它执行的并不是当前的panicA1，而是之前的panicA。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/05a8af4fc35043deb135541d524914cf~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/178ebe4cf18c4eed829af6f481766a30.png" alt="在这里插入图片描述"></p>
 <p>这时会根据A1这里记录的_panic指针，找到对应的_panic，并把它标记为已终止。怎么标记？那就要把_panic结构体展开来看看了。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> _panic <span class="keyword">struct</span> &#123;</span><br><span class="line">    argp      unsafe.Pointer</span><br><span class="line">    arg       <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">    link      *_panic</span><br><span class="line">    recovered <span class="type">bool</span></span><br><span class="line">    aborted   <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 
 
 <ul>
@@ -329,11 +330,9 @@
 <li>aborted 标识这个panic是否被终止。</li>
 </ul>
 <p>所以要终止panicA，就是把它的_panic.aborted字段置为true。而且defer链表中A1这一项也要被移除。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2db14fc403d44c06bbbca67a31f6bf7e~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/cf824d6349684bb9a0ab2caa3f6be5a7.png" alt="在这里插入图片描述"></p>
 <p>此时，defer链表为空，paic处理流程来到了打印panic信息这一步。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">panic</span>:panicA</span><br><span class="line"><span class="built_in">panic</span>:panicA1</span><br></pre></td></tr></table></figure>
-
-
 
 <p>注意panic打印异常信息时，会打印此时panic链表中剩余的所有链表项。不过，并不是从链表头开始，而是从链表尾开始，按照链表项的插入顺序逐一输出。所以这个例子才会先输出panicA，然后是panicA1。打印完异常信息后，程序退出。</p>
 <p>好了，到目前为止，没有recover发生的panic处理逻辑就算梳理完了，理解这个过程的关键点有两个：</p>
@@ -345,20 +344,19 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> A1()</span><br><span class="line">    <span class="keyword">defer</span> A2()</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A2</span><span class="params">()</span></span>&#123;</span><br><span class="line">    p := <span class="built_in">recover</span>()</span><br><span class="line">    fmt.Println(p) <span class="comment">//这里会正常执行输出“panicA”</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-
 <p>函数A中panic发生时，当前goroutine中defer链表已经注册了A1和A2。然后panic链表增加一项，记为panicA。panic触发defer链表执行，先执行函数A2。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2c599b8a7d0b4eecb6483c14d11c3427~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/70447d221e8948ac9bdcd515d7832754.png" alt="在这里插入图片描述"></p>
 <p>函数A2执行时发生recover，其实，recover函数本身的逻辑很简单，它只做一件事，就是把当前执行的panic置为已恢复，也就是把它的_panic.recovered字段置为true，其它的都不管。</p>
 <p>所以函数A2中recover发生后会把当前执行的panicA置为已恢复，然后recover函数的任务就完成了。函数A2会继续往下执行，直到A2结束。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/783ff71e604040fead7b3a6ca698464b~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/3088df6cd8834b52a297a2843b16e6a2.png" alt="在这里插入图片描述"></p>
 <p>其实在每个defer函数执行完以后，panic处理流程都会检查当前panic是否被恢复了。这里A2结束后，panic处理流程发现panicA已经被恢复，所以就会把它从panic链表中移除。A2这一项也会从defer链表中移除，不过在移除前要保存_defer.sp和_defer.pc两个字段的值。</p>
 <p>接下来要做的，就是使用保存的sp和pc字段值跳出panicA处理流程，但是要怎么跳出来？又该恢复到哪里去呢？</p>
 <p>我们知道，sp和pc是注册defer函数时保存的，对应到defer函数A2，sp就是函数A的栈指针，而pc就是调用deferproc(或deferprocStack)函数的返回地址。对应到下面这段伪指令中，就是函数A中判断r是否大于零的这部分逻辑。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/92a18fb4b78446bb990890497f764c96~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/818f7ecc07354c03a6f9deb1cc00830e.png" alt="在这里插入图片描述"></p>
 <p>通过sp，可以恢复到函数A的栈帧；通过pc，可以把指令地址恢复到判断r是否大于零这里。但是r就不能是0了，否则函数A就会重复执行。我们之前提过这个返回值被编译器保存在一个寄存器中，所以只要把它置为1就可以执行goto ret，跳转到deferreturn这里继续执行defer链表了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b37ca442326d4b07b5c83a446d93a2a1~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/6a0dad73bc4246edab3022e8a68c9875.png" alt="在这里插入图片描述"></p>
 <p>注意，函数A这里的deferreturn只负责执行函数A中注册的defer函数，是通过栈指针来判断的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2f58368ca6364052a1cea5512bb1877b~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/d6bc4d11f5d54f8793aed979e835dd72.png" alt="在这里插入图片描述"></p>
 <p>我们这个例子中，跳转到A的deferreturn这里后，下一个链表项A1仍然是函数A注册的defer，所以，接下来会执行defer函数A1，A1结束后，defer链表为空，函数A结束。</p>
 <p>这就是recover的基本流程，理解的关键有两点：</p>
 <ol>
@@ -366,25 +364,19 @@
 </ol>
 <h2 id="recover后同一函数又panic"><a href="#recover后同一函数又panic" class="headerlink" title="recover后同一函数又panic"></a>recover后同一函数又panic</h2><p>如果发生recover的函数，在返回前再次panic，情况又会如何？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> A1()</span><br><span class="line">    <span class="keyword">defer</span> A2()</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A2</span><span class="params">()</span></span>&#123;</span><br><span class="line">    p := <span class="built_in">recover</span>()</span><br><span class="line">    fmt.Println(p) <span class="comment">//这里会正常执行输出“panicA”</span></span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA2&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5dabe644f02a42a6944ff4af9d5c9345~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/b4af212c15d94f119bd1bb48a4fc2bb3.png" alt="在这里插入图片描述"></p>
 <p>当panicA2触发defer链表执行时，发现defer函数A2已经执行，所以把触发它执行的panicA终止掉。A2这一项也会从链表移除。<br>值得注意的是，由于A2没有正常返回，所以即使panicA已经被恢复了，也没有从链表中移除。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9db490bfd1f549f0bd2f8ab942ad4667~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/47c8fa96a73c467f8a995f677391cd86.png" alt="在这里插入图片描述"></p>
 <p>然后panicA2继续执行defer函数A1，A1中记录的_defer._panic指向panicA2。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e2a5836186d487ea0f8fdc3fb9c9dc6~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/9126d8e2c54d4f508435ff6334c4888b.png" alt="在这里插入图片描述"></p>
 <p>函数A1结束后，defer链表为空，接下来就要输出异常信息了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9593a3315a034f6298bb427590ab73c5~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/8c1a02c4dae04231a32a4f8865797f97.png" alt="在这里插入图片描述"></p>
 <p>对于链表中已经被恢复的panic，打印它的信息时会加上recovered标记，panic链表每一项都输出后程序退出。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">panic</span>:panicA[recovered]</span><br><span class="line"><span class="built_in">panic</span>:panicA2</span><br></pre></td></tr></table></figure>
 
 
-
 <h2 id="recover后恢复到哪里"><a href="#recover后恢复到哪里" class="headerlink" title="recover后恢复到哪里"></a>recover后恢复到哪里</h2><p>这个例子是为了加深对recover的理解，这一次我们结合函数调用关系弄清楚recover发生后，程序究竟会恢复到哪里。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> A1()</span><br><span class="line">    <span class="keyword">defer</span> A2()</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A1</span><span class="params">()</span></span>&#123; </span><br><span class="line">    fmt.Println(<span class="string">&quot;A1正常执行&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">A2</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> B1()        </span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">&quot;panicA2&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">B1</span><span class="params">()</span></span>&#123;</span><br><span class="line">    p := <span class="built_in">recover</span>()</span><br><span class="line">    fmt.Println(p)<span class="comment">//这里正常输出&quot;panicA2&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
 
 
 <ul>
@@ -394,14 +386,14 @@
 <li>B1执行时调用recover函数把panicA2置为已恢复。</li>
 <li>B1结束后，panicA2被移除，程序恢复到函数A2这里的deferreturn继续执行。</li>
 </ul>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d56fd18866cc4f7ab5506b0746dcafc0~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/041ca603580948749560d2d4f16c7c7f.png" alt="在这里插入图片描述"></p>
 <p>因为A2注册的defer函数已经执行完了，所以函数A2返回。最终返回到哪里呢？回到panicA这里继续执行，因为A2的执行就是由panicA触发的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/395a09713e314d16922374879d29bb93~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/01c13618179f4da4a300f4e41e39ecaa.png" alt="在这里插入图片描述"></p>
 <p>回到panicA这里，继续执行defer链表，接下来就轮到函数A1了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c99cd4e2dfca434086502706a0f8311a~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/dd5a306f6cfd457f9331ff745931acab.png" alt="在这里插入图片描述"></p>
 <p>等到A1执行结束，defer链表为空。输出panic链表上仅剩的panicA的异常信息之后程序就退出了。</p>
 <h2 id="recover调用限制"><a href="#recover调用限制" class="headerlink" title="recover调用限制"></a>recover调用限制</h2><p>关于recover，还要强调最后一点，就是recover函数只能在defer函数中直接调用，不能通过另外的函数间接调用。这是语言实现层面的要求，不满足要求的recover调用，不会有任何效果。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3e8daf5d06564eeaaa29213c226c7aee~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/cad8f3334d13458a8ae2f79e0c768914.png" alt="在这里插入图片描述"></p>
 <h2 id="关于open-coded-defer"><a href="#关于open-coded-defer" class="headerlink" title="关于open coded defer"></a>关于open coded defer</h2><p>Go1.14版本以前，panic和recover的基本流程就是这样。但是，由于1.14中使用了open coded defer，在函数内部展开调用的defer函数并没有注册到defer链表，导致panic执行defer链表时不能像之前这般轻松。</p>
 <p>1.14版本中panic处理流程要在执行defer链表前先进行栈扫描，把第一个open codeed defer注册到链表中正确的位置。然后开始执行defer链表。而且每次都要判断_defer.openCoded的值，如果为true，就通过_defer记录的信息拿到所属函数中open coded defer的相关信息，然后按照正确的顺序执行。具体过程相当繁琐，但是panic和recover的总体设计思想是一致的。</p>
 
