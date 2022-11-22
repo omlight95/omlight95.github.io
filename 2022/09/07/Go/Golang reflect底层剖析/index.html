@@ -27,22 +27,22 @@
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a8706c6d1efc46fab47eb32942cf9022~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25b46777918b4178bc34db3a51d52cb2~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d75e386ac77e4e85a5942a87a7408845~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a78332221c484f0d9965b95edc4c48e9~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/412a5ce2ed14422e9fbb25b243878e07~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cafce1fce2754de1bb3865e632a852ec~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/478f8e7d2de3470496ecf1c4be8d28d7~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9d9bde514db144be9fe1cde8e8f4226c~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f63f55a02caf4c27a1a133f2a4c22311~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0651539506f447df9474ce3b718136ea~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/934e7a0589e545d3b5acf3103520c385.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2d8113189c3040ab89dcf7df9e048698.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d843536c4c5a4f3c886b1be7e717a90a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0d234088dda6445e94be7a84a4201bd3.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/046de697b508497a84a6a7064bcc8114.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/77b4c360da5d44d3a8b346f469cf8d6e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/7eff206c59b74247bee2a180d8cdc365.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/3b28ff59fee947a3b3f8bd2e6c6c652b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6b42695dc514444886bb4581e58ffc31.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/21fce825212042c5944c77f972be449a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e621fd8820384ac3967caf1ace483202.png">
 <meta property="article:published_time" content="2022-09-07T15:29:12.056Z">
-<meta property="article:modified_time" content="2022-09-07T15:29:46.558Z">
+<meta property="article:modified_time" content="2022-11-22T06:34:56.731Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/934e7a0589e545d3b5acf3103520c385.png">
 
 <link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20reflect%E5%BA%95%E5%B1%82%E5%89%96%E6%9E%90/">
 
@@ -233,10 +233,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-07 23:29:12 / 修改时间：23:29:46" itemprop="dateCreated datePublished" datetime="2022-09-07T23:29:12+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-07 23:29:12" itemprop="dateCreated datePublished" datetime="2022-09-07T23:29:12+08:00">2022-09-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-22 14:34:56" itemprop="dateModified" datetime="2022-11-22T14:34:56+08:00">2022-11-22</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -281,7 +287,7 @@
 
       
         <p>用到反射的场景不外乎是变量类型不确定，内部结构不明朗的情况，所以反射的作用简单来说就是把类型元数据暴露给用户使用。<br>我们已经介绍过runtime包中<code>_type</code>、<code>uncommontype</code>、<code>eface</code>、<code>iface</code>等类型了，reflect也要和它们打交道，但是它们都属于未导出类型，所以reflect在自己的包中又定义了一套，两边的类型定义是保持一致的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1c3da14520694290b8f242f7812dc0b0~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/934e7a0589e545d3b5acf3103520c385.png" alt="在这里插入图片描述"></p>
 <p>reflect中有两个核心类型，<code>reflect.Type</code>和<code>reflect.Value</code>，它们两个撑起了反射功能的基本框架。</p>
 <h2 id="Type"><a href="#Type" class="headerlink" title="Type"></a>Type</h2><p><code>reflect.Type</code>是一个接口类型，它定义了一系列方法用于获取类型各方面的信息。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Type <span class="keyword">interface</span> &#123;</span><br><span class="line">    Align() <span class="type">int</span> <span class="comment">//对齐边界</span></span><br><span class="line">    FieldAlign() <span class="type">int</span> <span class="comment">//作为结构体字段的对齐边界</span></span><br><span class="line">    Method(<span class="type">int</span>) Method <span class="comment">//获取方法数组中第i个Method</span></span><br><span class="line">    MethodByName(<span class="type">string</span>) (Method, <span class="type">bool</span>) <span class="comment">//按照名称查找方法</span></span><br><span class="line">    NumMethod() <span class="type">int</span> <span class="comment">//方法列表中可导出方法的数目</span></span><br><span class="line">    Name() <span class="type">string</span> <span class="comment">//类型名称</span></span><br><span class="line">    PkgPath() <span class="type">string</span> <span class="comment">//包路径</span></span><br><span class="line">    Size() <span class="type">uintptr</span> <span class="comment">//该类型变量占用字节数</span></span><br><span class="line">    String() <span class="type">string</span> <span class="comment">//获取类型的字符串表示</span></span><br><span class="line">    Kind() Kind <span class="comment">//类型对应的reflect.Kind</span></span><br><span class="line">    Implements(u Type) <span class="type">bool</span> <span class="comment">//该类型是否实现了接口u</span></span><br><span class="line">    AssignableTo(u Type) <span class="type">bool</span> <span class="comment">//是否可以赋值给类型u</span></span><br><span class="line">    ConvertibleTo(u Type) <span class="type">bool</span> <span class="comment">//是否可转换为类型u</span></span><br><span class="line">    Comparable() <span class="type">bool</span> <span class="comment">//是否可比较</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//只能应用于某些Kind的方法</span></span><br><span class="line">    <span class="comment">//Int*, Uint*, Float*, Complex*: </span></span><br><span class="line">    Bits() <span class="type">int</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Array,Ptr,Slice,Map: </span></span><br><span class="line">    Elem() Type</span><br><span class="line">    <span class="comment">//Array</span></span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">        </span><br><span class="line">    <span class="comment">//Chan:ChanDir, Elem </span></span><br><span class="line">    ChanDir() ChanDir</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Func: </span></span><br><span class="line">    In(i <span class="type">int</span>) Type</span><br><span class="line">    NumIn() <span class="type">int</span></span><br><span class="line">    Out(i <span class="type">int</span>) Type</span><br><span class="line">    NumOut() <span class="type">int</span></span><br><span class="line">    IsVariadic() <span class="type">bool</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Map: </span></span><br><span class="line">    Key() Type</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Struct: </span></span><br><span class="line">    Field(i <span class="type">int</span>) StructField</span><br><span class="line">    FieldByIndex(index []<span class="type">int</span>) StructField</span><br><span class="line">    FieldByName(name <span class="type">string</span>) (StructField, <span class="type">bool</span>)</span><br><span class="line">    FieldByNameFunc(match <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">string</span>)</span></span> <span class="type">bool</span>) (StructField, <span class="type">bool</span>)  </span><br><span class="line">    NumField() <span class="type">int</span></span><br><span class="line"></span><br><span class="line">    common() *rtype</span><br><span class="line">    uncommon() *uncommonType</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -294,20 +300,20 @@
 
 
 <p>它接收一个空接口类型的参数。<br>接下来，<code>reflect.TypeOf</code>函数会把<code>runtime.eface</code>类型的参数<code>i</code>转换成reflect.emptyInterface类型并赋给局部变量<code>eface</code>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a8706c6d1efc46fab47eb32942cf9022~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/2d8113189c3040ab89dcf7df9e048698.png" alt="在这里插入图片描述"></p>
 <p>因为<code>*rtype</code>实现了<code>reflect.Type</code>接口，所以只要把<code>eface</code>这里的<code>typ</code>字段取出来，包装成<code>reflect.Type</code>类型的返回值就好了。<br>这就相当于下面这样把<code>eface.typ</code>赋值给一个<code>reflect.Type</code>类型的变量，这两行代码可以帮助我们理解返回值的结构。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ret reflect.Type</span><br><span class="line">ret = eface.typ</span><br></pre></td></tr></table></figure>
 
 
 
 <p>还记得非空接口长什么样子吧？<code>eface.typ</code>是个指针，所以这个返回值的<code>data</code>字段就等于<code>eface.typ</code>，也就是<code>string</code>类型的元数据地址，而<code>itab</code>中的接口类型就是<code>reflect.Type</code>，动态类型就是<code>*rtype</code>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25b46777918b4178bc34db3a51d52cb2~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/d843536c4c5a4f3c886b1be7e717a90a.png" alt="在这里插入图片描述"></p>
 <p>至于<code>*rtype</code>实现的这些接口要求的方法，也不过是去<code>data</code>字段指向的类型元数据那里获取各种信息罢了。<br>例如可以使用<code>Implements</code>方法来判断类型是否实现了某个接口，比方说fmt.Stringer接口。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Stringer <span class="keyword">interface</span> &#123;</span><br><span class="line">    String() <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
 
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d75e386ac77e4e85a5942a87a7408845~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/0d234088dda6445e94be7a84a4201bd3.png" alt="在这里插入图片描述"></p>
 <p>判断的过程就是通过类型元数据找到方法元数据数组，这里的Method是按照方法名称排过序的，所以只要和接口要求的方法列表两相比较一下，就可以确定该类型是否实现指定接口了。<br>这就是<code>reflect</code>的<code>Type</code>类型和<code>TypeOf</code>方法，重点是要理解反射如何拿到反射变量的类型元数据，剩下的就好说了。</p>
 <h2 id="Value"><a href="#Value" class="headerlink" title="Value"></a>Value</h2><p>与<code>reflect.Type</code>不同，<code>reflect.Value</code>是一个结构体类型。   </p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">type</span> Value <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ *rtype</span><br><span class="line">    ptr unsafe.Pointer</span><br><span class="line">    flag</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -330,11 +336,11 @@
 
 
 <p>此外还要注意，<code>reflect.ValueOf</code>函数目前的实现方式，会通过<code>escapes</code>函数显示地把参数<code>i</code>指向的变量逃逸到堆上。<br>对应到上面这个例子，<code>copy of a</code>就会逃逸到堆上，栈上存储它的地址。所以这个空接口类型的参数<code>i</code>，其动态类型指向string类型元数据，动态值指向堆上的<code>copy of a</code>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a78332221c484f0d9965b95edc4c48e9~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/046de697b508497a84a6a7064bcc8114.png" alt="在这里插入图片描述"></p>
 <p><code>ValueOf</code>函数的返回值是<code>reflect.Value</code>类型，其<code>typ</code>字段取参数的<code>_type</code>字段，指向<code>string</code>类型元数据，<code>ptr</code>字段取参数的<code>data</code>字段，指向<code>copy of a</code>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/412a5ce2ed14422e9fbb25b243878e07~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/77b4c360da5d44d3a8b346f469cf8d6e.png" alt="在这里插入图片描述"></p>
 <p>接下来，这个返回值被赋给局部变量<code>v</code>，调用<code>v.SetString</code>时，方法接收者<code>v</code>作为第一个参数，字符串”new eggo”作为第二个参数。 因为此时<code>v.ptr</code>指向的是<code>copy of a</code>，而不是<code>a</code>，所以是不允许修改的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cafce1fce2754de1bb3865e632a852ec~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/7eff206c59b74247bee2a180d8cdc365.png" alt="在这里插入图片描述"></p>
 <p>因为修改这样一个用户都不知道的临时变量<code>copy of a</code>没有任何意义，毕竟通过反射来修改变量值本意是要作用到原变量身上的，所以上面这个例子在执行阶段会发生panic：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">panic</span>: reflect: reflect.Value.SetString using unaddressable value</span><br></pre></td></tr></table></figure>
 
@@ -344,14 +350,15 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">    v := reflect.ValueOf(&amp;a)</span><br><span class="line">    v.Elem().SetString(<span class="string">&quot;new eggo&quot;</span>)</span><br><span class="line">    <span class="built_in">println</span>(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
+
 <p>传参依然是值拷贝，只不过这一次拷贝的是<code>a</code>的地址，所以<code>reflect.ValueOf</code>会显示地把局部变量<code>a</code>逃逸到堆上，栈上只存它的地址&amp;a。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/478f8e7d2de3470496ecf1c4be8d28d7~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/3b28ff59fee947a3b3f8bd2e6c6c652b.png" alt="在这里插入图片描述"></p>
 <p>局部变量<code>v</code>中，<code>v.typ</code>指向<code>*string</code>类型元数据，<code>v.ptr</code>等于<code>a</code>的地址。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9d9bde514db144be9fe1cde8e8f4226c~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/6b42695dc514444886bb4581e58ffc31.png" alt="在这里插入图片描述"></p>
 <p>接下来调用<code>v.Elem()</code>方法可以拿到<code>v.ptr</code>指向的那个变量，也就是局部变量<code>a</code>，并把它包装成一个新的<code>reflect.Value</code>对象作为返回值。这个返回值里<code>typ</code>指向<code>string</code>类型元数据，<code>ptr</code>指向局部变量<code>a</code>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f63f55a02caf4c27a1a133f2a4c22311~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/21fce825212042c5944c77f972be449a.png" alt="在这里插入图片描述"></p>
 <p>通过<code>v.Elem()</code>的返回值再调用<code>SetString</code>方法时，修改的就是原来的变量<code>a</code>了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0651539506f447df9474ce3b718136ea~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/e621fd8820384ac3967caf1ace483202.png" alt="在这里插入图片描述"></p>
 <p>通过反射修改变量值的问题有点绕，但是只要记住函数传参值拷贝，以及反射修改变量值要作用到原变量身上才有意义这两个原则，再梳理出<code>Value</code>对象内部结构，理解起来就没那么困难了。</p>
 
     </div>
