@@ -27,32 +27,32 @@
 <meta property="og:site_name" content="Omlight&#39;s Blog">
 <meta property="og:description" content="类型断言是Go语言中应用在接口值上的一个神奇特性，而类型断言的目标类型可以是某种具体类型，也可以是某种非空接口类型。这样我们就组合出四种类型断言，接下来就逐一看看它们究竟是如何断言的！">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2fe6bd42b75b47079a072cecbc5553dd~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/21b8c3da8da24af9b089764d786527a1~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ee841f5df8304fbca19f0fcb89d2d705~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/30d6f861dad943c397bbdd3219a71dcf~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bd0f8134678b4d0ba509093d7c5cfea1~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/201b855c4e604b15afc779414d0c2213~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fc0d599f80a24c13a86bb6f52e91d39f~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d49fd151a9c242c9915b256cf4a754d1~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ebf4856462cf4e209831625afaa4bd9e~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b5115b48d32448a6a02d0b156cb089c4~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/469758a3a0a34e7d811504ccd9b730bc~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/54a068b4d22b4958ad3f2e24e5fc5f59~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c03eee5b43514c7b850a83d8ce403495~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58abfcf1dc3d473b95c9125d6843001a~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e5e158fffaf414d960089f1004b45b9~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58940ab0e6d2454d9cccb41bb317b204~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8b7b39cbacc64ca0b1d8137f3aecb483~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25597330157848da9b87c32155093bcf~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/51626b80c6644669b7440949462c1b34~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/84bf9ebfb557428c9ffa883951ee8df0~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/aed97e3208c446d69a9f0848fa9439c3~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/90e7ecea33f94225a93bc144381ab3f1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6570ad6661ae4000be8d5f5fe043092c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/cab1b8951c75441c9dc8f04f050c0cf1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/828ba2fff97848f9a4cf157820fb52f8.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/bf6b30ac285147078ab499aacff5b8c1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a52a868e2e4c4cb5a8bce4bccec4fcbd.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/dfa526ca79074ac2bf05926267954da8.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e591caa12fc84f5f9885e24267787796.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/31a46be7b0014ef3951a5cd74c055df5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a3efd28621484cd1b2a8d2dbf614f87d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/46af630a89614fb99b753dbd6858e7a8.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0fb30a797dce4245908d572528f53673.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/99a89cd590554578997cc58f2140db97.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ec7641aa4b1a4b9f96a96e5d70466319.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/3c5e5a8e43d940e1af7c4e372db1e28b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b10f509d95954a43accb0cb5397419c7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/64ef6f0190d043e0968333d4f3aa4238.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5e123aaa8a0942a38558e990442fa748.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/98ad94ecdcb34f8298adacda56acd23b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fd7b2085924a417bb3fa6b548f36493b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a5d3369f7d23430f9b698dbb74bdb012.png">
 <meta property="article:published_time" content="2022-09-07T15:26:40.049Z">
-<meta property="article:modified_time" content="2022-09-07T15:27:16.139Z">
+<meta property="article:modified_time" content="2022-11-22T06:24:19.131Z">
 <meta property="article:author" content="Omlight">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2fe6bd42b75b47079a072cecbc5553dd~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/90e7ecea33f94225a93bc144381ab3f1.png">
 
 <link rel="canonical" href="http://example.com/2022/09/07/Go/Golang%20%E7%B1%BB%E5%9E%8B%E6%96%AD%E8%A8%80/">
 
@@ -243,10 +243,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-07 23:26:40 / 修改时间：23:27:16" itemprop="dateCreated datePublished" datetime="2022-09-07T23:26:40+08:00">2022-09-07</time>
+              <time title="创建时间：2022-09-07 23:26:40" itemprop="dateCreated datePublished" datetime="2022-09-07T23:26:40+08:00">2022-09-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-22 14:24:19" itemprop="dateModified" datetime="2022-11-22T14:24:19+08:00">2022-11-22</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -294,18 +300,18 @@
 <h2 id="空接口-具体类型"><a href="#空接口-具体类型" class="headerlink" title="空接口.(具体类型)"></a>空接口.(具体类型)</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> e <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"><span class="comment">//......</span></span><br><span class="line">r,ok := e.(*os.File)</span><br></pre></td></tr></table></figure>
 
 <p>e.(<em>os.File)就是要判断e存储的_type是否指向</em>os.File的类型元数据。反正我们介绍过Go语言里每种类型的类型元数据都是全局唯一的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2fe6bd42b75b47079a072cecbc5553dd~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/90e7ecea33f94225a93bc144381ab3f1.png" alt="在这里插入图片描述"></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f,_ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">e = f</span><br></pre></td></tr></table></figure>
 
 
 
 <p>如果e像上面这样赋值，e的动态类型就是*os.File，所以e.(*os.File)类型断言成功，ok为true，r为e的动态值。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/21b8c3da8da24af9b089764d786527a1~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ee841f5df8304fbca19f0fcb89d2d705~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/6570ad6661ae4000be8d5f5fe043092c.png" alt="在这里插入图片描述"><img src="https://img-blog.csdnimg.cn/cab1b8951c75441c9dc8f04f050c0cf1.png" alt="在这里插入图片描述"></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">e = f</span><br></pre></td></tr></table></figure>
 
 
 
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/30d6f861dad943c397bbdd3219a71dcf~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"><br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bd0f8134678b4d0ba509093d7c5cfea1~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/828ba2fff97848f9a4cf157820fb52f8.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/bf6b30ac285147078ab499aacff5b8c1.png" alt="在这里插入图片描述"></p>
 <p>请看以下代码的演示：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="keyword">var</span> e <span class="keyword">interface</span>&#123;&#125;   <span class="comment">//e为空接口类型</span></span><br><span class="line">	r, ok := e.(*os.File)  <span class="comment">//将e与*os.File类型进行类型断言</span></span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f, _ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">	e = f    <span class="comment">//将*os.File类型的f赋值给e</span></span><br><span class="line">	r, ok = e.(*os.File)</span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f1 := <span class="string">&quot;hello&quot;</span></span><br><span class="line">	e = f1  <span class="comment">//将string类型的f1赋值给e</span></span><br><span class="line">	r, ok = e.(*os.File)</span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -321,14 +327,14 @@
 
 
 <p>rw.(<em>os.File)是要判断rw的动态类型是否为</em>os.File。前面我们介绍过，程序中用到的itab结构体都会缓存起来，可以通过&lt;接口类型, 动态类型&gt;组合起来的key，查找到对应的itab指针。<br>所以这里的类型断言只需要一次比较就能完成，就是看iface.tab是否等于&lt;io.ReadWriter, *os.File&gt;这个组合对应的itab指针就好。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/201b855c4e604b15afc779414d0c2213~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/a52a868e2e4c4cb5a8bce4bccec4fcbd.png" alt="在这里插入图片描述"></p>
 <p>如果把一个<em>os.File类型的变量f赋给rw，它的动态值就是f，动态类型就是</em>os.File。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f,_ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">rw = f</span><br></pre></td></tr></table></figure>
 
 
 
 <p>rw这里存储的itab指针就指向&lt;io.ReadWriter, *os.File&gt;组合对应的itab，所以类型断言成功，ok为true，r被赋值为rw的动态值。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fc0d599f80a24c13a86bb6f52e91d39f~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"><br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d49fd151a9c242c9915b256cf4a754d1~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/dfa526ca79074ac2bf05926267954da8.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/e591caa12fc84f5f9885e24267787796.png" alt="在这里插入图片描述"></p>
 <p>下面我们定义一个eggo类型，并且由*eggo类型实现io.ReadWriter接口。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> eggo <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Read(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Write(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -339,7 +345,7 @@
 
 
 
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ebf4856462cf4e209831625afaa4bd9e~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/31a46be7b0014ef3951a5cd74c055df5.png" alt="在这里插入图片描述"></p>
 <p>请看以下代码的演示：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;io&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义一个eggo类型</span></span><br><span class="line"><span class="keyword">type</span> eggo <span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Read(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Write(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="keyword">var</span> rw io.ReadWriter</span><br><span class="line"></span><br><span class="line">	r, ok := rw.(*os.File)</span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f, _ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">	rw = f</span><br><span class="line">	r, ok = rw.(*os.File)</span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f1 := eggo&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">	rw = &amp;f1</span><br><span class="line">	r, ok = rw.(*os.File)</span><br><span class="line">	fmt.Println(r)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -354,25 +360,25 @@
 
 
 <p>e.(io.ReadWriter)就是要判断e的动态类型是否实现了io.ReadWriter接口。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b5115b48d32448a6a02d0b156cb089c4~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/a3efd28621484cd1b2a8d2dbf614f87d.png" alt="在这里插入图片描述"></p>
 <p>如果e像这样赋值：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f,_ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">e = f</span><br></pre></td></tr></table></figure>
 
 
 
 <p>e的动态类型就是<em>os.File，我们知道</em>os.File类型元数据的后面可以找到该类型实现的方法列表描述信息。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/469758a3a0a34e7d811504ccd9b730bc~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/46af630a89614fb99b753dbd6858e7a8.png" alt="在这里插入图片描述"></p>
 <p>其实并不需要每次都检查动态类型的方法列表，还记得itab缓存吗？ 实际上，当类型断言的目标类型为非空接口时，会首先去itabTable里查找对应的itab指针，若没有找到，再去检查动态类型的方法列表。<br>此处注意，就算从itabTable中找到了itab指针，也要进一步确认itab.fun[0]是否等于0。这是因为一旦通过方法列表确定某个具体类型没有实现指定接口，就会把itab这里的fun[0]置为0，然后同样会把这个itab结构体缓存起来，和那些断言成功的itab缓存一样。这样做的目的是避免再遇到同种类型断言时重复检查方法列表。</p>
 <p>回到例子中，这里会断言成功，ok为true，rw就是一个io.ReadWriter类型的变量，其动态值与e相同。tab指向&lt;io.ReadWriter, *os.File&gt;对应的itab结构体。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/54a068b4d22b4958ad3f2e24e5fc5f59~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/0fb30a797dce4245908d572528f53673.png" alt="在这里插入图片描述"></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">e = f</span><br></pre></td></tr></table></figure>
 
 
 
 <p>然而如果把一个字符串赋值给e，它的动态类型就是string，&lt;io.ReadWriter, string&gt;这个组合会对应下面这个itab，它也会被缓存起来。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c03eee5b43514c7b850a83d8ce403495~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/99a89cd590554578997cc58f2140db97.png" alt="在这里插入图片描述"></p>
 <p>断言失败，ok为false，rw为io.ReadWriter的类型零值，即tab和data均为nil。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58abfcf1dc3d473b95c9125d6843001a~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/ec7641aa4b1a4b9f96a96e5d70466319.png" alt="在这里插入图片描述"></p>
 <p>示例请看以下代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;io&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="keyword">var</span> e <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">	rw, ok := e.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f, _  := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">	e = f</span><br><span class="line">	rw, ok = e.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f1 := <span class="string">&quot;eggo&quot;</span></span><br><span class="line">	e = f1</span><br><span class="line">	rw, ok = e.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -382,18 +388,19 @@
 
 
 
+
 <h2 id="非空接口-非空接口"><a href="#非空接口-非空接口" class="headerlink" title="非空接口.(非空接口)"></a>非空接口.(非空接口)</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line"><span class="comment">//......</span></span><br><span class="line">rw,ok := w.(io.ReadWriter)</span><br></pre></td></tr></table></figure>
 
 
 
 <p>w.(io.ReadWriter)是要判断w的动态类型是否实现了io.ReadWriter接口。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5e5e158fffaf414d960089f1004b45b9~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/3c5e5a8e43d940e1af7c4e372db1e28b.png" alt="在这里插入图片描述"></p>
 <p>下面同样把一个<em>os.File类型的变量f赋值给w，它的动态值就是f，动态类型就是</em>os.File。</p>
 <p>f,_ :&#x3D; os.Open(“hello.txt”)<br>w &#x3D; f</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58940ab0e6d2454d9cccb41bb317b204~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/b10f509d95954a43accb0cb5397419c7.png" alt="在这里插入图片描述"></p>
 <p>要确定<em>os.File是否实现了io.ReadWriter接口，同样会先去itab缓存里查找&lt;io.ReadWriter,*os.File&gt;对应的itab，若存在，且itab.fun[0]不等于0，则断言成功；若不存在，再去检查</em>os.File的方法列表，创建并缓存itab信息。</p>
 <p>这里断言成功，ok为true，rw为io.ReadWriter类型的变量，动态值与w相同，而itab是&lt;io.ReadWriter, *os.File&gt;对应的那一个。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8b7b39cbacc64ca0b1d8137f3aecb483~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/64ef6f0190d043e0968333d4f3aa4238.png" alt="在这里插入图片描述"></p>
 <p>下面我们自定义一个eggo类型，且<em>eggo类型只实现io.Writer要求的Write方法，并没有实现io.ReadWriter额外要求的Read方法。如果把一个</em>eggo类型的变量赋给w：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> eggo <span class="keyword">struct</span> &#123;</span><br><span class="line">  name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Write(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">f := eggo&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">w = &amp;f</span><br></pre></td></tr></table></figure>
 
@@ -401,9 +408,9 @@
 
 
 <p>此时，w的动态类型为<em>eggo，而</em>eggo的方法列表里缺少一个Read方法，所以类型断言失败，下面这个itab被缓存起来。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/25597330157848da9b87c32155093bcf~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/5e123aaa8a0942a38558e990442fa748.png" alt="在这里插入图片描述"></p>
 <p>断言失败后，ok为false，rw的data和tab均为nil。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/51626b80c6644669b7440949462c1b34~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"><br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/84bf9ebfb557428c9ffa883951ee8df0~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/98ad94ecdcb34f8298adacda56acd23b.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/fd7b2085924a417bb3fa6b548f36493b.png" alt="在这里插入图片描述"></p>
 <p>示例请看以下代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;io&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> eggo <span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *eggo)</span></span> Write(b []<span class="type">byte</span>) (n <span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(e.name), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="keyword">var</span> w io.Writer</span><br><span class="line">	rw, ok := w.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f, _ := os.Open(<span class="string">&quot;hello.txt&quot;</span>)</span><br><span class="line">	w = f</span><br><span class="line">	rw, ok = w.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line"></span><br><span class="line">	f1 := eggo&#123;name: <span class="string">&quot;eggo&quot;</span>&#125;</span><br><span class="line">	w = &amp;f1</span><br><span class="line">	rw, ok = w.(io.ReadWriter)</span><br><span class="line">	fmt.Println(rw)</span><br><span class="line">	fmt.Println(ok)</span><br><span class="line">	fmt.Println()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -419,7 +426,7 @@
 
 
 <p>这里的b会被赋值为e的动态值，下面每个case都是把e的动态类型和某个具体类型作比较，相等则选择这个分支，没有匹配的则走到default分支。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/aed97e3208c446d69a9f0848fa9439c3~tplv-k3u1fbpfcp-zoom-1.image" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/a5d3369f7d23430f9b698dbb74bdb012.png" alt="在这里插入图片描述"></p>
 <p>有时会遇到多个类型放在一个分支的情况，这时b的类型是interface{}。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> b := e.(<span class="keyword">type</span>) &#123;</span><br><span class="line"><span class="keyword">case</span> *os.File:</span><br><span class="line">    &#123;</span><br><span class="line">      fmt.Println(<span class="string">&quot;这里b的类型为*os.File&quot;</span>, b)</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">case</span> <span class="type">string</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      fmt.Println(<span class="string">&quot;这里b的类型为string&quot;</span>, b)</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">case</span> <span class="type">int</span>, <span class="type">int32</span>, <span class="type">int64</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      fmt.Println(<span class="string">&quot;多类型分支里b的类型为interface&#123;&#125;&quot;</span>, b)</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">    fmt.Println(<span class="string">&quot;default&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
     </div>
