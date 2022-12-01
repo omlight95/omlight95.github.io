@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Go1.7加入了一个新的标准库context，它定义了Context类型，专门用来简化对于处理单个请求的多个goroutine之间与请求域的数据、取消信号、截止时间等相关操作，这些操作可能涉及多个 API 调用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang Context">
+<meta property="og:url" content="http://example.com/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/index.html">
+<meta property="og:site_name" content="Omlight&#39;s Blog">
+<meta property="og:description" content="Go1.7加入了一个新的标准库context，它定义了Context类型，专门用来简化对于处理单个请求的多个goroutine之间与请求域的数据、取消信号、截止时间等相关操作，这些操作可能涉及多个 API 调用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/97b8e4e814694ba49c1ce58923376225.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5b96ab191be942518cf54a61e8d55f31.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2022-12-01T11:46:05.731Z">
+<meta property="article:modified_time" content="2022-12-01T11:49:05.110Z">
+<meta property="article:author" content="Omlight">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/97b8e4e814694ba49c1ce58923376225.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16">
+
+<link rel="canonical" href="http://example.com/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang Context | Omlight's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb965384e6867949ee72c7e67224e414";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+	</div>
+	<a target="_blank" rel="noopener" href="https://github.com/omlight95" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Omlight's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不知乘月几人归，落月摇情满江树</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang Context
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-12-01 19:46:05 / 修改时间：19:49:05" itemprop="dateCreated datePublished" datetime="2022-12-01T19:46:05+08:00">2022-12-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/" class="post-meta-item leancloud_visitors" data-flag-title="Golang Context" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/12/01/Go/golang%E4%B8%8A%E4%B8%8B%E6%96%87context/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <div class="post-description">Go1.7加入了一个新的标准库context，它定义了Context类型，专门用来简化对于处理单个请求的多个goroutine之间与请求域的数据、取消信号、截止时间等相关操作，这些操作可能涉及多个 API 调用。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-context简介"><a href="#1-context简介" class="headerlink" title="1. context简介"></a>1. context简介</h2><p>Go1.7加入了一个新的标准库<code>context</code>，它定义了Context类型，专门用来简化对于处理单个请求的多个 <code>goroutine</code> 之间与请求域的数据、取消信号、截止时间等相关操作，这些操作可能涉及多个 API 调用。</p>
+<p>对服务器传入的请求应该创建上下文，而对服务器的传出调用应该接受上下文。它们之间的函数调用链必须传递上下文，或者可以使用<code>WithCancel</code>、<code>WithDeadline</code>、<code>WithTimeout</code>或<code>WithValue</code>创建的派生上下文。当一个上下文被取消时，它派生的所有上下文也被取消。</p>
+<p>简而言之：<strong>context的作用就是一种多Goroutine管理机制。</strong></p>
+<p><code>context</code>包不仅实现了在程序单元之间共享状态变量的方法，同时能通过简单的方法，使我们在被调用程序单元的外部，通过设置ctx变量值，将过期或撤销这些信号传递给被调用的程序单元。在网络编程中，若存在A调用B的API, B再调用C的API，若A调用B取消，那也要取消B调用C，通过在A,B,C的API调用之间传递<code>context</code>，以及判断其状态，就能解决此问题。</p>
+<p>context包的主要内容可以被概括为<strong>1个接口</strong>，<strong>4个具体实现</strong>，<strong>6个函数</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/97b8e4e814694ba49c1ce58923376225.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h2 id="2-context接口"><a href="#2-context接口" class="headerlink" title="2. context接口"></a>2. context接口</h2><p><code>context</code>接口中提供了4个方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A Context carries a deadline, cancelation signal, and request-scoped values</span></span><br><span class="line"><span class="comment">// across API boundaries. Its methods are safe for simultaneous use by multiple</span></span><br><span class="line"><span class="comment">// goroutines.</span></span><br><span class="line"><span class="keyword">type</span> Context <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Done returns a channel that is closed when this Context is canceled</span></span><br><span class="line">    <span class="comment">// or times out.</span></span><br><span class="line">    Done() &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Err indicates why this context was canceled, after the Done channel</span></span><br><span class="line">    <span class="comment">// is closed.</span></span><br><span class="line">    Err() <span class="type">error</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Deadline returns the time when this Context will be canceled, if any.</span></span><br><span class="line">    Deadline() (deadline time.Time, ok <span class="type">bool</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Value returns the value associated with key or nil if none.</span></span><br><span class="line">    Value(key <span class="keyword">interface</span>&#123;&#125;) <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li><code>Deadline</code>会返回一个超时时间，Goroutine获得了超时时间后，例如可以对某些io操作设定超时时间。</li>
+<li><code>Done</code>方法返回一个通道（channel），当Context被撤销或过期时，该通道是关闭的，即它是一个表示Context是否已关闭的信号。</li>
+<li>当Done信道关闭后，<code>Err</code>方法表明Context被撤的原因。</li>
+<li><code>Value</code>可以让Goroutine共享一些数据，当然获得数据是协程安全的。但使用这些数据的时候要注意同步，比如返回了一个map，而这个map的读写则要加锁。</li>
+</ul>
+<h2 id="3-emptyCtx、cancelCtx、timerCtx和valueCtx"><a href="#3-emptyCtx、cancelCtx、timerCtx和valueCtx" class="headerlink" title="3. emptyCtx、cancelCtx、timerCtx和valueCtx"></a>3. emptyCtx、cancelCtx、timerCtx和valueCtx</h2><p><strong>emptyCtx</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// An emptyCtx is never canceled, has no values, and has no deadline. It is not</span></span><br><span class="line"><span class="comment">// struct&#123;&#125;, since vars of this type must have distinct addresses.</span></span><br><span class="line"><span class="keyword">type</span> emptyCtx <span class="type">int</span></span><br></pre></td></tr></table></figure>
+
+<p><code>emptyCtx</code>只是简单的返回nil和false等等，实际上什么也没做。一般用来当作context树的根节点。</p>
+<p><strong>cancelCtx</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A cancelCtx can be canceled. When canceled, it also cancels any children</span></span><br><span class="line"><span class="comment">// that implement canceler.</span></span><br><span class="line"><span class="keyword">type</span> cancelCtx <span class="keyword">struct</span> &#123;</span><br><span class="line">	Context</span><br><span class="line"></span><br><span class="line">	mu       sync.Mutex            <span class="comment">// protects following fields</span></span><br><span class="line">	done     atomic.Value          <span class="comment">// of chan struct&#123;&#125;, created lazily, closed by first cancel call</span></span><br><span class="line">	children <span class="keyword">map</span>[canceler]<span class="keyword">struct</span>&#123;&#125; <span class="comment">// set to nil by the first cancel call</span></span><br><span class="line">	err      <span class="type">error</span>                 <span class="comment">// set to non-nil by the first cancel call</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>cancelCtx</code>中有一个<code>context</code>变量作为父节点，变量<code>done</code>表示一个channel，用来表示传递关闭信号；<code>children</code>表示一个map，存储了当前context节点下的子节点；<code>err</code>用于存储错误信息表示任务结束的原因。</p>
+<p><strong>timerCtx</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A timerCtx carries a timer and a deadline. It embeds a cancelCtx to</span></span><br><span class="line"><span class="comment">// implement Done and Err. It implements cancel by stopping its timer then</span></span><br><span class="line"><span class="comment">// delegating to cancelCtx.cancel.</span></span><br><span class="line"><span class="keyword">type</span> timerCtx <span class="keyword">struct</span> &#123;</span><br><span class="line">	cancelCtx</span><br><span class="line">	timer *time.Timer <span class="comment">// Under cancelCtx.mu.</span></span><br><span class="line"></span><br><span class="line">	deadline time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>timerCtx</code>是一种基于cancelCtx的context类型，从字面上就能看出，这是一种可以定时取消的context。</p>
+<p><code>timerCtx</code>内部使用cancelCtx实现取消，另外使用定时器timer和过期时间deadline实现定时取消的功能。<code>timerCtx</code>调用cancel方法，会先将内部的cancelCtx取消，如果需要则将自己从cancelCtx祖先节点上移除，最后取消计时器。</p>
+<p><strong>valueCtx</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A valueCtx carries a key-value pair. It implements Value for that key and</span></span><br><span class="line"><span class="comment">// delegates all other calls to the embedded Context.</span></span><br><span class="line"><span class="keyword">type</span> valueCtx <span class="keyword">struct</span> &#123;</span><br><span class="line">	Context</span><br><span class="line">	key, val <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>valueCtx</code>利用一个Context类型的变量来表示父节点context，所以当前context继承了父context的所有信息；<code>valueCtx</code>类型还携带一组键值对，也就是说这种context可以携带额外的信息。<code>valueCtx</code>实现了Value方法，用以在context链路上获取key对应的值，如果当前context上不存在需要的key，会沿着context链向上寻找key对应的值，直到根节点。</p>
+<h2 id="4-Background-和-TODO"><a href="#4-Background-和-TODO" class="headerlink" title="4. Background() 和 TODO()"></a>4. Background() 和 TODO()</h2><p>对于goroutine，他们的创建和调用关系总是像层层调用进行的，就像一个树状结构，而更靠顶部的context应该有办法主动关闭下属的goroutine的执行。为了实现这种关系，context也是一个树状结构，叶子节点总是由根节点衍生出来的。</p>
+<p>要创建context树，第一步应该得到根节点，context.Background()函数的返回值就是根节点。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	background = <span class="built_in">new</span>(emptyCtx)</span><br><span class="line">	todo       = <span class="built_in">new</span>(emptyCtx)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Background returns a non-nil, empty Context. It is never canceled, has no</span></span><br><span class="line"><span class="comment">// values, and has no deadline. It is typically used by the main function,</span></span><br><span class="line"><span class="comment">// initialization, and tests, and as the top-level Context for incoming</span></span><br><span class="line"><span class="comment">// requests.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Background</span><span class="params">()</span></span> Context &#123;</span><br><span class="line">	<span class="keyword">return</span> background</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// TODO returns a non-nil, empty Context. Code should use context.TODO when</span></span><br><span class="line"><span class="comment">// it&#x27;s unclear which Context to use or it is not yet available (because the</span></span><br><span class="line"><span class="comment">// surrounding function has not yet been extended to accept a Context</span></span><br><span class="line"><span class="comment">// parameter).</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TODO</span><span class="params">()</span></span> Context &#123;</span><br><span class="line">	<span class="keyword">return</span> todo</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这两个函数函数内部都会创建一个emptyCtx。</p>
+<p><code>Background()</code> 该函数返回空的Context，该Context一般由接收请求的第一个Goroutine创建，是与进入请求对应的Context根节点，它不能被取消、没有值、也没有过期时间。它常常作为处理Request的顶层context存在。</p>
+<p>Background()函数返回的变量结构：</p>
+<p><img src="https://img-blog.csdnimg.cn/5b96ab191be942518cf54a61e8d55f31.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBARGF3bmxpZ2h0Xy1f,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p><code>TODO()</code> 官方文档建议本来应该使用的外层传递的ctx，而外层却没有传递的地方使用，就像函数名称表达的一样，留下一个TODO。</p>
+<h2 id="5-WithCancel-、WithDeadline-、WithTimeout-和WithValue"><a href="#5-WithCancel-、WithDeadline-、WithTimeout-和WithValue" class="headerlink" title="5. WithCancel()、WithDeadline()、WithTimeout()和WithValue()"></a>5. WithCancel()、WithDeadline()、WithTimeout()和WithValue()</h2><p>有了根节点，就可以创建子孙节点了，context包提供了一系列方法来创建他们：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A CancelFunc tells an operation to abandon its work.</span></span><br><span class="line"><span class="comment">// A CancelFunc does not wait for the work to stop.</span></span><br><span class="line"><span class="comment">// A CancelFunc may be called by multiple goroutines simultaneously.</span></span><br><span class="line"><span class="comment">// After the first call, subsequent calls to a CancelFunc do nothing.</span></span><br><span class="line"><span class="keyword">type</span> CancelFunc <span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>怎么通过context传递改变后的状态呢?<br>在父goroutine中可以通过Withxx方法获取一个cancel方法，从而获得了操作子context的权力。</p>
+<p><strong>WithCancel()</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WithCancel returns a copy of parent with a new Done channel. The returned</span></span><br><span class="line"><span class="comment">// context&#x27;s Done channel is closed when the returned cancel function is called</span></span><br><span class="line"><span class="comment">// or when the parent context&#x27;s Done channel is closed, whichever happens first.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Canceling this context releases resources associated with it, so code should</span></span><br><span class="line"><span class="comment">// call cancel as soon as the operations running in this Context complete.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithCancel</span><span class="params">(parent Context)</span></span> (ctx Context, cancel CancelFunc) &#123;</span><br><span class="line">	<span class="keyword">if</span> parent == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;cannot create context from nil parent&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	c := newCancelCtx(parent)</span><br><span class="line">	propagateCancel(parent, &amp;c)</span><br><span class="line">	<span class="keyword">return</span> &amp;c, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; c.cancel(<span class="literal">true</span>, Canceled) &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>WithCancel</code>返回带有新Done通道的父节点的副本。当调用返回的cancel函数或当关闭父上下文的Done通道时，将关闭返回上下文的Done通道，无论先发生什么情况。<br>取消此上下文将释放与其关联的资源，因此代码应该在此上下文中运行的操作完成后立即调用cancel。</p>
+<p>我们来了解一个利用context结束goroutine的demo。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	创建一个通道chan，启动goroutine</span></span><br><span class="line"><span class="comment">	for循环储存数据</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">gen</span><span class="params">(ctx context.Context)</span></span> &lt;-<span class="keyword">chan</span> <span class="type">int</span> &#123;</span><br><span class="line">	dst := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">	n := <span class="number">1</span></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span>  &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">				<span class="keyword">case</span> &lt;- ctx.Done() :</span><br><span class="line">					<span class="keyword">return</span>  <span class="comment">//return结束该goroutine，防止泄露</span></span><br><span class="line">				<span class="keyword">case</span> dst &lt;- n:</span><br><span class="line">					n++</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> dst</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line">	<span class="comment">//当取数据n == 5的时候，执行defer cancel操作</span></span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> n := <span class="keyword">range</span> gen(ctx) &#123;</span><br><span class="line">		fmt.Println(n)</span><br><span class="line">		<span class="keyword">if</span> n == <span class="number">5</span> &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line"> 	&#125;</span><br><span class="line">	 time.Sleep(time.Second * <span class="number">5</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span></span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"><span class="number">4</span></span><br><span class="line"><span class="number">5</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的示例代码中，<code>gen</code>函数在单独的goroutine中生成整数并将它们发送到返回的通道。 gen的调用者在使用生成的整数之后需要取消上下文，以免<code>gen</code>启动的内部goroutine发生泄漏。</p>
+<p><strong>WithDeadline()</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WithDeadline returns a copy of the parent context with the deadline adjusted</span></span><br><span class="line"><span class="comment">// to be no later than d. If the parent&#x27;s deadline is already earlier than d,</span></span><br><span class="line"><span class="comment">// WithDeadline(parent, d) is semantically equivalent to parent. The returned</span></span><br><span class="line"><span class="comment">// context&#x27;s Done channel is closed when the deadline expires, when the returned</span></span><br><span class="line"><span class="comment">// cancel function is called, or when the parent context&#x27;s Done channel is</span></span><br><span class="line"><span class="comment">// closed, whichever happens first.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Canceling this context releases resources associated with it, so code should</span></span><br><span class="line"><span class="comment">// call cancel as soon as the operations running in this Context complete.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithDeadline</span><span class="params">(parent Context, d time.Time)</span></span> (Context, CancelFunc) &#123;</span><br><span class="line">	<span class="keyword">if</span> parent == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;cannot create context from nil parent&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> cur, ok := parent.Deadline(); ok &amp;&amp; cur.Before(d) &#123;</span><br><span class="line">		<span class="comment">// The current deadline is already sooner than the new one.</span></span><br><span class="line">		<span class="keyword">return</span> WithCancel(parent)</span><br><span class="line">	&#125;</span><br><span class="line">	c := &amp;timerCtx&#123;</span><br><span class="line">		cancelCtx: newCancelCtx(parent),</span><br><span class="line">		deadline:  d,</span><br><span class="line">	&#125;</span><br><span class="line">	propagateCancel(parent, c)</span><br><span class="line">	dur := time.Until(d)</span><br><span class="line">	<span class="keyword">if</span> dur &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		c.cancel(<span class="literal">true</span>, DeadlineExceeded) <span class="comment">// deadline has already passed</span></span><br><span class="line">		<span class="keyword">return</span> c, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; c.cancel(<span class="literal">false</span>, Canceled) &#125;</span><br><span class="line">	&#125;</span><br><span class="line">	c.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> c.mu.Unlock()</span><br><span class="line">	<span class="keyword">if</span> c.err == <span class="literal">nil</span> &#123;</span><br><span class="line">		c.timer = time.AfterFunc(dur, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			c.cancel(<span class="literal">true</span>, DeadlineExceeded)</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> c, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; c.cancel(<span class="literal">true</span>, Canceled) &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>WithDeadline</code>函数的作用也差不多，它返回的Context类型值同样是parent的副本，但其过期时间由deadline和parent的过期时间共同决定。当parent的过期时间早于传入的deadline时间时，返回的过期时间应与parent相同。父节点过期时，其所有的子孙节点必须同时关闭；反之，返回的父节点的过期时间则为deadline。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	d := time.Now().Add(<span class="number">50</span> * time.Millisecond)</span><br><span class="line">	ctx, cancel := context.WithDeadline(context.Background(), d)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 尽管ctx会过期，但在任何情况下调用它的cancel函数都是很好的实践。</span></span><br><span class="line">	<span class="comment">// 如果不这样做，可能会使上下文及其父类存活的时间超过必要的时间。</span></span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;- time.After(<span class="number">1</span> * time.Second):</span><br><span class="line">			fmt.Println(<span class="string">&quot;overslept&quot;</span>)</span><br><span class="line">		<span class="keyword">case</span> &lt;- ctx.Done():</span><br><span class="line">		fmt.Println(ctx.Err())</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">context deadline exceeded</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码中，定义了一个50毫秒之后过期的<code>deadline</code>，然后我们调用<code>context.WithDeadline(context.Background(), d)</code>得到一个上下文（ctx）和一个取消函数（cancel），然后使用一个<code>select</code>让主程序陷入等待：等待1秒后打印<code>overslept</code>退出或者等待ctx过期后退出。</p>
+<p>在上面的示例代码中，因为ctx 50毫秒后就会过期，所以<code>ctx.Done()</code>会先接收到<code>context</code>到期通知，并且会打印<code>ctx.Err()</code>的内容。</p>
+<p><strong>WithTimeout</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WithTimeout returns WithDeadline(parent, time.Now().Add(timeout)).</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Canceling this context releases resources associated with it, so code should</span></span><br><span class="line"><span class="comment">// call cancel as soon as the operations running in this Context complete:</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 	func slowOperationWithTimeout(ctx context.Context) (Result, error) &#123;</span></span><br><span class="line"><span class="comment">// 		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)</span></span><br><span class="line"><span class="comment">// 		defer cancel()  // releases resources if slowOperation completes before timeout elapses</span></span><br><span class="line"><span class="comment">// 		return slowOperation(ctx)</span></span><br><span class="line"><span class="comment">// 	&#125;</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithTimeout</span><span class="params">(parent Context, timeout time.Duration)</span></span> (Context, CancelFunc) &#123;</span><br><span class="line">	<span class="keyword">return</span> WithDeadline(parent, time.Now().Add(timeout))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>WithTimeout</code>函数与WithDeadline类似，只不过它传入的是从现在开始Context剩余的生命时长。他们都同样也都返回了所创建的子Context的控制权，一个CancelFunc类型的函数变量。</p>
+<p>当顶层的Request请求函数结束后，我们就可以cancel掉某个context，从而层层Goroutine根据判断cxt.Done()来结束。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">worker</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">LOOP:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;db connecting ...&quot;</span>)</span><br><span class="line">		time.Sleep(time.Millisecond * <span class="number">10</span>) <span class="comment">//假设正常连接数据库耗时10毫秒</span></span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;- ctx.Done():  <span class="comment">//50毫秒后自动调用</span></span><br><span class="line">				<span class="keyword">break</span> LOOP</span><br><span class="line">			<span class="keyword">default</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(<span class="string">&quot;worker done!&quot;</span>)</span><br><span class="line">	wg.Done()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//设置一个50毫秒的超时</span></span><br><span class="line">	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * <span class="number">50</span>)</span><br><span class="line">	wg.Add(<span class="number">1</span>)</span><br><span class="line">	<span class="keyword">go</span> worker(ctx)</span><br><span class="line">	time.Sleep(time.Second * <span class="number">5</span>)</span><br><span class="line">	cancel()  <span class="comment">//通知子goroutine结束</span></span><br><span class="line">	wg.Wait()</span><br><span class="line">	fmt.Println(<span class="string">&quot;over&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db connecting ...</span><br><span class="line">db connecting ...</span><br><span class="line">db connecting ...</span><br><span class="line">db connecting ...</span><br><span class="line">db connecting ...</span><br><span class="line">worker done!</span><br><span class="line">over</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>WithValue()</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WithValue returns a copy of parent in which the value associated with key is</span></span><br><span class="line"><span class="comment">// val.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Use context Values only for request-scoped data that transits processes and</span></span><br><span class="line"><span class="comment">// APIs, not for passing optional parameters to functions.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// The provided key must be comparable and should not be of type</span></span><br><span class="line"><span class="comment">// string or any other built-in type to avoid collisions between</span></span><br><span class="line"><span class="comment">// packages using context. Users of WithValue should define their own</span></span><br><span class="line"><span class="comment">// types for keys. To avoid allocating when assigning to an</span></span><br><span class="line"><span class="comment">// interface&#123;&#125;, context keys often have concrete type</span></span><br><span class="line"><span class="comment">// struct&#123;&#125;. Alternatively, exported context key variables&#x27; static</span></span><br><span class="line"><span class="comment">// type should be a pointer or interface.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithValue</span><span class="params">(parent Context, key, val <span class="keyword">interface</span>&#123;&#125;)</span></span> Context &#123;</span><br><span class="line">	<span class="keyword">if</span> parent == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;cannot create context from nil parent&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> key == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;nil key&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> !reflectlite.TypeOf(key).Comparable() &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;key is not comparable&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> &amp;valueCtx&#123;parent, key, val&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>WithValue</code>函数，它返回parent的一个副本，调用该副本的Value(key)方法将得到val。这样我们不光将根节点原有的值保留了，还在子孙节点中加入了新的值，注意若存在Key相同，则会被覆盖。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> TraceCode <span class="type">string</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">worker</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">	key := TraceCode(<span class="string">&quot;TRACE_CODE&quot;</span>)</span><br><span class="line">	traceCode, ok := ctx.Value(key).(<span class="type">string</span>)  <span class="comment">//在子goroutine中获取trace code</span></span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;invalid trace code&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">LOOP:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;worker, trace code:%s\n&quot;</span>, traceCode)</span><br><span class="line">		time.Sleep(time.Millisecond * <span class="number">10</span>) <span class="comment">// 假设正常连接数据库耗时10毫秒</span></span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-ctx.Done(): <span class="comment">// 50毫秒后自动调用</span></span><br><span class="line">			<span class="keyword">break</span> LOOP</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(<span class="string">&quot;worker done!&quot;</span>)</span><br><span class="line">	wg.Done()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 设置一个50毫秒的超时</span></span><br><span class="line">	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*<span class="number">50</span>)</span><br><span class="line">	<span class="comment">// 在系统的入口中设置trace code传递给后续启动的goroutine实现日志数据聚合</span></span><br><span class="line">	ctx = context.WithValue(ctx, TraceCode(<span class="string">&quot;TRACE_CODE&quot;</span>), <span class="string">&quot;12512312234&quot;</span>)</span><br><span class="line">	wg.Add(<span class="number">1</span>)</span><br><span class="line">	<span class="keyword">go</span> worker(ctx)</span><br><span class="line">	time.Sleep(time.Second * <span class="number">5</span>)</span><br><span class="line">	cancel() <span class="comment">// 通知子goroutine结束</span></span><br><span class="line">	wg.Wait()</span><br><span class="line">	fmt.Println(<span class="string">&quot;over&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">worker, trace code:<span class="number">12512312234</span></span><br><span class="line">worker, trace code:<span class="number">12512312234</span></span><br><span class="line">worker, trace code:<span class="number">12512312234</span></span><br><span class="line">worker, trace code:<span class="number">12512312234</span></span><br><span class="line">worker, trace code:<span class="number">12512312234</span></span><br><span class="line">worker done!</span><br><span class="line">over</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="6-使用context小结"><a href="#6-使用context小结" class="headerlink" title="6. 使用context小结"></a>6. 使用context小结</h2><p><strong>小结：</strong></p>
+<ul>
+<li>context包通过构建树形关系的context，来达到上一层goroutine对下一层goroutine的控制。对于处理一个request请求操作，需要通过goroutine来层层控制goroutine，以及传递一些变量来共享。</li>
+<li>context变量的请求周期一般为一个请求的处理周期。即针对一个请求创建context对象；在请求处理结束后，撤销此ctx变量，释放资源。</li>
+<li>每创建一个goroutine，要不将原有context传递给子goroutine，要么创建一个子context传递给goroutine.</li>
+<li>Context能灵活地存储不同类型、不同数目的值，并且使多个Goroutine安全地读写其中的值。</li>
+<li>当通过父<br>Context对象创建子Context时，可以同时获得子Context的撤销函数，这样父goroutine就获得了子goroutine的撤销权。</li>
+</ul>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>推荐以参数的方式显示传递Context。</li>
+<li>以Context作为参数的函数方法，应该把Context作为第一个参数。</li>
+<li>给一个函数方法传递Context的时候，不要传递nil，如果不知道传递什么，就使用context.TODO()。</li>
+<li>Context的Value相关方法应该传递请求域的必要数据，不应该用于传递可选参数。</li>
+<li>Context是线程安全的，可以放心的在多个goroutine中传递。</li>
+</ul>
+<p>参考博客：<br><a target="_blank" rel="noopener" href="https://www.liwenzhou.com/posts/Go/go_context/#autoid-0-4-0">https://www.liwenzhou.com/posts/Go/go_context&#x2F;#autoid-0-4-0</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zhangboyu/p/7456606.html">https://www.cnblogs.com/zhangboyu/p/7456606.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/juanmaofeifei/p/14439957.html">https://www.cnblogs.com/juanmaofeifei/p/14439957.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/06/RabbitMQ/%E5%9B%9B%E3%80%81RabbitMQ%20TTL%E3%80%81%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97%E4%BB%A5%E5%8F%8A%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97/" rel="prev" title="四、RabbitMQ TTL、死信队列以及延迟队列">
+      <i class="fa fa-chevron-left"></i> 四、RabbitMQ TTL、死信队列以及延迟队列
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-context%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">1. context简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-context%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.</span> <span class="nav-text">2. context接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-emptyCtx%E3%80%81cancelCtx%E3%80%81timerCtx%E5%92%8CvalueCtx"><span class="nav-number">3.</span> <span class="nav-text">3. emptyCtx、cancelCtx、timerCtx和valueCtx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Background-%E5%92%8C-TODO"><span class="nav-number">4.</span> <span class="nav-text">4. Background() 和 TODO()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-WithCancel-%E3%80%81WithDeadline-%E3%80%81WithTimeout-%E5%92%8CWithValue"><span class="nav-number">5.</span> <span class="nav-text">5. WithCancel()、WithDeadline()、WithTimeout()和WithValue()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E4%BD%BF%E7%94%A8context%E5%B0%8F%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">6. 使用context小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Omlight"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Omlight</p>
+  <div class="site-description" itemprop="description">gopher</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">143</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/omlight95" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;omlight95" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49723651?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49723651?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fa custom csdn fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Omlight</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NYxlvPYAXEonmQ80BtgDUD58-gzGzoHsz',
+      appKey     : 'su4psizeZXLgtHkhviTz7tct',
+      placeholder: "欢迎畅所欲言",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-Hans' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -196,6 +196,102 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Omlight">
+      <meta itemprop="description" content="gopher">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Omlight's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-title-link" itemprop="url">Redis源码与设计剖析 -- 3.字典</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-31 17:23:47 / 修改时间：17:28:59" itemprop="dateCreated datePublished" datetime="2022-10-31T17:23:47+08:00">2022-10-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" class="post-meta-item leancloud_visitors" data-flag-title="Redis源码与设计剖析 -- 3.字典" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis构建了自己的字典实现. 字典在Redis中的应用相当广泛，比如哈希对象在满足条件的情况下会使用字典作为底层实现，以及Redis中的数据库也是使用字典来作为底层实现的，对数据库的增、删、查、改操作也是构建在对字典的操作之上的.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%203.%E5%AD%97%E5%85%B8/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/31/Redis/Redis%E6%BA%90%E7%A0%81%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%89%96%E6%9E%90%20--%202.%E9%93%BE%E8%A1%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1056,102 +1152,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Omlight">
-      <meta itemprop="description" content="gopher">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Omlight's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-title-link" itemprop="url">Golang 优雅的使用Context</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-08 13:23:13 / 修改时间：13:23:52" itemprop="dateCreated datePublished" datetime="2022-09-08T13:23:13+08:00">2022-09-08</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-                </span>
-            </span>
-
-          
-            <span id="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" class="post-meta-item leancloud_visitors" data-flag-title="Golang 优雅的使用Context" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在很多场景下，在执行一个任务时，我们会将这个任务拆分成几个子任务，然后开启几个不同的goroutine去执行。当因为某些原因这个任务需要终止时，我们需要将这些goroutine也全都终止掉。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/08/Go/Golang%20%E4%BC%98%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8Context/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1223,7 +1223,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-count">143</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
